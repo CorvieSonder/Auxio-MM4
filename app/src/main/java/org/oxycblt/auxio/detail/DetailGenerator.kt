@@ -26,6 +26,7 @@ import org.oxycblt.auxio.list.ListSettings
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.MusicType
+import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Genre
@@ -67,9 +68,16 @@ constructor(
     private val listSettings: ListSettings,
     private val musicRepository: MusicRepository,
     private val playlistSortRepository: PlaylistSortRepository,
+    private val playlistTreeRepository: PlaylistTreeRepository,
 ) : DetailGenerator.Factory {
     override fun create(invalidator: DetailGenerator.Invalidator): DetailGenerator =
-        DetailGeneratorImpl(invalidator, listSettings, musicRepository, playlistSortRepository)
+        DetailGeneratorImpl(
+            invalidator,
+            listSettings,
+            musicRepository,
+            playlistSortRepository,
+            playlistTreeRepository,
+        )
 }
 
 private class DetailGeneratorImpl(
@@ -77,15 +85,18 @@ private class DetailGeneratorImpl(
     private val listSettings: ListSettings,
     private val musicRepository: MusicRepository,
     private val playlistSortRepository: PlaylistSortRepository,
+    private val playlistTreeRepository: PlaylistTreeRepository,
 ) :
     DetailGenerator,
     MusicRepository.UpdateListener,
     ListSettings.Listener,
-    PlaylistSortRepository.Listener {
+    PlaylistSortRepository.Listener,
+    PlaylistTreeRepository.Listener {
     override fun attach() {
         listSettings.registerListener(this)
         musicRepository.addUpdateListener(this)
         playlistSortRepository.addListener(this)
+        playlistTreeRepository.addListener(this)
     }
 
     override fun onAlbumSongSortChanged() {
@@ -107,6 +118,16 @@ private class DetailGeneratorImpl(
         invalidator.invalidate(MusicType.PLAYLISTS, -1)
     }
 
+    override fun onPlaylistSortChanged() {
+        super.onPlaylistSortChanged()
+        // Child playlists are listed in the order of the playlist tab.
+        invalidator.invalidate(MusicType.PLAYLISTS, null)
+    }
+
+    override fun onPlaylistTreeChanged() {
+        invalidator.invalidate(MusicType.PLAYLISTS, null)
+    }
+
     override fun onMusicChanges(changes: MusicRepository.Changes) {
         if (changes.deviceLibrary) {
             invalidator.invalidate(MusicType.ALBUMS, null)
@@ -122,6 +143,7 @@ private class DetailGeneratorImpl(
         listSettings.unregisterListener(this)
         musicRepository.removeUpdateListener(this)
         playlistSortRepository.removeListener(this)
+        playlistTreeRepository.removeListener(this)
     }
 
     override fun any(uid: Music.UID): Detail<out MusicParent>? {
@@ -196,11 +218,15 @@ private class DetailGeneratorImpl(
 
     override fun playlist(uid: Music.UID): Detail<Playlist>? {
         val playlist = musicRepository.library?.findPlaylist(uid) ?: return null
-        if (playlist.songs.isNotEmpty()) {
-            val songs = DetailSection.Songs(playlistSortRepository.songs(playlist))
-            return Detail(playlist, listOf(songs))
+        val sections = mutableListOf<DetailSection>()
+        val children = playlistTreeRepository.childrenOf(playlist)
+        if (children.isNotEmpty()) {
+            sections.add(DetailSection.Playlists(listSettings.playlistSort.playlists(children)))
         }
-        return Detail(playlist, listOf())
+        if (playlist.songs.isNotEmpty()) {
+            sections.add(DetailSection.Songs(playlistSortRepository.songs(playlist)))
+        }
+        return Detail(playlist, sections)
     }
 
     private companion object {
@@ -242,6 +268,11 @@ sealed interface DetailSection {
             LIVE(R.string.lbl_live_group),
             REMIXES(R.string.lbl_remix_group),
         }
+    }
+
+    data class Playlists(override val items: List<Playlist>) : PlainSection<Playlist>() {
+        override val order = 11
+        override val stringRes = R.string.lbl_playlists
     }
 
     data class Songs(override val items: List<Song>) : PlainSection<Song>() {

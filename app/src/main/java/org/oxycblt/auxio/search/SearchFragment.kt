@@ -33,6 +33,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.FragmentSearchBinding
 import org.oxycblt.auxio.detail.DetailViewModel
@@ -47,6 +48,8 @@ import org.oxycblt.auxio.music.MusicType
 import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.music.PlaylistDecision
 import org.oxycblt.auxio.music.PlaylistMessage
+import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
+import org.oxycblt.auxio.music.tree.describePlaylistPath
 import org.oxycblt.auxio.playback.PlaybackDecision
 import org.oxycblt.auxio.playback.PlaybackViewModel
 import org.oxycblt.auxio.ui.FadingToolbarOffsetListener
@@ -81,7 +84,11 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
     override val listModel: ListViewModel by activityViewModels()
     override val playbackModel: PlaybackViewModel by activityViewModels()
     override val musicModel: MusicViewModel by activityViewModels()
-    private val searchAdapter = SearchAdapter(this)
+    @Inject lateinit var playlistTreeRepository: PlaylistTreeRepository
+    private val searchAdapter =
+        SearchAdapter(this) {
+            requireContext().describePlaylistPath(playlistTreeRepository.pathOf(it))
+        }
     private var getContentLauncher: ActivityResultLauncher<String>? = null
     private var pendingImportTarget: Playlist? = null
     private var imm: InputMethodManager? = null
@@ -347,8 +354,10 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
                     )
                 }
                 is PlaylistDecision.Delete -> {
-                    L.d("Deleting ${decision.playlist}")
-                    SearchFragmentDirections.deletePlaylist(decision.playlist.uid)
+                    L.d("Deleting ${decision.playlists.size} playlists")
+                    SearchFragmentDirections.deletePlaylist(
+                        decision.playlists.map { it.uid }.toTypedArray()
+                    )
                 }
                 is PlaylistDecision.Export -> {
                     L.d("Exporting ${decision.playlist}")
@@ -361,7 +370,13 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
                     )
                 }
                 is PlaylistDecision.New -> {
-                    error("Unexpected decision $decision")
+                    L.d("Creating new playlist")
+                    SearchFragmentDirections.newPlaylist(
+                        decision.songs.map { it.uid }.toTypedArray(),
+                        decision.template,
+                        decision.reason,
+                        decision.parent?.uid,
+                    )
                 }
             }
         findNavController().navigateSafe(directions)

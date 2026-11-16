@@ -24,6 +24,7 @@ import org.oxycblt.auxio.list.ListSettings
 import org.oxycblt.auxio.list.adapter.UpdateInstructions
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.MusicType
+import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Genre
@@ -69,9 +70,16 @@ constructor(
     private val homeSettings: HomeSettings,
     private val listSettings: ListSettings,
     private val musicRepository: MusicRepository,
+    private val playlistTreeRepository: PlaylistTreeRepository,
 ) : HomeGenerator.Factory {
     override fun create(invalidator: HomeGenerator.Invalidator): HomeGenerator =
-        HomeGeneratorImpl(invalidator, homeSettings, listSettings, musicRepository)
+        HomeGeneratorImpl(
+            invalidator,
+            homeSettings,
+            listSettings,
+            musicRepository,
+            playlistTreeRepository,
+        )
 }
 
 private class HomeGeneratorImpl(
@@ -79,11 +87,23 @@ private class HomeGeneratorImpl(
     private val homeSettings: HomeSettings,
     private val listSettings: ListSettings,
     private val musicRepository: MusicRepository,
-) : HomeGenerator, HomeSettings.Listener, ListSettings.Listener, MusicRepository.UpdateListener {
+    private val playlistTreeRepository: PlaylistTreeRepository,
+) :
+    HomeGenerator,
+    HomeSettings.Listener,
+    ListSettings.Listener,
+    MusicRepository.UpdateListener,
+    PlaylistTreeRepository.Listener {
     override fun attach() {
         homeSettings.registerListener(this)
         listSettings.registerListener(this)
         musicRepository.addUpdateListener(this)
+        playlistTreeRepository.addListener(this)
+    }
+
+    override fun onPlaylistTreeChanged() {
+        // Replace rather than diff, so that the child counts of the playlists are rebound.
+        invalidator.invalidateMusic(MusicType.PLAYLISTS, UpdateInstructions.Replace(0))
     }
 
     override fun onTabsChanged() {
@@ -143,6 +163,7 @@ private class HomeGeneratorImpl(
     }
 
     override fun release() {
+        playlistTreeRepository.removeListener(this)
         musicRepository.removeUpdateListener(this)
         listSettings.unregisterListener(this)
         homeSettings.unregisterListener(this)
@@ -170,8 +191,9 @@ private class HomeGeneratorImpl(
         musicRepository.library?.let { listSettings.genreSort.genres(it.genres) } ?: emptyList()
 
     override fun playlists() =
-        musicRepository.library?.let { listSettings.playlistSort.playlists(it.playlists) }
-            ?: emptyList()
+        musicRepository.library?.let {
+            listSettings.playlistSort.playlists(playlistTreeRepository.childrenOf(null))
+        } ?: emptyList()
 
     override fun tabs() = homeSettings.homeTabs.filterIsInstance<Tab.Visible>().map { it.type }
 }

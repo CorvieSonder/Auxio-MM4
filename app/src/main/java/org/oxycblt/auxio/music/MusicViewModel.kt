@@ -29,13 +29,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.list.ListSettings
+import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.auxio.util.Event
 import org.oxycblt.auxio.util.MutableEvent
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
 import org.oxycblt.musikr.playlist.ExportConfig
@@ -54,6 +57,7 @@ constructor(
     @ApplicationContext context: Context,
     private val listSettings: ListSettings,
     private val musicRepository: MusicRepository,
+    private val playlistTreeRepository: PlaylistTreeRepository,
 ) : ViewModel(), MusicRepository.UpdateListener, MusicRepository.IndexingListener {
     private val externalPlaylistManager = ExternalPlaylistManager.from(context)
 
@@ -124,16 +128,29 @@ constructor(
      * @param songs The [Song]s to be contained in the new playlist.
      * @param reason The reason why a new playlist is being created. For all intensive purposes, you
      *   do not need to specify this.
+     * @param parent The [Playlist] to create the new playlist in, or null for the top level.
      */
     fun createPlaylist(
         name: String? = null,
         songs: List<Song> = listOf(),
         reason: PlaylistDecision.New.Reason = PlaylistDecision.New.Reason.NEW,
+        parent: Playlist? = null,
     ) {
         if (name != null) {
             L.d("Creating $name with ${songs.size} songs]")
             viewModelScope.launch(Dispatchers.IO) {
+                val existing =
+                    musicRepository.library?.playlists?.mapTo(mutableSetOf()) { it.uid }.orEmpty()
                 musicRepository.createPlaylist(name, songs)
+                if (parent != null) {
+                    // The new playlist is not returned, so find it as the one that did not exist.
+                    val created = musicRepository.library?.playlists?.find { it.uid !in existing }
+                    if (created != null) {
+                        withContext(Dispatchers.Main) {
+                            playlistTreeRepository.move(listOf(created), parent)
+                        }
+                    }
+                }
                 val message =
                     when (reason) {
                         PlaylistDecision.New.Reason.NEW -> PlaylistMessage.NewPlaylistSuccess
@@ -144,7 +161,7 @@ constructor(
             }
         } else {
             L.d("Launching creation dialog for ${songs.size} songs")
-            playlistDecision.put(PlaylistDecision.New(songs, null, reason))
+            playlistDecision.put(PlaylistDecision.New(songs, null, reason, parent))
         }
     }
 
@@ -274,18 +291,100 @@ constructor(
      * @param rude Whether to immediately delete the playlist or prompt the user first. This should
      *   be false at almost all times. This argument is internal and does not need to be specified
      *   in normal use.
+     * @param withChildren Whether to also delete every playlist nested inside [playlist]. If false,
+     *   the playlists directly inside it move up a level.
      */
-    fun deletePlaylist(playlist: Playlist, rude: Boolean = false) {
+    fun deletePlaylist(playlist: Playlist, rude: Boolean = false, withChildren: Boolean = false) =
+        deletePlaylists(listOf(playlist), rude, withChildren)
+
+    /**
+     * Delete several [Playlist]s.
+     *
+     * @param playlists The playlists to delete.
+     * @param rude Whether to immediately delete the playlists or prompt the user first.
+     * @param withChildren Whether to also delete every playlist nested inside [playlists]. If
+     *   false, the playlists inside them move up to the nearest level that is not deleted.
+     */
+    fun deletePlaylists(
+        playlists: List<Playlist>,
+        rude: Boolean = false,
+        withChildren: Boolean = false,
+    ) {
+        if (playlists.isEmpty()) return
         if (rude) {
-            L.d("Deleting $playlist")
+            L.d("Deleting ${playlists.size} playlists")
             viewModelScope.launch(Dispatchers.IO) {
-                musicRepository.deletePlaylist(playlist)
+                // Children that move up and clash with a name in their new level are renamed.
+                val renames = mutableListOf<Pair<Playlist, String>>()
+                val deleted =
+                    withContext(Dispatchers.Main) {
+                        val tree = playlistTreeRepository
+                        if (withChildren) {
+                            (playlists + playlists.flatMap(tree::descendantsOf)).distinctBy {
+                                it.uid
+                            }
+                        } else {
+                            val deletedUids = playlists.mapTo(mutableSetOf()) { it.uid }
+                            // Level (parent UID, null for the top level) -> names used in it.
+                            val takenNames = mutableMapOf<Music.UID?, MutableSet<String>>()
+                            for (playlist in playlists) {
+                                val target =
+                                    tree.pathOf(playlist).lastOrNull {
+                                        it.uid !in deletedUids
+                                    }
+                                val children =
+                                    tree.childrenOf(playlist).filter { it.uid !in deletedUids }
+                                val taken =
+                                    takenNames.getOrPut(target?.uid) {
+                                        tree
+                                            .childrenOf(target)
+                                            .filter { it.uid !in deletedUids }
+                                            .mapTo(mutableSetOf()) { it.name.raw }
+                                    }
+                                for (child in children) {
+                                    val name = uniqueName(child.name.raw, taken)
+                                    taken.add(name)
+                                    if (name != child.name.raw) {
+                                        renames.add(child to name)
+                                    }
+                                }
+                                tree.move(children, target)
+                            }
+                            playlists
+                        }
+                    }
+                for ((child, name) in renames) {
+                    L.d("Renaming $child to $name to keep names unique in its level")
+                    musicRepository.renamePlaylist(child, name)
+                }
+                for (it in deleted) {
+                    musicRepository.deletePlaylist(it)
+                }
+                withContext(Dispatchers.Main) { playlistTreeRepository.forget(deleted) }
                 playlistMessage.put(PlaylistMessage.DeleteSuccess)
             }
         } else {
-            L.d("Launching deletion dialog for $playlist")
-            playlistDecision.put(PlaylistDecision.Delete(playlist))
+            L.d("Launching deletion dialog for ${playlists.size} playlists")
+            playlistDecision.put(PlaylistDecision.Delete(playlists))
         }
+    }
+
+    /**
+     * Make a playlist name unique in a level by adding " (2)", " (3)" and so on to it.
+     *
+     * @param name The wanted name.
+     * @param taken The names already used in the level.
+     * @return [name] if it is free, otherwise the first free numbered variant of it.
+     */
+    private fun uniqueName(name: String, taken: Set<String>): String {
+        if (name !in taken) {
+            return name
+        }
+        var i = 2
+        while ("$name ($i)" in taken) {
+            ++i
+        }
+        return "$name ($i)"
     }
 
     /**
@@ -384,9 +483,14 @@ sealed interface PlaylistDecision {
      *   null, a placeholder should be created and shown as a hint instead.
      * @param reason The reason why a new playlist is being created. For all intensive purposes, you
      *   do not need to specify this.
+     * @param parent The [Playlist] to create the new playlist in, or null for the top level.
      */
-    data class New(val songs: List<Song>, val template: String?, val reason: Reason) :
-        PlaylistDecision {
+    data class New(
+        val songs: List<Song>,
+        val template: String?,
+        val reason: Reason,
+        val parent: Playlist? = null,
+    ) : PlaylistDecision {
         enum class Reason {
             NEW,
             ADD,
@@ -431,7 +535,7 @@ sealed interface PlaylistDecision {
      *
      * @param playlist The playlist to act on.
      */
-    data class Delete(val playlist: Playlist) : PlaylistDecision
+    data class Delete(val playlists: List<Playlist>) : PlaylistDecision
 
     /**
      * Navigate to a dialog that allows the user to add [Song]s to a [Playlist].

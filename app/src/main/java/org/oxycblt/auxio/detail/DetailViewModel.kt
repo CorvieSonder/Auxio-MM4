@@ -42,6 +42,7 @@ import org.oxycblt.auxio.list.adapter.UpdateInstructions
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.MusicType
+import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.auxio.playback.PlaySong
 import org.oxycblt.auxio.playback.PlaybackSettings
 import org.oxycblt.auxio.util.Event
@@ -70,6 +71,7 @@ constructor(
     private val musicRepository: MusicRepository,
     private val playbackSettings: PlaybackSettings,
     private val playlistSortRepository: PlaylistSortRepository,
+    private val playlistTreeRepository: PlaylistTreeRepository,
     detailGeneratorFactory: DetailGenerator.Factory,
 ) : ViewModel(), DetailGenerator.Invalidator {
     /**
@@ -166,6 +168,10 @@ constructor(
 
     /** The current list data derived from [currentPlaylist] */
     val playlistSongList: StateFlow<List<Item>> = _playlistSongList
+
+    /** The playlists above [currentPlaylist], from the top level down to its parent. */
+    val playlistPath: StateFlow<List<Playlist>>
+        field = MutableStateFlow<List<Playlist>>(listOf())
 
     /** Instructions for updating [playlistSongList] in the UI. */
     val playlistSongInstructions: Event<UpdateInstructions>
@@ -625,6 +631,8 @@ constructor(
         val edited = editedPlaylist.value
         if (edited == null) {
             val playlist = detailGenerator.playlist(uid)
+            playlistPath.value =
+                playlist?.let { playlistTreeRepository.pathOf(it.parent) } ?: listOf()
             refreshDetail(
                 playlist,
                 currentPlaylist,

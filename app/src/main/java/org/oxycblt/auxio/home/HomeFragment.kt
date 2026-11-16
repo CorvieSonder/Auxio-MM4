@@ -337,6 +337,7 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                         decision.songs.map { it.uid }.toTypedArray(),
                         decision.template,
                         decision.reason,
+                        decision.parent?.uid,
                     )
                 }
                 is PlaylistDecision.Import -> {
@@ -363,8 +364,10 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                     HomeFragmentDirections.exportPlaylist(decision.playlist.uid)
                 }
                 is PlaylistDecision.Delete -> {
-                    L.d("Deleting ${decision.playlist}")
-                    HomeFragmentDirections.deletePlaylist(decision.playlist.uid)
+                    L.d("Deleting ${decision.playlists.size} playlists")
+                    HomeFragmentDirections.deletePlaylist(
+                        decision.playlists.map { it.uid }.toTypedArray()
+                    )
                 }
                 is PlaylistDecision.Add -> {
                     L.d("Adding ${decision.songs.size} to a playlist")

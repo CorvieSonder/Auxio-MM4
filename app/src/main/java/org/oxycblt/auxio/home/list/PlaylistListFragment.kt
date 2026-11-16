@@ -24,6 +24,10 @@ import android.view.ViewGroup
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.FragmentHomeListBinding
 import org.oxycblt.auxio.detail.DetailViewModel
@@ -37,9 +41,12 @@ import org.oxycblt.auxio.list.recycler.PlaylistViewHolder
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.IndexingState
 import org.oxycblt.auxio.music.MusicViewModel
+import org.oxycblt.auxio.music.tree.PlaylistNestDragCallback
+import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.auxio.playback.PlaybackViewModel
 import org.oxycblt.auxio.playback.formatDurationMsPopup
 import org.oxycblt.auxio.util.collectImmediately
+import org.oxycblt.auxio.util.showToast
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.MusicParent
 import org.oxycblt.musikr.Playlist
@@ -50,6 +57,7 @@ import org.oxycblt.musikr.Song
  *
  * @author Alexander Capehart (OxygenCobalt)
  */
+@AndroidEntryPoint
 class PlaylistListFragment :
     ListFragment<Playlist, FragmentHomeListBinding>(),
     FastScrollRecyclerView.PopupProvider,
@@ -59,7 +67,14 @@ class PlaylistListFragment :
     override val listModel: ListViewModel by activityViewModels()
     override val musicModel: MusicViewModel by activityViewModels()
     override val playbackModel: PlaybackViewModel by activityViewModels()
-    private val playlistAdapter = PlaylistAdapter(this)
+    @Inject lateinit var playlistTreeRepository: PlaylistTreeRepository
+    private val playlistAdapter =
+        PlaylistAdapter(
+            this,
+            { playlistTreeRepository.childrenOf(it).size },
+            { nestTouchHelper?.startDrag(it) },
+        )
+    private var nestTouchHelper: ItemTouchHelper? = null
 
     override fun onCreateBinding(inflater: LayoutInflater) =
         FragmentHomeListBinding.inflate(inflater)
@@ -73,6 +88,18 @@ class PlaylistListFragment :
             popupProvider = this@PlaylistListFragment
             listener = this@PlaylistListFragment
         }
+        nestTouchHelper =
+            ItemTouchHelper(
+                    PlaylistNestDragCallback(
+                        playlistTreeRepository,
+                        { listModel.selected.value.filterIsInstance<Playlist>() },
+                        { playlistAdapter.currentList.getOrNull(it) },
+                    ) {
+                        listModel.dropSelection()
+                        requireContext().showToast(R.string.lng_playlist_moved)
+                    }
+                )
+                .also { it.attachToRecyclerView(binding.homeRecycler) }
 
         binding.homeNoMusicPlaceholder.apply {
             setImageResource(R.drawable.ic_playlist_48)
@@ -98,6 +125,8 @@ class PlaylistListFragment :
 
     override fun onDestroyBinding(binding: FragmentHomeListBinding) {
         super.onDestroyBinding(binding)
+        nestTouchHelper?.attachToRecyclerView(null)
+        nestTouchHelper = null
         binding.homeRecycler.apply {
             adapter = null
             popupProvider = null
@@ -166,6 +195,9 @@ class PlaylistListFragment :
 
     private fun updateSelection(selection: List<Music>) {
         playlistAdapter.setSelected(selection.filterIsInstanceTo(mutableSetOf()))
+        // The fast scroller shares the right edge with the drag handles of selected playlists,
+        // so turn it off while the handles are shown.
+        requireBinding().homeRecycler.fastScrollingEnabled = selection.none { it is Playlist }
     }
 
     private fun updatePlayback(song: Song?, parent: MusicParent?, isPlaying: Boolean) {
@@ -180,13 +212,17 @@ class PlaylistListFragment :
      *
      * @param listener An [SelectableListListener] to bind interactions to.
      */
-    private class PlaylistAdapter(private val listener: SelectableListListener<Playlist>) :
-        SelectionIndicatorAdapter<Playlist, PlaylistViewHolder>(PlaylistViewHolder.DIFF_CALLBACK) {
+    private class PlaylistAdapter(
+        private val listener: SelectableListListener<Playlist>,
+        private val childCount: (Playlist) -> Int,
+        private val pickUp: (RecyclerView.ViewHolder) -> Unit,
+    ) : SelectionIndicatorAdapter<Playlist, PlaylistViewHolder>(PlaylistViewHolder.DIFF_CALLBACK) {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            PlaylistViewHolder.from(parent)
+            PlaylistViewHolder.from(parent).also { it.onPickUp = pickUp }
 
         override fun onBindViewHolder(holder: PlaylistViewHolder, position: Int) {
-            holder.bind(getItem(position), listener)
+            val playlist = getItem(position)
+            holder.bind(playlist, listener, childCount(playlist))
         }
     }
 }

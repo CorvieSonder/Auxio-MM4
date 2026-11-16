@@ -27,7 +27,9 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.FragmentDetailBinding
 import org.oxycblt.auxio.detail.list.PlaylistDetailListAdapter
@@ -38,12 +40,16 @@ import org.oxycblt.auxio.list.menu.Menu
 import org.oxycblt.auxio.music.PlaylistDecision
 import org.oxycblt.auxio.music.PlaylistMessage
 import org.oxycblt.auxio.music.resolve
+import org.oxycblt.auxio.music.tree.PlaylistNestDragCallback
+import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
+import org.oxycblt.auxio.music.tree.describePlaylistPath
 import org.oxycblt.auxio.playback.PlaybackDecision
 import org.oxycblt.auxio.playback.formatDurationMs
 import org.oxycblt.auxio.ui.DialogAwareNavigationListener
 import org.oxycblt.auxio.util.collect
 import org.oxycblt.auxio.util.collectImmediately
 import org.oxycblt.auxio.util.context
+import org.oxycblt.auxio.util.getAttrColorCompat
 import org.oxycblt.auxio.util.getPlural
 import org.oxycblt.auxio.util.navigateSafe
 import org.oxycblt.auxio.util.showToast
@@ -61,11 +67,18 @@ import timber.log.Timber as L
  */
 @AndroidEntryPoint
 class PlaylistDetailFragment :
-    DetailFragment<Playlist, Song>(), PlaylistDetailListAdapter.Listener {
+    DetailFragment<Playlist, Music>(), PlaylistDetailListAdapter.Listener {
     // Information about what playlist to display is initially within the navigation arguments
     // as a UID, as that is the only safe way to parcel an playlist.
     private val args: PlaylistDetailFragmentArgs by navArgs()
-    private val playlistListAdapter = PlaylistDetailListAdapter(this)
+    @Inject lateinit var playlistTreeRepository: PlaylistTreeRepository
+    private val playlistListAdapter =
+        PlaylistDetailListAdapter(
+            this,
+            { playlistTreeRepository.childrenOf(it).size },
+            { nestTouchHelper?.startDrag(it) },
+        )
+    private var nestTouchHelper: ItemTouchHelper? = null
     private var touchHelper: ItemTouchHelper? = null
     private var editNavigationListener: DialogAwareNavigationListener? = null
     private var getContentLauncher: ActivityResultLauncher<String>? = null
@@ -74,6 +87,18 @@ class PlaylistDetailFragment :
     override fun getDetailListAdapter() = playlistListAdapter
 
     override fun getToolbarParent() = detailModel.currentPlaylist.value
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // A child playlist slides in from the side of its parent, like a folder being opened.
+        if (
+            findNavController().previousBackStackEntry?.destination?.id ==
+                R.id.playlist_detail_fragment
+        ) {
+            enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, true)
+            returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, false)
+        }
+    }
 
     override fun onBindingCreated(binding: FragmentDetailBinding, savedInstanceState: Bundle?) {
         super.onBindingCreated(binding, savedInstanceState)
@@ -102,6 +127,18 @@ class PlaylistDetailFragment :
             ItemTouchHelper(PlaylistDragCallback(detailModel)).also {
                 it.attachToRecyclerView(binding.detailRecycler)
             }
+        nestTouchHelper =
+            ItemTouchHelper(
+                    PlaylistNestDragCallback(
+                        playlistTreeRepository,
+                        { listModel.selected.value.filterIsInstance<Playlist>() },
+                        { playlistListAdapter.currentList.getOrNull(it) as? Playlist },
+                    ) {
+                        listModel.dropSelection()
+                        requireContext().showToast(R.string.lng_playlist_moved)
+                    }
+                )
+                .also { it.attachToRecyclerView(binding.detailRecycler) }
 
         // --- VIEWMODEL SETUP ---
         // DetailViewModel handles most initialization from the navigation argument.
@@ -112,6 +149,7 @@ class PlaylistDetailFragment :
             ::updatePlaylist,
         )
         collectImmediately(detailModel.playlistSongList, ::updateList)
+        collectImmediately(detailModel.playlistPath, ::updatePath)
         collectImmediately(detailModel.editedPlaylist, ::updateEditedList)
         collect(detailModel.toShow.flow, ::handleShow)
         collect(listModel.menu.flow, ::handleMenu)
@@ -158,6 +196,8 @@ class PlaylistDetailFragment :
         super.onDestroyBinding(binding)
         binding.detailNormalToolbar.setOnMenuItemClickListener(null)
         touchHelper = null
+        nestTouchHelper?.attachToRecyclerView(null)
+        nestTouchHelper = null
         binding.detailRecycler.adapter = null
         // Avoid possible race conditions that could cause a bad replace instruction to be consumed
         // during list initialization and crash the app. Could happen if the user is fast enough.
@@ -173,8 +213,12 @@ class PlaylistDetailFragment :
         playbackModel.shuffle(parent)
     }
 
-    override fun onRealClick(item: Song) {
-        playbackModel.play(item, detailModel.playInPlaylistWith)
+    override fun onRealClick(item: Music) {
+        when (item) {
+            is Playlist -> detailModel.showPlaylist(item)
+            is Song -> playbackModel.play(item, detailModel.playInPlaylistWith)
+            else -> error("Unexpected datatype: ${item::class.simpleName}")
+        }
     }
 
     override fun onStartEdit() {
@@ -190,8 +234,13 @@ class PlaylistDetailFragment :
         listModel.openMenu(R.menu.detail_playlist, currentPlaylist)
     }
 
-    override fun onOpenMenu(item: Song) {
-        listModel.openMenu(R.menu.playlist_song, item, detailModel.playInPlaylistWith)
+    override fun onOpenMenu(item: Music) {
+        when (item) {
+            is Playlist -> listModel.openMenu(R.menu.playlist, item)
+            is Song ->
+                listModel.openMenu(R.menu.playlist_song, item, detailModel.playInPlaylistWith)
+            else -> error("Unexpected datatype: ${item::class.simpleName}")
+        }
     }
 
     override fun onOpenSortMenu() {
@@ -199,6 +248,24 @@ class PlaylistDetailFragment :
             findNavController().navigateSafe(PlaylistDetailFragmentDirections.sort())
         } else {
             findNavController().navigateSafe(PlaylistDetailFragmentDirections.viewSort())
+        }
+    }
+
+    private fun updatePath(path: List<Playlist>) {
+        val binding = requireBinding()
+        // Show the playlists above this one, and open the parent when tapped.
+        binding.detailSubhead.isVisible = path.isNotEmpty()
+        // Shown in the accent color, so that it reads as a link to the parent.
+        binding.detailSubhead.setTextColor(
+            binding.context.getAttrColorCompat(androidx.appcompat.R.attr.colorPrimary)
+        )
+        binding.detailSubhead.text = requireContext().describePlaylistPath(path)
+        val parent = path.lastOrNull()
+        if (parent != null) {
+            binding.detailSubhead.setOnClickListener { detailModel.showPlaylist(parent) }
+        } else {
+            binding.detailSubhead.setOnClickListener(null)
+            binding.detailSubhead.isClickable = false
         }
     }
 
@@ -227,8 +294,6 @@ class PlaylistDetailFragment :
 
         binding.detailType.text = binding.context.getString(R.string.lbl_playlist)
         binding.detailName.text = playlist.name.resolve(binding.context)
-        // Nothing about a playlist is applicable to the sub-head text.
-        binding.detailSubhead.isVisible = false
 
         val songs = editedPlaylist ?: playlist.songs
         val durationMs = editedPlaylist?.sumOf { it.durationMs } ?: playlist.durationMs
@@ -321,8 +386,18 @@ class PlaylistDetailFragment :
                     )
             }
             is Show.PlaylistDetails -> {
-                L.d("Navigated to this playlist")
-                detailModel.toShow.consume()
+                if (detailModel.currentPlaylist.value?.uid == show.playlist.uid) {
+                    L.d("Navigated to this playlist")
+                    detailModel.toShow.consume()
+                } else {
+                    L.d("Navigating to ${show.playlist}")
+                    exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, true)
+                    reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, false)
+                    findNavController()
+                        .navigateSafe(
+                            PlaylistDetailFragmentDirections.showPlaylist(show.playlist.uid)
+                        )
+                }
             }
             is Show.GenreDetails -> {
                 error("Unexpected show command $show")
@@ -385,8 +460,10 @@ class PlaylistDetailFragment :
                     PlaylistDetailFragmentDirections.exportPlaylist(decision.playlist.uid)
                 }
                 is PlaylistDecision.Delete -> {
-                    L.d("Deleting ${decision.playlist}")
-                    PlaylistDetailFragmentDirections.deletePlaylist(decision.playlist.uid)
+                    L.d("Deleting ${decision.playlists.size} playlists")
+                    PlaylistDetailFragmentDirections.deletePlaylist(
+                        decision.playlists.map { it.uid }.toTypedArray()
+                    )
                 }
                 is PlaylistDecision.Add -> {
                     L.d("Adding ${decision.songs.size} songs to a playlist")
@@ -394,7 +471,15 @@ class PlaylistDetailFragment :
                         decision.songs.map { it.uid }.toTypedArray()
                     )
                 }
-                is PlaylistDecision.New -> error("Unexpected playlist decision $decision")
+                is PlaylistDecision.New -> {
+                    L.d("Creating new playlist")
+                    PlaylistDetailFragmentDirections.newPlaylist(
+                        decision.songs.map { it.uid }.toTypedArray(),
+                        decision.template,
+                        decision.reason,
+                        decision.parent?.uid,
+                    )
+                }
             }
         findNavController().navigateSafe(directions)
     }

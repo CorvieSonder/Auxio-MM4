@@ -99,6 +99,7 @@ class MenuViewModel @Inject constructor(private val musicRepository: MusicReposi
     private fun unpackSelectionParcel(parcel: Menu.ForSelection.Parcel): Menu.ForSelection? {
         val library = musicRepository.library ?: return null
         val songs = parcel.songUids.mapNotNull(library::findSong)
-        return Menu.ForSelection(parcel.res, songs)
+        val playlists = parcel.playlistUids.mapNotNull(library::findPlaylist)
+        return Menu.ForSelection(parcel.res, songs, playlists)
     }
 }

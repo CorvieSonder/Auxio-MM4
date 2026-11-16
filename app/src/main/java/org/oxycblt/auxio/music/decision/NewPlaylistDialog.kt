@@ -69,12 +69,21 @@ class NewPlaylistDialog : ViewBindingMaterialDialogFragment<DialogPlaylistNameBi
                         else -> throw IllegalStateException()
                     }
                 // TODO: Navigate to playlist if there are songs in it
-                musicModel.createPlaylist(name, pendingPlaylist.songs, pendingPlaylist.reason)
+                musicModel.createPlaylist(
+                    name,
+                    pendingPlaylist.songs,
+                    pendingPlaylist.reason,
+                    pendingPlaylist.parent,
+                )
                 findNavController().apply {
+                    // Only leave the playlist addition dialog too if it opened this one, as
+                    // otherwise this would leave the screen the dialog was opened from.
+                    val fromAddDialog =
+                        previousBackStackEntry?.destination?.id == R.id.add_to_playlist_dialog
                     navigateUp()
-                    // Do an additional navigation away from the playlist addition dialog, if
-                    // needed. If that dialog isn't present, this should be a no-op. Hopefully.
-                    navigateUp()
+                    if (fromAddDialog) {
+                        navigateUp()
+                    }
                 }
             }
             .setNegativeButton(R.string.lbl_cancel, null)
@@ -91,7 +100,13 @@ class NewPlaylistDialog : ViewBindingMaterialDialogFragment<DialogPlaylistNameBi
 
         // --- VIEWMODEL SETUP ---
         musicModel.playlistDecision.consume()
-        pickerModel.setPendingPlaylist(requireContext(), args.songUids, args.template, args.reason)
+        pickerModel.setPendingPlaylist(
+            requireContext(),
+            args.songUids,
+            args.template,
+            args.reason,
+            args.parentUid,
+        )
 
         collectImmediately(pickerModel.currentPendingNewPlaylist, ::updatePendingPlaylist)
         collectImmediately(pickerModel.chosenName, ::updateChosenName)

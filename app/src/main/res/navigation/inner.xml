@@ -2,6 +2,7 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/inner_nav"
     app:startDestination="@id/home_fragment">
 
     <fragment
@@ -184,6 +185,9 @@
             android:id="@+id/rename_playlist"
             app:destination="@id/rename_playlist_dialog" />
         <action
+            android:id="@+id/new_playlist"
+            app:destination="@id/new_playlist_dialog" />
+        <action
             android:id="@+id/delete_playlist"
             app:destination="@id/delete_playlist_dialog" />
         <action
@@ -365,6 +369,9 @@
             android:id="@+id/view_sort"
             app:destination="@+id/playlist_view_sort_dialog" />
         <action
+            android:id="@+id/show_playlist"
+            app:destination="@id/playlist_detail_fragment" />
+        <action
             android:id="@+id/show_song"
             app:destination="@id/song_detail_dialog" />
         <action
@@ -391,6 +398,9 @@
         <action
             android:id="@+id/export_playlist"
             app:destination="@id/export_playlist_dialog" />
+        <action
+            android:id="@+id/new_playlist"
+            app:destination="@id/new_playlist_dialog" />
         <action
             android:id="@+id/delete_playlist"
             app:destination="@id/delete_playlist_dialog" />
@@ -432,6 +442,11 @@
         <argument
             android:name="reason"
             app:argType="org.oxycblt.auxio.music.PlaylistDecision$New$Reason" />
+        <argument
+            android:name="parentUid"
+            android:defaultValue="@null"
+            app:argType="org.oxycblt.musikr.Music$UID"
+            app:nullable="true" />
     </dialog>
 
     <dialog
@@ -470,8 +485,8 @@
         android:label="delete_playlist_dialog"
         tools:layout="@layout/dialog_playlist_name">
         <argument
-            android:name="playlistUid"
-            app:argType="org.oxycblt.musikr.Music$UID" />
+            android:name="playlistUids"
+            app:argType="org.oxycblt.musikr.Music$UID[]" />
     </dialog>
 
     <dialog
@@ -582,4 +597,19 @@
         android:name="org.oxycblt.auxio.music.locations.LocationsDialog"
         android:label="music_locations_dialog"
         tools:layout="@layout/dialog_music_locations" />
+
+    <dialog
+        android:id="@+id/move_playlist_dialog"
+        android:name="org.oxycblt.auxio.music.tree.MovePlaylistDialog"
+        android:label="move_playlist_dialog"
+        tools:layout="@layout/dialog_music_choices">
+        <argument
+            android:name="playlistUids"
+            app:argType="org.oxycblt.musikr.Music$UID[]" />
+    </dialog>
+
+    <!-- Reachable from every screen that can select or open a menu for playlists. -->
+    <action
+        android:id="@+id/move_playlists"
+        app:destination="@id/move_playlist_dialog" />
 </navigation>

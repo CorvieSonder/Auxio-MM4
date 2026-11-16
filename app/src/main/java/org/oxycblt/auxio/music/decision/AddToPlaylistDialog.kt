@@ -26,16 +26,17 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.ConcatAdapter
-import androidx.recyclerview.widget.RecyclerView
 import dagger.hilt.android.AndroidEntryPoint
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.DialogMusicChoicesBinding
-import org.oxycblt.auxio.list.ClickableListListener
 import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.music.PlaylistDecision
+import org.oxycblt.auxio.music.tree.TreeChoice
+import org.oxycblt.auxio.music.tree.TreeChoiceAdapter
 import org.oxycblt.auxio.ui.ViewBindingMaterialDialogFragment
 import org.oxycblt.auxio.util.collectImmediately
 import org.oxycblt.auxio.util.navigateSafe
+import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
 import timber.log.Timber as L
 
@@ -47,14 +48,14 @@ import timber.log.Timber as L
 @AndroidEntryPoint
 class AddToPlaylistDialog :
     ViewBindingMaterialDialogFragment<DialogMusicChoicesBinding>(),
-    ClickableListListener<PlaylistChoice>,
+    TreeChoiceAdapter.Listener,
     NewPlaylistFooterAdapter.Listener {
     private val musicModel: MusicViewModel by activityViewModels()
     private val pickerModel: PlaylistPickerViewModel by viewModels()
     // Information about what playlist to name for is initially within the navigation arguments
     // as UIDs, as that is the only safe way to parcel playlist information.
     private val args: AddToPlaylistDialogArgs by navArgs()
-    private val choiceAdapter = PlaylistChoiceAdapter(this)
+    private val choiceAdapter = TreeChoiceAdapter(this)
     private val footerAdapter = NewPlaylistFooterAdapter(this)
 
     override fun onConfigDialog(builder: AlertDialog.Builder) {
@@ -84,9 +85,23 @@ class AddToPlaylistDialog :
         binding.choiceRecycler.adapter = null
     }
 
-    override fun onClick(item: PlaylistChoice, viewHolder: RecyclerView.ViewHolder) {
-        musicModel.addToPlaylist(pickerModel.currentSongsToAdd.value ?: return, item.playlist)
-        findNavController().navigateUp()
+    override fun onChoose(choice: TreeChoice) {
+        when (choice) {
+            is TreeChoice.Up -> pickerModel.closePlaylistAddLevel()
+            is TreeChoice.Node -> {
+                musicModel.addToPlaylist(
+                    pickerModel.currentSongsToAdd.value ?: return,
+                    choice.playlist,
+                )
+                findNavController().navigateUp()
+            }
+            // Songs can only be added to a playlist.
+            is TreeChoice.TopLevel -> {}
+        }
+    }
+
+    override fun onOpen(playlist: Playlist) {
+        pickerModel.openPlaylistAddLevel(playlist)
     }
 
     override fun onNewPlaylist() {
@@ -103,6 +118,8 @@ class AddToPlaylistDialog :
                     songs.map { it.uid }.toTypedArray(),
                     null,
                     PlaylistDecision.New.Reason.ADD,
+                    // The new playlist goes in the level being shown.
+                    pickerModel.playlistAddLevel.value?.uid,
                 )
             )
     }
@@ -114,7 +131,7 @@ class AddToPlaylistDialog :
         }
     }
 
-    private fun updatePlaylistChoices(choices: List<PlaylistChoice>) {
+    private fun updatePlaylistChoices(choices: List<TreeChoice>) {
         choiceAdapter.update(choices, null)
     }
 }

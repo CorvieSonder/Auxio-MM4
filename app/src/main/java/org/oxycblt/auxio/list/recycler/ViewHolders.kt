@@ -19,6 +19,7 @@
 package org.oxycblt.auxio.list.recycler
 
 import android.annotation.SuppressLint
+import android.view.MotionEvent
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.divider.MaterialDivider
@@ -280,20 +281,56 @@ class GenreViewHolder private constructor(private val binding: ItemParentBinding
 class PlaylistViewHolder private constructor(private val binding: ItemParentBinding) :
     SelectionIndicatorAdapter.ViewHolder(binding.root) {
     /**
+     * Called when the drag handle of a selected row is touched. While set, the menu button of a
+     * selected row turns into a drag handle. Null if playlists cannot be dragged in this list.
+     */
+    var onPickUp: ((RecyclerView.ViewHolder) -> Unit)? = null
+
+    /**
      * Bind new data to this instance.
      *
      * @param playlist The new [Playlist] to bind.
      * @param listener An [SelectableListListener] to bind interactions to.
      */
-    fun bind(playlist: Playlist, listener: SelectableListListener<Playlist>) {
+    fun bind(playlist: Playlist, listener: SelectableListListener<Playlist>) =
+        bind(playlist, listener, 0)
+
+    /**
+     * Bind new data to this instance.
+     *
+     * @param playlist The new [Playlist] to bind.
+     * @param listener An [SelectableListListener] to bind interactions to.
+     * @param childCount The number of playlists nested inside [playlist].
+     * @param location Where [playlist] is nested, shown instead of its counts. Null to show them.
+     */
+    fun bind(
+        playlist: Playlist,
+        listener: SelectableListListener<Playlist>,
+        childCount: Int,
+        location: String? = null,
+    ) {
         listener.bind(playlist, this, menuButton = binding.parentMenu)
         binding.parentImage.bind(playlist)
         binding.parentName.text = playlist.name.resolve(binding.context)
-        binding.parentInfo.text =
+        val context = binding.context
+        val songs =
             if (playlist.songs.isNotEmpty()) {
-                binding.context.getPlural(R.plurals.fmt_song_count, playlist.songs.size)
+                context.getPlural(R.plurals.fmt_song_count, playlist.songs.size)
             } else {
-                binding.context.getString(R.string.def_song_count)
+                context.getString(R.string.def_song_count)
+            }
+        binding.parentInfo.text =
+            when {
+                location != null -> location
+                childCount == 0 -> songs
+                playlist.songs.isEmpty() ->
+                    context.getPlural(R.plurals.fmt_playlist_count, childCount)
+                else ->
+                    context.getString(
+                        R.string.fmt_playlist_info,
+                        context.getPlural(R.plurals.fmt_playlist_count, childCount),
+                        songs,
+                    )
             }
     }
 
@@ -302,8 +339,28 @@ class PlaylistViewHolder private constructor(private val binding: ItemParentBind
         binding.parentImage.setPlaying(isPlaying)
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun updateSelectionIndicator(isSelected: Boolean) {
         binding.root.isActivated = isSelected
+        val pickUp = onPickUp
+        if (isSelected && pickUp != null) {
+            // The handle sits where the menu button is, so scrolling never starts a drag.
+            binding.parentMenu.setIconResource(R.drawable.ic_handle_24)
+            binding.parentMenu.contentDescription =
+                binding.context.getString(R.string.desc_playlist_handle)
+            binding.parentMenu.setOnTouchListener { _, event ->
+                if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                    pickUp(this)
+                    true
+                } else {
+                    false
+                }
+            }
+        } else {
+            binding.parentMenu.setIconResource(R.drawable.ic_more_24)
+            binding.parentMenu.contentDescription = null
+            binding.parentMenu.setOnTouchListener(null)
+        }
     }
 
     companion object {
