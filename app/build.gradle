@@ -15,7 +15,8 @@ android {
     namespace "org.oxycblt.auxio"
 
     defaultConfig {
-        applicationId namespace
+        // FORK: own app id so the fork installs next to stock Auxio
+        applicationId "org.oxycblt.auxio.fork"
         versionName "4.1.5"
         versionCode 75
 

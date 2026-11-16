@@ -49,7 +49,10 @@ class Auxio : Application() {
         @Suppress("KotlinConstantConditions")
         if (
             BuildConfig.APPLICATION_ID != "org.oxycblt.auxio" &&
-                BuildConfig.APPLICATION_ID != "org.oxycblt.auxio.debug"
+                BuildConfig.APPLICATION_ID != "org.oxycblt.auxio.debug" &&
+                // FORK: the fork's ids get normal debug logging
+                BuildConfig.APPLICATION_ID != "org.oxycblt.auxio.fork" &&
+                BuildConfig.APPLICATION_ID != "org.oxycblt.auxio.fork.debug"
         ) {
             Timber.plant(CopyleftNoticeTree())
         } else if (BuildConfig.DEBUG) {
