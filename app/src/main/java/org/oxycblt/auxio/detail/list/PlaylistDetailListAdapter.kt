@@ -39,12 +39,14 @@ import org.oxycblt.auxio.list.adapter.PlayingIndicatorAdapter
 import org.oxycblt.auxio.list.adapter.SelectionIndicatorAdapter
 import org.oxycblt.auxio.list.adapter.SimpleDiffCallback
 import org.oxycblt.auxio.list.recycler.MaterialDragCallback
+import org.oxycblt.auxio.list.recycler.PlaylistViewHolder
 import org.oxycblt.auxio.list.recycler.SongViewHolder
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
 import org.oxycblt.auxio.util.context
 import org.oxycblt.auxio.util.getAttrColorCompat
 import org.oxycblt.auxio.util.inflater
+import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
 import timber.log.Timber as L
@@ -56,14 +58,18 @@ import timber.log.Timber as L
  * @param listener A [DetailListAdapter.Listener] to bind interactions to.
  * @author Alexander Capehart (OxygenCobalt)
  */
-class PlaylistDetailListAdapter(private val listener: Listener) :
-    DetailListAdapter(listener, DIFF_CALLBACK) {
+class PlaylistDetailListAdapter(
+    private val listener: Listener,
+    private val childCount: (Playlist) -> Int = { 0 },
+    private val pickUpPlaylist: ((RecyclerView.ViewHolder) -> Unit)? = null,
+) : DetailListAdapter(listener, DIFF_CALLBACK) {
     private var isEditing = false
 
     override fun getItemViewType(position: Int) =
         when (getItem(position)) {
             is EditHeader -> EditHeaderViewHolder.VIEW_TYPE
             is Song -> PlaylistSongViewHolder.VIEW_TYPE
+            is Playlist -> PlaylistViewHolder.VIEW_TYPE
             else -> super.getItemViewType(position)
         }
 
@@ -71,6 +77,8 @@ class PlaylistDetailListAdapter(private val listener: Listener) :
         when (viewType) {
             EditHeaderViewHolder.VIEW_TYPE -> EditHeaderViewHolder.from(parent)
             PlaylistSongViewHolder.VIEW_TYPE -> PlaylistSongViewHolder.from(parent)
+            PlaylistViewHolder.VIEW_TYPE ->
+                PlaylistViewHolder.from(parent).also { it.onPickUp = pickUpPlaylist }
             else -> super.onCreateViewHolder(parent, viewType)
         }
 
@@ -85,6 +93,7 @@ class PlaylistDetailListAdapter(private val listener: Listener) :
             when (val item = getItem(position)) {
                 is EditHeader -> (holder as EditHeaderViewHolder).bind(item, listener)
                 is Song -> (holder as PlaylistSongViewHolder).bind(item, listener)
+                is Playlist -> (holder as PlaylistViewHolder).bind(item, listener, childCount(item))
             }
         }
 
@@ -104,7 +113,7 @@ class PlaylistDetailListAdapter(private val listener: Listener) :
     }
 
     /** An extended [DetailListAdapter.Listener] for [PlaylistDetailListAdapter]. */
-    interface Listener : DetailListAdapter.Listener<Song>, EditableListListener {
+    interface Listener : DetailListAdapter.Listener<Music>, EditableListListener {
         /** Called when the "edit" option is selected in the edit header. */
         fun onStartEdit()
     }
@@ -134,6 +143,10 @@ class PlaylistDetailListAdapter(private val listener: Listener) :
                                 oldItem,
                                 newItem,
                             )
+
+                        // Always rebind child playlists, as their child count is not part of
+                        // the item and can change with any move.
+                        is Playlist if newItem is Playlist -> false
 
                         is EditHeader if newItem is EditHeader ->
                             EditHeaderViewHolder.DIFF_CALLBACK.areContentsTheSame(oldItem, newItem)

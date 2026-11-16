@@ -24,6 +24,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import org.oxycblt.auxio.detail.persist.PlaylistSortRepository
 import org.oxycblt.auxio.list.menu.Menu
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.playback.PlaySong
@@ -46,8 +47,11 @@ import timber.log.Timber as L
 @HiltViewModel
 class ListViewModel
 @Inject
-constructor(private val listSettings: ListSettings, private val musicRepository: MusicRepository) :
-    ViewModel(), MusicRepository.UpdateListener {
+constructor(
+    private val listSettings: ListSettings,
+    private val musicRepository: MusicRepository,
+    private val playlistSortRepository: PlaylistSortRepository,
+) : ViewModel(), MusicRepository.UpdateListener {
     /** The currently selected items. These are ordered in earliest selected and latest selected. */
     val selected: StateFlow<List<Music>>
         field = MutableStateFlow(listOf<Music>())
@@ -89,7 +93,8 @@ constructor(private val listSettings: ListSettings, private val musicRepository:
      * @param music The [Music] item to select.
      */
     fun select(music: Music) {
-        if (music is MusicParent && music.songs.isEmpty()) {
+        // Empty playlists can still be selected, as they can hold other playlists.
+        if (music is MusicParent && music !is Playlist && music.songs.isEmpty()) {
             L.d("Cannot select empty parent, ignoring operation")
             return
         }
@@ -117,7 +122,8 @@ constructor(private val listSettings: ListSettings, private val musicRepository:
                 is Album -> listSettings.albumSongSort.songs(it.songs)
                 is Artist -> listSettings.artistSongSort.songs(it.songs)
                 is Genre -> listSettings.genreSongSort.songs(it.songs)
-                is Playlist -> it.songs
+                // A selected playlist adds only its own songs, in the order shown on its page.
+                is Playlist -> playlistSortRepository.songs(it)
             }
         }
 

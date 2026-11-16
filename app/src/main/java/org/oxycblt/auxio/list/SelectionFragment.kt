@@ -21,13 +21,20 @@ package org.oxycblt.auxio.list
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.widget.Toolbar
+import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import androidx.viewbinding.ViewBinding
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.music.MusicViewModel
+import org.oxycblt.auxio.music.tree.MovePlaylistDialogArgs
+import org.oxycblt.auxio.music.tree.PlaylistTreeViewModel
 import org.oxycblt.auxio.playback.PlaybackViewModel
 import org.oxycblt.auxio.ui.AuxioToolbar
 import org.oxycblt.auxio.ui.ViewBindingFragment
+import org.oxycblt.auxio.util.collect
+import org.oxycblt.auxio.util.collectImmediately
 import org.oxycblt.auxio.util.showToast
+import org.oxycblt.musikr.Playlist
 
 /**
  * A subset of ListFragment that implements aspects of the selection UI.
@@ -39,6 +46,7 @@ abstract class SelectionFragment<VB : ViewBinding> :
     protected abstract val listModel: ListViewModel
     protected abstract val musicModel: MusicViewModel
     protected abstract val playbackModel: PlaybackViewModel
+    private val treeModel: PlaylistTreeViewModel by activityViewModels()
 
     open fun getSelectionToolbar(binding: VB): AuxioToolbar? = null
 
@@ -49,9 +57,31 @@ abstract class SelectionFragment<VB : ViewBinding> :
             setNavigationOnClickListener { listModel.dropSelection() }
             setOnMenuItemClickListener(this@SelectionFragment)
             setOnOverflowMenuClick {
-                listModel.openMenu(R.menu.selection, listModel.peekSelection())
+                // A selection of empty playlists has no songs to act on.
+                val songs = listModel.peekSelection()
+                if (songs.isNotEmpty()) {
+                    listModel.openMenu(R.menu.selection, songs)
+                }
+            }
+            // Selected playlists can be moved into another playlist.
+            val moveItem = menu.findItem(R.id.action_selection_move)
+            if (moveItem != null) {
+                collectImmediately(listModel.selected) { selected ->
+                    moveItem.isVisible = selected.any { it is Playlist }
+                }
             }
         }
+        collect(treeModel.moveDecision.flow) { if (it != null) handleMoveDecision() }
+    }
+
+    private fun handleMoveDecision() {
+        // Several fragments can be listening at once, so only the first one handles it.
+        val playlistUids = treeModel.moveDecision.consume() ?: return
+        findNavController()
+            .navigate(
+                R.id.move_playlists,
+                MovePlaylistDialogArgs(playlistUids.toTypedArray()).toBundle(),
+            )
     }
 
     override fun onDestroyBinding(binding: VB) {
@@ -62,12 +92,26 @@ abstract class SelectionFragment<VB : ViewBinding> :
     override fun onMenuItemClick(item: MenuItem) =
         when (item.itemId) {
             R.id.action_selection_play_next -> {
-                playbackModel.playNext(listModel.takeSelection())
-                requireContext().showToast(R.string.lng_play_next)
+                val songs = listModel.peekSelection()
+                if (songs.isNotEmpty()) {
+                    listModel.dropSelection()
+                    playbackModel.playNext(songs)
+                    requireContext().showToast(R.string.lng_play_next)
+                }
                 true
             }
             R.id.action_selection_playlist_add -> {
-                musicModel.addToPlaylist(listModel.takeSelection())
+                val songs = listModel.peekSelection()
+                if (songs.isNotEmpty()) {
+                    listModel.dropSelection()
+                    musicModel.addToPlaylist(songs)
+                }
+                true
+            }
+            R.id.action_selection_move -> {
+                val playlists = listModel.selected.value.filterIsInstance<Playlist>()
+                listModel.dropSelection()
+                treeModel.requestMove(playlists)
                 true
             }
             else -> false

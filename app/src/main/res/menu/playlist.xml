@@ -25,6 +25,10 @@
         android:icon="@drawable/ic_edit_24"
         android:title="@string/lbl_rename" />
     <item
+        android:id="@+id/action_move"
+        android:icon="@drawable/ic_move_24"
+        android:title="@string/lbl_move_to" />
+    <item
         android:id="@+id/action_import"
         android:icon="@drawable/ic_import_24"
         android:title="@string/lbl_import" />

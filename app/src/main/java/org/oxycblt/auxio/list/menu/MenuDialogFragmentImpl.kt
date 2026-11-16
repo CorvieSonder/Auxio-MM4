@@ -30,6 +30,7 @@ import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
+import org.oxycblt.auxio.music.tree.PlaylistTreeViewModel
 import org.oxycblt.auxio.playback.PlaybackViewModel
 import org.oxycblt.auxio.playback.formatDurationMs
 import org.oxycblt.auxio.util.getPlural
@@ -277,6 +278,7 @@ class PlaylistMenuDialogFragment : MenuDialogFragment<Menu.ForPlaylist>() {
     private val detailModel: DetailViewModel by activityViewModels()
     private val musicModel: MusicViewModel by activityViewModels()
     private val playbackModel: PlaybackViewModel by activityViewModels()
+    private val treeModel: PlaylistTreeViewModel by activityViewModels()
     private val args: PlaylistMenuDialogFragmentArgs by navArgs()
 
     override val parcel
@@ -326,6 +328,7 @@ class PlaylistMenuDialogFragment : MenuDialogFragment<Menu.ForPlaylist>() {
                 requireContext().showToast(R.string.lng_queue_added)
             }
             R.id.action_rename -> musicModel.renamePlaylist(menu.playlist)
+            R.id.action_move -> treeModel.requestMove(listOf(menu.playlist))
             R.id.action_import -> musicModel.importPlaylist(target = menu.playlist)
             R.id.action_export -> musicModel.exportPlaylist(menu.playlist)
             R.id.action_delete -> musicModel.deletePlaylist(menu.playlist)

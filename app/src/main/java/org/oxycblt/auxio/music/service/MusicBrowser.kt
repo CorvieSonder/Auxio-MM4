@@ -225,6 +225,8 @@ private constructor(
                     section.items.map { it.toMediaItem(context, header(section.stringRes)) }
                 is DetailSection.Artists ->
                     section.items.map { it.toMediaItem(context, header(section.stringRes)) }
+                is DetailSection.Playlists ->
+                    section.items.map { it.toMediaItem(context, header(section.stringRes)) }
                 is DetailSection.Discs ->
                     section.discs.flatMap { (disc, songs) ->
                         val discString =

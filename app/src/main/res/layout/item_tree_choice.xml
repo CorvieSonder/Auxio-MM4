@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:minHeight="@dimen/size_touchable_large"
+    android:paddingStart="@dimen/spacing_large"
+    android:paddingTop="@dimen/spacing_mid_medium"
+    android:paddingEnd="@dimen/spacing_mid_medium"
+    android:paddingBottom="@dimen/spacing_mid_medium">
+
+    <org.oxycblt.auxio.image.CoverView
+        android:id="@+id/tree_cover"
+        style="@style/Widget.Auxio.Image.Small"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/tree_icon"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:importantForAccessibility="no"
+        android:scaleType="center"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/tree_cover"
+        app:layout_constraintEnd_toEndOf="@+id/tree_cover"
+        app:layout_constraintStart_toStartOf="@+id/tree_cover"
+        app:layout_constraintTop_toTopOf="@+id/tree_cover"
+        tools:src="@drawable/ic_back_24" />
+
+    <TextView
+        android:id="@+id/tree_name"
+        style="@style/Widget.Auxio.TextView.Item.Primary"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/spacing_mid_medium"
+        android:textColor="@color/sel_selectable_text_primary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/tree_open"
+        app:layout_constraintStart_toEndOf="@+id/tree_cover"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Playlist" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/tree_open"
+        style="@style/Widget.Auxio.Button.Icon.Small"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/lbl_open_playlist_level"
+        app:icon="@drawable/ic_chevron_right_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
