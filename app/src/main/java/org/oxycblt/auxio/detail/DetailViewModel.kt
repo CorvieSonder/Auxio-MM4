@@ -32,6 +32,7 @@ import org.oxycblt.auxio.detail.list.DiscHeader
 import org.oxycblt.auxio.detail.list.EditHeader
 import org.oxycblt.auxio.detail.list.SongProperty
 import org.oxycblt.auxio.detail.list.SortHeader
+import org.oxycblt.auxio.detail.persist.PlaylistSortRepository
 import org.oxycblt.auxio.list.BasicHeader
 import org.oxycblt.auxio.list.Item
 import org.oxycblt.auxio.list.ListSettings
@@ -68,6 +69,7 @@ constructor(
     private val listSettings: ListSettings,
     private val musicRepository: MusicRepository,
     private val playbackSettings: PlaybackSettings,
+    private val playlistSortRepository: PlaylistSortRepository,
     detailGeneratorFactory: DetailGenerator.Factory,
 ) : ViewModel(), DetailGenerator.Invalidator {
     /**
@@ -175,6 +177,12 @@ constructor(
      */
     val editedPlaylist: StateFlow<List<Song>?>
         field = MutableStateFlow<List<Song>?>(null)
+
+    /** The current [Sort] used for [Song]s in [playlistSongList] outside of editing. */
+    val playlistSongSort: Sort
+        get() =
+            currentPlaylist.value?.let { playlistSortRepository.getSort(it) }
+                ?: PlaylistSortRepository.DEFAULT
 
     /** The [PlaySong] instructions to use when playing a [Song] from [Genre] details. */
     val playInPlaylistWith
@@ -407,6 +415,8 @@ constructor(
     fun startPlaylistEdit() {
         val playlist = currentPlaylist.value ?: return
         L.d("Starting playlist edit")
+        // Editing works on the saved order, so show that order once editing ends too.
+        playlistSortRepository.setSort(playlist, PlaylistSortRepository.DEFAULT)
         editedPlaylist.value = playlist.songs
         refreshPlaylist(playlist.uid)
     }
@@ -443,6 +453,18 @@ constructor(
         editedPlaylist.value = null
         refreshPlaylist(playlist.uid)
         return true
+    }
+
+    /**
+     * Apply a [Sort] to how the current playlist is shown. Does not change the saved order of the
+     * playlist.
+     *
+     * @param sort The [Sort] to apply.
+     */
+    fun applyPlaylistViewSort(sort: Sort) {
+        val playlist = currentPlaylist.value ?: return
+        L.d("Applying view sort $sort to $playlist")
+        playlistSortRepository.setSort(playlist, sort)
     }
 
     /**

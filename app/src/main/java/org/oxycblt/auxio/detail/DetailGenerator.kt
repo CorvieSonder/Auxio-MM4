@@ -21,6 +21,7 @@ package org.oxycblt.auxio.detail
 import androidx.annotation.StringRes
 import javax.inject.Inject
 import org.oxycblt.auxio.R
+import org.oxycblt.auxio.detail.persist.PlaylistSortRepository
 import org.oxycblt.auxio.list.ListSettings
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.MusicRepository
@@ -62,20 +63,29 @@ interface DetailGenerator {
 
 class DetailGeneratorFactoryImpl
 @Inject
-constructor(private val listSettings: ListSettings, private val musicRepository: MusicRepository) :
-    DetailGenerator.Factory {
+constructor(
+    private val listSettings: ListSettings,
+    private val musicRepository: MusicRepository,
+    private val playlistSortRepository: PlaylistSortRepository,
+) : DetailGenerator.Factory {
     override fun create(invalidator: DetailGenerator.Invalidator): DetailGenerator =
-        DetailGeneratorImpl(invalidator, listSettings, musicRepository)
+        DetailGeneratorImpl(invalidator, listSettings, musicRepository, playlistSortRepository)
 }
 
 private class DetailGeneratorImpl(
     private val invalidator: DetailGenerator.Invalidator,
     private val listSettings: ListSettings,
     private val musicRepository: MusicRepository,
-) : DetailGenerator, MusicRepository.UpdateListener, ListSettings.Listener {
+    private val playlistSortRepository: PlaylistSortRepository,
+) :
+    DetailGenerator,
+    MusicRepository.UpdateListener,
+    ListSettings.Listener,
+    PlaylistSortRepository.Listener {
     override fun attach() {
         listSettings.registerListener(this)
         musicRepository.addUpdateListener(this)
+        playlistSortRepository.addListener(this)
     }
 
     override fun onAlbumSongSortChanged() {
@@ -93,6 +103,10 @@ private class DetailGeneratorImpl(
         invalidator.invalidate(MusicType.GENRES, -1)
     }
 
+    override fun onPlaylistSortsChanged() {
+        invalidator.invalidate(MusicType.PLAYLISTS, -1)
+    }
+
     override fun onMusicChanges(changes: MusicRepository.Changes) {
         if (changes.deviceLibrary) {
             invalidator.invalidate(MusicType.ALBUMS, null)
@@ -107,6 +121,7 @@ private class DetailGeneratorImpl(
     override fun release() {
         listSettings.unregisterListener(this)
         musicRepository.removeUpdateListener(this)
+        playlistSortRepository.removeListener(this)
     }
 
     override fun any(uid: Music.UID): Detail<out MusicParent>? {
@@ -182,7 +197,7 @@ private class DetailGeneratorImpl(
     override fun playlist(uid: Music.UID): Detail<Playlist>? {
         val playlist = musicRepository.library?.findPlaylist(uid) ?: return null
         if (playlist.songs.isNotEmpty()) {
-            val songs = DetailSection.Songs(playlist.songs)
+            val songs = DetailSection.Songs(playlistSortRepository.songs(playlist))
             return Detail(playlist, listOf(songs))
         }
         return Detail(playlist, listOf())

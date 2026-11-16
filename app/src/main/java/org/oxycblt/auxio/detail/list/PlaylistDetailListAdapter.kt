@@ -186,12 +186,9 @@ private class EditHeaderViewHolder private constructor(private val binding: Item
             isFocusable = !editing
             jumpDrawablesToCurrentState()
         }
-        binding.headerSort.apply {
-            isVisible = editing
-            isClickable = editing
-            isFocusable = editing
-            jumpDrawablesToCurrentState()
-        }
+        // Sorting is available both outside of editing (sorting the shown order) and while
+        // editing (sorting the saved order).
+        binding.headerSort.jumpDrawablesToCurrentState()
     }
 
     companion object {

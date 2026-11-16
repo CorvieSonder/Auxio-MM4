@@ -362,6 +362,9 @@
             android:id="@+id/sort"
             app:destination="@+id/playlist_song_sort_dialog" />
         <action
+            android:id="@+id/view_sort"
+            app:destination="@+id/playlist_view_sort_dialog" />
+        <action
             android:id="@+id/show_song"
             app:destination="@id/song_detail_dialog" />
         <action
@@ -406,6 +409,12 @@
         android:id="@+id/playlist_song_sort_dialog"
         android:name="org.oxycblt.auxio.detail.sort.PlaylistSongSortDialog"
         android:label="playlist_song_sort_dialog"
+        tools:layout="@layout/dialog_sort" />
+
+    <dialog
+        android:id="@+id/playlist_view_sort_dialog"
+        android:name="org.oxycblt.auxio.detail.sort.PlaylistViewSortDialog"
+        android:label="playlist_view_sort_dialog"
         tools:layout="@layout/dialog_sort" />
 
     <dialog

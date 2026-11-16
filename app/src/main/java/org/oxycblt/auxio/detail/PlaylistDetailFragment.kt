@@ -195,7 +195,11 @@ class PlaylistDetailFragment :
     }
 
     override fun onOpenSortMenu() {
-        findNavController().navigateSafe(PlaylistDetailFragmentDirections.sort())
+        if (detailModel.editedPlaylist.value != null) {
+            findNavController().navigateSafe(PlaylistDetailFragmentDirections.sort())
+        } else {
+            findNavController().navigateSafe(PlaylistDetailFragmentDirections.viewSort())
+        }
     }
 
     private fun updatePlaylist(playlist: Playlist?, editedPlaylist: List<Song>?) {

@@ -374,6 +374,21 @@ data class Sort(val mode: Mode, val direction: Direction) {
             }
         }
 
+        /**
+         * Keep the given order of the items. Only meaningful for playlists, which have their own
+         * user-defined order. Descending reverses that order.
+         */
+        data object ByCustom : Mode {
+            override val intCode = IntegerTable.SORT_BY_CUSTOM
+            override val stringRes = R.string.lbl_custom_order
+
+            override fun sortSongs(songs: MutableList<Song>, direction: Direction) {
+                if (direction == Direction.DESCENDING) {
+                    songs.reverse()
+                }
+            }
+        }
+
         companion object {
             fun fromIntCode(intCode: Int): Mode? =
                 when (intCode) {
@@ -386,6 +401,7 @@ data class Sort(val mode: Mode, val direction: Direction) {
                     ByDisc.intCode -> ByDisc
                     ByTrack.intCode -> ByTrack
                     ByDateAdded.intCode -> ByDateAdded
+                    ByCustom.intCode -> ByCustom
                     else -> null
                 }
         }
