@@ -19,6 +19,7 @@
 package org.oxycblt.auxio.playback.state
 
 import javax.inject.Inject
+import org.oxycblt.auxio.detail.persist.PlaylistSortRepository
 import org.oxycblt.auxio.list.ListSettings
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.MusicRepository
@@ -88,6 +89,7 @@ constructor(
     val playbackSettings: PlaybackSettings,
     val listSettings: ListSettings,
     val musicRepository: MusicRepository,
+    val playlistSortRepository: PlaylistSortRepository,
 ) : PlaybackCommand.Factory {
     data class PlaybackCommandImpl(
         override val song: Song?,
@@ -115,7 +117,7 @@ constructor(
         newCommand(song, genre, song.genres, listSettings.genreSongSort, shuffle)
 
     override fun songFromPlaylist(song: Song, playlist: Playlist, shuffle: ShuffleMode) =
-        newCommand(song, playlist, playlist.songs, shuffle)
+        newCommand(song, playlist, playlistSortRepository.songs(playlist), shuffle)
 
     override fun all(shuffle: ShuffleMode) = newCommand(null, shuffle)
 
@@ -132,7 +134,7 @@ constructor(
         newCommand(null, genre, listSettings.genreSongSort, shuffle)
 
     override fun playlist(playlist: Playlist, shuffle: ShuffleMode) =
-        newCommand(null, playlist, playlist.songs, shuffle)
+        newCommand(null, playlist, playlistSortRepository.songs(playlist), shuffle)
 
     private fun <T : MusicParent> newCommand(
         song: Song,

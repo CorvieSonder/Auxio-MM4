@@ -29,6 +29,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import org.oxycblt.auxio.detail.persist.PlaylistSortRepository
 import org.oxycblt.auxio.list.ListSettings
 import org.oxycblt.auxio.list.adapter.UpdateInstructions
 import org.oxycblt.auxio.playback.state.DeferredPlayback
@@ -63,6 +64,7 @@ constructor(
     private val playbackSettings: PlaybackSettings,
     private val commandFactory: PlaybackCommand.Factory,
     private val listSettings: ListSettings,
+    private val playlistSortRepository: PlaylistSortRepository,
 ) : ViewModel(), PlaybackStateManager.Listener, PlaybackSettings.Listener {
     private var lastPositionJob: Job? = null
 
@@ -530,7 +532,7 @@ constructor(
      */
     fun playNext(playlist: Playlist) {
         L.d("Playing $playlist next")
-        playbackManager.playNext(playlist.songs)
+        playbackManager.playNext(playlistSortRepository.songs(playlist))
     }
 
     /**
@@ -590,7 +592,7 @@ constructor(
      */
     fun addToQueue(playlist: Playlist) {
         L.d("Adding $playlist to queue")
-        playbackManager.addToQueue(playlist.songs)
+        playbackManager.addToQueue(playlistSortRepository.songs(playlist))
     }
 
     /**

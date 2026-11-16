@@ -153,4 +153,6 @@ object IntegerTable {
     const val FILTER_MODE_INCLUDE = 0xA129
     /** LocationMode.FileSystem */
     const val FILTER_MODE_EXCLUDE = 0xA12A
+    /** Sort.Mode.ByCustom */
+    const val SORT_BY_CUSTOM = 0xA12B
 }
