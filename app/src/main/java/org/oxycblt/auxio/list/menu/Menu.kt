@@ -100,10 +100,25 @@ sealed interface Menu {
         @Parcelize data class Parcel(val res: Int, val playlistUid: Music.UID) : Menu.Parcel
     }
 
-    class ForSelection(@MenuRes override val res: Int, val songs: List<Song>) : Menu {
+    /**
+     * Navigate to a selection menu dialog.
+     *
+     * @param songs The [Song]s collated from the selection.
+     * @param playlists The [Playlist]s that were selected themselves, for playlist-only actions.
+     */
+    class ForSelection(
+        @MenuRes override val res: Int,
+        val songs: List<Song>,
+        val playlists: List<Playlist> = listOf(),
+    ) : Menu {
         override val parcel: Parcel
-            get() = Parcel(res, songs.map { it.uid })
+            get() = Parcel(res, songs.map { it.uid }, playlists.map { it.uid })
 
-        @Parcelize data class Parcel(val res: Int, val songUids: List<Music.UID>) : Menu.Parcel
+        @Parcelize
+        data class Parcel(
+            val res: Int,
+            val songUids: List<Music.UID>,
+            val playlistUids: List<Music.UID> = listOf(),
+        ) : Menu.Parcel
     }
 }

@@ -29,6 +29,8 @@ import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.PlaylistDecision
 import org.oxycblt.auxio.music.resolve
+import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
+import org.oxycblt.auxio.music.tree.TreeChoice
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
@@ -41,8 +43,12 @@ import timber.log.Timber as L
  * @author Alexander Capehart
  */
 @HiltViewModel
-class PlaylistPickerViewModel @Inject constructor(private val musicRepository: MusicRepository) :
-    ViewModel(), MusicRepository.UpdateListener {
+class PlaylistPickerViewModel
+@Inject
+constructor(
+    private val musicRepository: MusicRepository,
+    private val playlistTreeRepository: PlaylistTreeRepository,
+) : ViewModel(), MusicRepository.UpdateListener, PlaylistTreeRepository.Listener {
     /** A new [Playlist] having it's name chosen by the user. Null if none yet. */
     val currentPendingNewPlaylist: StateFlow<PendingNewPlaylist?>
         field = MutableStateFlow<PendingNewPlaylist?>(null)
@@ -59,9 +65,9 @@ class PlaylistPickerViewModel @Inject constructor(private val musicRepository: M
     val currentExportConfig: StateFlow<ExportConfig>
         field = MutableStateFlow(DEFAULT_EXPORT_CONFIG)
 
-    /** The current [Playlist] that needs it's deletion confirmed. Null if none yet. */
-    val currentPlaylistToDelete: StateFlow<Playlist?>
-        field = MutableStateFlow<Playlist?>(null)
+    /** The current [Playlist]s that need their deletion confirmed. Null if none yet. */
+    val currentPlaylistsToDelete: StateFlow<List<Playlist>?>
+        field = MutableStateFlow<List<Playlist>?>(null)
 
     /** The users chosen name for [currentPendingNewPlaylist] or [currentPendingRenamePlaylist]. */
     val chosenName: StateFlow<ChosenName>
@@ -72,11 +78,16 @@ class PlaylistPickerViewModel @Inject constructor(private val musicRepository: M
         field = MutableStateFlow<List<Song>?>(null)
 
     /** The [Playlist]s that [currentSongsToAdd] could be added to. */
-    val playlistAddChoices: StateFlow<List<PlaylistChoice>>
-        field = MutableStateFlow<List<PlaylistChoice>>(listOf())
+    val playlistAddChoices: StateFlow<List<TreeChoice>>
+        field = MutableStateFlow<List<TreeChoice>>(listOf())
+
+    /** The [Playlist] whose children [playlistAddChoices] shows, or null for the top level. */
+    val playlistAddLevel: StateFlow<Playlist?>
+        field = MutableStateFlow<Playlist?>(null)
 
     init {
         musicRepository.addUpdateListener(this)
+        playlistTreeRepository.addListener(this)
     }
 
     override fun onMusicChanges(changes: MusicRepository.Changes) {
@@ -90,6 +101,7 @@ class PlaylistPickerViewModel @Inject constructor(private val musicRepository: M
                         pendingPlaylist.songs.mapNotNull { library.findSong(it.uid) },
                         pendingPlaylist.template,
                         pendingPlaylist.reason,
+                        pendingPlaylist.parent,
                     )
                 }
             L.d("Updated pending playlist: ${currentPendingNewPlaylist.value?.preferredName}")
@@ -115,6 +127,8 @@ class PlaylistPickerViewModel @Inject constructor(private val musicRepository: M
             }
             L.d("Updated chosen name to $chosenName")
             refreshChoicesWith = refreshChoicesWith ?: currentSongsToAdd.value
+            playlistAddLevel.value =
+                playlistAddLevel.value?.let { musicRepository.library?.findPlaylist(it.uid) }
 
             // TODO: Add music syncing for other playlist states here
 
@@ -130,6 +144,11 @@ class PlaylistPickerViewModel @Inject constructor(private val musicRepository: M
 
     override fun onCleared() {
         musicRepository.removeUpdateListener(this)
+        playlistTreeRepository.removeListener(this)
+    }
+
+    override fun onPlaylistTreeChanged() {
+        currentSongsToAdd.value?.let(::refreshPlaylistChoices)
     }
 
     /**
@@ -138,12 +157,15 @@ class PlaylistPickerViewModel @Inject constructor(private val musicRepository: M
      * @param context [Context] required to generate a playlist name.
      * @param songUids The [Music.UID]s of songs to be present in the playlist.
      * @param reason The reason the playlist is being created.
+     * @param parentUid The [Music.UID] of the [Playlist] to create the playlist in, or null for the
+     *   top level.
      */
     fun setPendingPlaylist(
         context: Context,
         songUids: Array<Music.UID>,
         template: String?,
         reason: PlaylistDecision.New.Reason,
+        parentUid: Music.UID? = null,
     ) {
         L.d("Opening ${songUids.size} songs to create a playlist from")
         val library = musicRepository.library ?: return
@@ -168,7 +190,13 @@ class PlaylistPickerViewModel @Inject constructor(private val musicRepository: M
 
         currentPendingNewPlaylist.value =
             if (possibleName != null && songs != null) {
-                PendingNewPlaylist(possibleName, songs, template, reason)
+                PendingNewPlaylist(
+                    possibleName,
+                    songs,
+                    template,
+                    reason,
+                    parentUid?.let(library::findPlaylist),
+                )
             } else {
                 L.w("Given song UIDs to create were invalid")
                 null
@@ -229,12 +257,15 @@ class PlaylistPickerViewModel @Inject constructor(private val musicRepository: M
     /**
      * Set a new [currentPendingNewPlaylist] from a new [Playlist] [Music.UID].
      *
-     * @param playlistUid The [Music.UID] of the [Playlist] to delete.
+     * @param playlistUids The [Music.UID]s of the [Playlist]s to delete.
      */
-    fun setPlaylistToDelete(playlistUid: Music.UID) {
-        L.d("Opening playlist $playlistUid to delete")
-        currentPlaylistToDelete.value = musicRepository.library?.findPlaylist(playlistUid)
-        if (currentPlaylistToDelete.value == null) {
+    fun setPlaylistsToDelete(playlistUids: Array<Music.UID>) {
+        L.d("Opening ${playlistUids.size} playlists to delete")
+        currentPlaylistsToDelete.value =
+            musicRepository.library?.let {
+                playlistUids.mapNotNull(it::findPlaylist).ifEmpty { null }
+            }
+        if (currentPlaylistsToDelete.value == null) {
             L.w("Given playlist UID to delete was invalid")
         }
     }
@@ -259,7 +290,8 @@ class PlaylistPickerViewModel @Inject constructor(private val musicRepository: M
                 else -> {
                     val trimmed = name.trim()
                     val library = musicRepository.library
-                    if (library != null && library.findPlaylistByName(trimmed) == null) {
+                    // Names only have to be unique among the playlists in the same level.
+                    if (library != null && siblingPlaylists().none { it.name.raw == trimmed }) {
                         L.d("Chosen name is valid")
                         ChosenName.Valid(trimmed)
                     } else {
@@ -286,14 +318,59 @@ class PlaylistPickerViewModel @Inject constructor(private val musicRepository: M
         }
     }
 
-    private fun refreshPlaylistChoices(songs: List<Song>) {
-        val library = musicRepository.library ?: return
-        L.d("Refreshing playlist choices")
-        playlistAddChoices.value =
-            Sort(Sort.Mode.ByName, Sort.Direction.ASCENDING).playlists(library.playlists).map {
-                val songSet = it.songs.toSet()
-                PlaylistChoice(it, songs.all(songSet::contains))
+    /**
+     * The playlists in the level the new or renamed playlist will be in. A renamed playlist is
+     * included, so that keeping the same name is not counted as a change.
+     */
+    private fun siblingPlaylists(): List<Playlist> {
+        val renamed = currentPendingRenamePlaylist.value?.playlist
+        val parent =
+            if (renamed != null) {
+                playlistTreeRepository.parentOf(renamed)
+            } else {
+                currentPendingNewPlaylist.value?.parent
             }
+        return playlistTreeRepository.childrenOf(parent)
+    }
+
+    /**
+     * Show the playlists inside a [Playlist] in [playlistAddChoices].
+     *
+     * @param playlist The [Playlist] to show the children of.
+     */
+    fun openPlaylistAddLevel(playlist: Playlist) {
+        playlistAddLevel.value = playlist
+        currentSongsToAdd.value?.let(::refreshPlaylistChoices)
+    }
+
+    /** Show the level above the one currently shown in [playlistAddChoices]. */
+    fun closePlaylistAddLevel() {
+        playlistAddLevel.value = playlistAddLevel.value?.let(playlistTreeRepository::parentOf)
+        currentSongsToAdd.value?.let(::refreshPlaylistChoices)
+    }
+
+    private fun refreshPlaylistChoices(songs: List<Song>) {
+        if (musicRepository.library == null) return
+        L.d("Refreshing playlist choices")
+        val level = playlistAddLevel.value
+        val choices = mutableListOf<TreeChoice>()
+        if (level != null) {
+            choices.add(TreeChoice.Up(level))
+        }
+        val children =
+            Sort(Sort.Mode.ByName, Sort.Direction.ASCENDING)
+                .playlists(playlistTreeRepository.childrenOf(level))
+        for (child in children) {
+            val songSet = child.songs.toSet()
+            choices.add(
+                TreeChoice.Node(
+                    child,
+                    canOpen = playlistTreeRepository.childrenOf(child).isNotEmpty(),
+                    isActive = songs.all(songSet::contains),
+                )
+            )
+        }
+        playlistAddChoices.value = choices
     }
 
     private companion object {
@@ -307,6 +384,7 @@ class PlaylistPickerViewModel @Inject constructor(private val musicRepository: M
  * @param preferredName The name to be used by default if no other name is chosen.
  * @param songs The [Song]s to be contained in the [PendingNewPlaylist]
  * @param reason The reason the playlist is being created.
+ * @param parent The [Playlist] to create the playlist in, or null for the top level.
  * @author Alexander Capehart (OxygenCobalt)
  */
 data class PendingNewPlaylist(
@@ -314,6 +392,7 @@ data class PendingNewPlaylist(
     val songs: List<Song>,
     val template: String?,
     val reason: PlaylistDecision.New.Reason,
+    val parent: Playlist? = null,
 )
 
 data class PendingRenamePlaylist(

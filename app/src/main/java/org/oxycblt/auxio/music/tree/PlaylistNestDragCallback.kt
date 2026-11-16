@@ -22,7 +22,9 @@ import android.graphics.Canvas
 import androidx.core.view.children
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import org.oxycblt.auxio.R
 import org.oxycblt.auxio.list.recycler.PlaylistViewHolder
+import org.oxycblt.auxio.util.showToast
 import org.oxycblt.musikr.Playlist
 import timber.log.Timber as L
 
@@ -99,6 +101,10 @@ class PlaylistNestDragCallback(
         }
         val playlists = selectedPlaylists()
         L.d("Dropped ${playlists.size} playlists into $dropped")
+        if (playlistTreeRepository.hasNameClash(playlists, dropped)) {
+            recyclerView.context.showToast(R.string.lng_playlist_name_taken)
+            return
+        }
         playlistTreeRepository.move(playlists, dropped)
         onMoved()
     }

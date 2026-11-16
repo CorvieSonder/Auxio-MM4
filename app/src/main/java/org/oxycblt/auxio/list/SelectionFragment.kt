@@ -57,9 +57,12 @@ abstract class SelectionFragment<VB : ViewBinding> :
             setNavigationOnClickListener { listModel.dropSelection() }
             setOnMenuItemClickListener(this@SelectionFragment)
             setOnOverflowMenuClick {
-                // A selection of empty playlists has no songs to act on.
                 val songs = listModel.peekSelection()
-                if (songs.isNotEmpty()) {
+                val playlists = listModel.selected.value.filterIsInstance<Playlist>()
+                if (playlists.isNotEmpty()) {
+                    // Selected playlists can be deleted, even when they have no songs.
+                    listModel.openMenu(R.menu.selection_playlist, songs, playlists)
+                } else if (songs.isNotEmpty()) {
                     listModel.openMenu(R.menu.selection, songs)
                 }
             }

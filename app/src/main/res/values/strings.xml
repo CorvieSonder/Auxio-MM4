@@ -205,8 +205,11 @@
     <string name="lng_playlist_deleted">Playlist deleted</string>
     <string name="lng_playlist_added">Added to playlist</string>
     <string name="lng_playlist_moved">Playlist moved</string>
+    <string name="lng_playlist_name_taken">A playlist with the same name is already there</string>
     <string name="lbl_move_to">Move to…</string>
     <string name="lbl_top_level">Top level</string>
+    <string name="lbl_new_playlist_here">New playlist here</string>
+    <string name="lbl_delete_children">Also delete the playlists inside it</string>
     <string name="lbl_open_playlist_level">Show playlists inside</string>
     <string name="desc_playlist_handle">Drag onto a playlist to move the selected playlists into it</string>
     <!-- Shown under a nested playlist's name, e.g. "In: Person A › Favourites" -->
@@ -493,6 +496,11 @@
     <plurals name="fmt_song_count">
         <item quantity="one">%d song</item>
         <item quantity="other">%d songs</item>
+    </plurals>
+
+    <plurals name="fmt_deletion_info_count">
+        <item quantity="one">Delete %d playlist? This cannot be undone.</item>
+        <item quantity="other">Delete %d playlists? This cannot be undone.</item>
     </plurals>
 
     <plurals name="fmt_playlist_count">

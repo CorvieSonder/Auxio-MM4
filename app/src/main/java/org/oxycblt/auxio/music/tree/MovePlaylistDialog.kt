@@ -90,7 +90,11 @@ class MovePlaylistDialog :
     }
 
     private fun moveTo(parent: Playlist?) {
-        moveModel.move(parent)
+        if (!moveModel.move(parent)) {
+            // Stay open, so that another place can be picked.
+            requireContext().showToast(R.string.lng_playlist_name_taken)
+            return
+        }
         requireContext().showToast(R.string.lng_playlist_moved)
         findNavController().navigateUp()
     }

@@ -78,7 +78,6 @@ constructor(
     }
 
     override fun onCleared() {
-        super.onCleared()
         musicRepository.removeUpdateListener(this)
         playlistTreeRepository.removeListener(this)
     }
@@ -131,10 +130,15 @@ constructor(
      * Move the playlists.
      *
      * @param parent The new parent [Playlist], or null for the top level.
+     * @return false if nothing was moved, as a playlist with the same name is already there.
      */
-    fun move(parent: Playlist?) {
-        val playlists = playlistsToMove.value ?: return
+    fun move(parent: Playlist?): Boolean {
+        val playlists = playlistsToMove.value ?: return true
+        if (playlistTreeRepository.hasNameClash(playlists, parent)) {
+            return false
+        }
         playlistTreeRepository.move(playlists, parent)
+        return true
     }
 
     private fun refreshChoices() {

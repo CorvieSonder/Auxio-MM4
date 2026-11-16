@@ -301,8 +301,14 @@ class PlaylistViewHolder private constructor(private val binding: ItemParentBind
      * @param playlist The new [Playlist] to bind.
      * @param listener An [SelectableListListener] to bind interactions to.
      * @param childCount The number of playlists nested inside [playlist].
+     * @param location Where [playlist] is nested, shown instead of its counts. Null to show them.
      */
-    fun bind(playlist: Playlist, listener: SelectableListListener<Playlist>, childCount: Int) {
+    fun bind(
+        playlist: Playlist,
+        listener: SelectableListListener<Playlist>,
+        childCount: Int,
+        location: String? = null,
+    ) {
         listener.bind(playlist, this, menuButton = binding.parentMenu)
         binding.parentImage.bind(playlist)
         binding.parentName.text = playlist.name.resolve(binding.context)
@@ -315,6 +321,7 @@ class PlaylistViewHolder private constructor(private val binding: ItemParentBind
             }
         binding.parentInfo.text =
             when {
+                location != null -> location
                 childCount == 0 -> songs
                 playlist.songs.isEmpty() ->
                     context.getPlural(R.plurals.fmt_playlist_count, childCount)

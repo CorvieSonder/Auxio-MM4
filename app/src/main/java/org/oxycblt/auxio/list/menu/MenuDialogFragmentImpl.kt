@@ -329,6 +329,7 @@ class PlaylistMenuDialogFragment : MenuDialogFragment<Menu.ForPlaylist>() {
             }
             R.id.action_rename -> musicModel.renamePlaylist(menu.playlist)
             R.id.action_move -> treeModel.requestMove(listOf(menu.playlist))
+            R.id.action_new_child -> musicModel.createPlaylist(parent = menu.playlist)
             R.id.action_import -> musicModel.importPlaylist(target = menu.playlist)
             R.id.action_export -> musicModel.exportPlaylist(menu.playlist)
             R.id.action_delete -> musicModel.deletePlaylist(menu.playlist)
@@ -354,18 +355,35 @@ class SelectionMenuDialogFragment : MenuDialogFragment<Menu.ForSelection>() {
     override val parcel
         get() = args.parcel
 
-    // Nothing to disable in song menus.
-    override fun getDisabledItemIds(menu: Menu.ForSelection) = setOf<Int>()
+    // A selection of empty playlists has no songs to act on.
+    override fun getDisabledItemIds(menu: Menu.ForSelection) =
+        if (menu.songs.isEmpty()) {
+            setOf(
+                R.id.action_play,
+                R.id.action_shuffle,
+                R.id.action_play_next,
+                R.id.action_queue_add,
+                R.id.action_playlist_add,
+                R.id.action_share,
+            )
+        } else {
+            setOf()
+        }
 
     override fun updateMenu(binding: DialogMenuBinding, menu: Menu.ForSelection) {
+        val onlyPlaylists = menu.songs.isEmpty() && menu.playlists.isNotEmpty()
         binding.menuCover.bind(
             menu.songs,
             getString(R.string.desc_selection_image),
-            R.drawable.ic_song_24,
+            if (onlyPlaylists) R.drawable.ic_playlist_24 else R.drawable.ic_song_24,
         )
         binding.menuType.text = getString(R.string.lbl_selection)
         binding.menuName.text =
-            requireContext().getPlural(R.plurals.fmt_song_count, menu.songs.size)
+            if (onlyPlaylists) {
+                requireContext().getPlural(R.plurals.fmt_playlist_count, menu.playlists.size)
+            } else {
+                requireContext().getPlural(R.plurals.fmt_song_count, menu.songs.size)
+            }
         binding.menuInfo.text = menu.songs.sumOf { it.durationMs }.formatDurationMs(true)
     }
 
@@ -384,6 +402,7 @@ class SelectionMenuDialogFragment : MenuDialogFragment<Menu.ForSelection>() {
             }
             R.id.action_playlist_add -> musicModel.addToPlaylist(menu.songs)
             R.id.action_share -> requireContext().share(menu.songs)
+            R.id.action_delete -> musicModel.deletePlaylists(menu.playlists)
             else -> error("Unexpected menu item selected $item")
         }
     }

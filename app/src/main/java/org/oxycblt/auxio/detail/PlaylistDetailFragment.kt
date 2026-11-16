@@ -42,6 +42,7 @@ import org.oxycblt.auxio.music.PlaylistMessage
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.tree.PlaylistNestDragCallback
 import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
+import org.oxycblt.auxio.music.tree.describePlaylistPath
 import org.oxycblt.auxio.playback.PlaybackDecision
 import org.oxycblt.auxio.playback.formatDurationMs
 import org.oxycblt.auxio.ui.DialogAwareNavigationListener
@@ -258,13 +259,7 @@ class PlaylistDetailFragment :
         binding.detailSubhead.setTextColor(
             binding.context.getAttrColorCompat(androidx.appcompat.R.attr.colorPrimary)
         )
-        binding.detailSubhead.text =
-            getString(
-                R.string.fmt_playlist_parents,
-                path.joinToString(getString(R.string.fmt_path_separator)) {
-                    it.name.resolve(requireContext())
-                },
-            )
+        binding.detailSubhead.text = requireContext().describePlaylistPath(path)
         val parent = path.lastOrNull()
         if (parent != null) {
             binding.detailSubhead.setOnClickListener { detailModel.showPlaylist(parent) }
@@ -465,8 +460,10 @@ class PlaylistDetailFragment :
                     PlaylistDetailFragmentDirections.exportPlaylist(decision.playlist.uid)
                 }
                 is PlaylistDecision.Delete -> {
-                    L.d("Deleting ${decision.playlist}")
-                    PlaylistDetailFragmentDirections.deletePlaylist(decision.playlist.uid)
+                    L.d("Deleting ${decision.playlists.size} playlists")
+                    PlaylistDetailFragmentDirections.deletePlaylist(
+                        decision.playlists.map { it.uid }.toTypedArray()
+                    )
                 }
                 is PlaylistDecision.Add -> {
                     L.d("Adding ${decision.songs.size} songs to a playlist")
@@ -474,7 +471,15 @@ class PlaylistDetailFragment :
                         decision.songs.map { it.uid }.toTypedArray()
                     )
                 }
-                is PlaylistDecision.New -> error("Unexpected playlist decision $decision")
+                is PlaylistDecision.New -> {
+                    L.d("Creating new playlist")
+                    PlaylistDetailFragmentDirections.newPlaylist(
+                        decision.songs.map { it.uid }.toTypedArray(),
+                        decision.template,
+                        decision.reason,
+                        decision.parent?.uid,
+                    )
+                }
             }
         findNavController().navigateSafe(directions)
     }

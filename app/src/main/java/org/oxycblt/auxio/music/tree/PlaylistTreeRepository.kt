@@ -81,6 +81,16 @@ interface PlaylistTreeRepository {
     fun canMove(playlist: Playlist, parent: Playlist?): Boolean
 
     /**
+     * Whether moving playlists into a level would leave two playlists with the same name in it.
+     *
+     * @param playlists The [Playlist]s to move.
+     * @param parent The new parent [Playlist], or null for the top level.
+     * @return true if two of [playlists] share a name, or one shares a name with a playlist that is
+     *   already in [parent].
+     */
+    fun hasNameClash(playlists: List<Playlist>, parent: Playlist?): Boolean
+
+    /**
      * Move playlists into another playlist. Playlists that cannot be moved there (see [canMove])
      * are left where they are.
      *
@@ -191,6 +201,15 @@ constructor(
             return true
         }
         return parent.uid != playlist.uid && pathOf(parent).none { it.uid == playlist.uid }
+    }
+
+    override fun hasNameClash(playlists: List<Playlist>, parent: Playlist?): Boolean {
+        val moving = playlists.mapTo(mutableSetOf()) { it.uid }
+        val names = playlists.map { it.name.raw }
+        if (names.size != names.toSet().size) {
+            return true
+        }
+        return childrenOf(parent).any { it.uid !in moving && it.name.raw in names }
     }
 
     override fun move(playlists: List<Playlist>, parent: Playlist?) {

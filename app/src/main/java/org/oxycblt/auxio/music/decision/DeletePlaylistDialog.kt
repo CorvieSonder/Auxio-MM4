@@ -21,17 +21,21 @@ package org.oxycblt.auxio.music.decision
 import android.os.Bundle
 import android.view.LayoutInflater
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.DialogDeletePlaylistBinding
 import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.music.resolve
+import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.auxio.ui.ViewBindingMaterialDialogFragment
 import org.oxycblt.auxio.util.collectImmediately
+import org.oxycblt.auxio.util.getPlural
 import org.oxycblt.auxio.util.unlikelyToBeNull
 import org.oxycblt.musikr.Playlist
 import timber.log.Timber as L
@@ -48,18 +52,22 @@ class DeletePlaylistDialog : ViewBindingMaterialDialogFragment<DialogDeletePlayl
     // Information about what playlist to name for is initially within the navigation arguments
     // as UIDs, as that is the only safe way to parcel playlist information.
     private val args: DeletePlaylistDialogArgs by navArgs()
+    @Inject lateinit var playlistTreeRepository: PlaylistTreeRepository
 
     override fun onConfigDialog(builder: AlertDialog.Builder) {
         builder
             .setTitle(R.string.lbl_confirm_delete_playlist)
             .setPositiveButton(R.string.lbl_delete) { _, _ ->
+                // Read the choice before navigating away destroys the binding.
+                val withChildren = requireBinding().deletionChildren.isChecked
                 // Normally the navigateUp will occur after this, which then collides with the
                 // playlist view's navigation. Forcefully navigate up to stop this.
                 findNavController().navigateUp()
                 // Now we can delete the playlist for-real this time.
-                musicModel.deletePlaylist(
-                    unlikelyToBeNull(pickerModel.currentPlaylistToDelete.value),
+                musicModel.deletePlaylists(
+                    unlikelyToBeNull(pickerModel.currentPlaylistsToDelete.value),
                     rude = true,
+                    withChildren = withChildren,
                 )
             }
             .setNegativeButton(R.string.lbl_cancel, null)
@@ -76,18 +84,25 @@ class DeletePlaylistDialog : ViewBindingMaterialDialogFragment<DialogDeletePlayl
 
         // --- VIEWMODEL SETUP ---
         musicModel.playlistDecision.consume()
-        pickerModel.setPlaylistToDelete(args.playlistUid)
-        collectImmediately(pickerModel.currentPlaylistToDelete, ::updatePlaylistToDelete)
+        pickerModel.setPlaylistsToDelete(args.playlistUids)
+        collectImmediately(pickerModel.currentPlaylistsToDelete, ::updatePlaylistsToDelete)
     }
 
-    private fun updatePlaylistToDelete(playlist: Playlist?) {
-        if (playlist == null) {
+    private fun updatePlaylistsToDelete(playlists: List<Playlist>?) {
+        if (playlists == null) {
             L.d("No playlist to delete, navigating away")
             findNavController().navigateUp()
             return
         }
 
-        requireBinding().deletionInfo.text =
-            getString(R.string.fmt_deletion_info, playlist.name.resolve(requireContext()))
+        val binding = requireBinding()
+        binding.deletionInfo.text =
+            playlists.singleOrNull()?.let {
+                getString(R.string.fmt_deletion_info, it.name.resolve(requireContext()))
+            } ?: requireContext().getPlural(R.plurals.fmt_deletion_info_count, playlists.size)
+        // Without the box ticked, the playlists inside move up a level.
+        binding.deletionChildren.isVisible = playlists.any {
+            playlistTreeRepository.childrenOf(it).isNotEmpty()
+        }
     }
 }

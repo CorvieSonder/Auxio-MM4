@@ -216,9 +216,13 @@ constructor(
      * @param menuRes The resource of the menu to use.
      * @param songs The [Song] selection to show.
      */
-    fun openMenu(@MenuRes menuRes: Int, songs: List<Song>) {
-        L.d("Opening menu for ${songs.size} songs")
-        openImpl(Menu.ForSelection(menuRes, songs))
+    fun openMenu(
+        @MenuRes menuRes: Int,
+        songs: List<Song>,
+        playlists: List<Playlist> = listOf(),
+    ) {
+        L.d("Opening menu for ${songs.size} songs and ${playlists.size} playlists")
+        openImpl(Menu.ForSelection(menuRes, songs, playlists))
     }
 
     private fun openImpl(menu: Menu) {

@@ -185,6 +185,9 @@
             android:id="@+id/rename_playlist"
             app:destination="@id/rename_playlist_dialog" />
         <action
+            android:id="@+id/new_playlist"
+            app:destination="@id/new_playlist_dialog" />
+        <action
             android:id="@+id/delete_playlist"
             app:destination="@id/delete_playlist_dialog" />
         <action
@@ -396,6 +399,9 @@
             android:id="@+id/export_playlist"
             app:destination="@id/export_playlist_dialog" />
         <action
+            android:id="@+id/new_playlist"
+            app:destination="@id/new_playlist_dialog" />
+        <action
             android:id="@+id/delete_playlist"
             app:destination="@id/delete_playlist_dialog" />
         <action
@@ -436,6 +442,11 @@
         <argument
             android:name="reason"
             app:argType="org.oxycblt.auxio.music.PlaylistDecision$New$Reason" />
+        <argument
+            android:name="parentUid"
+            android:defaultValue="@null"
+            app:argType="org.oxycblt.musikr.Music$UID"
+            app:nullable="true" />
     </dialog>
 
     <dialog
@@ -474,8 +485,8 @@
         android:label="delete_playlist_dialog"
         tools:layout="@layout/dialog_playlist_name">
         <argument
-            android:name="playlistUid"
-            app:argType="org.oxycblt.musikr.Music$UID" />
+            android:name="playlistUids"
+            app:argType="org.oxycblt.musikr.Music$UID[]" />
     </dialog>
 
     <dialog

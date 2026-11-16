@@ -46,8 +46,10 @@ import org.oxycblt.musikr.Song
  * @param listener An [SelectableListListener] to bind interactions to.
  * @author Alexander Capehart (OxygenCobalt)
  */
-class SearchAdapter(private val listener: SelectableListListener<Music>) :
-    SelectionIndicatorAdapter<Item, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
+class SearchAdapter(
+    private val listener: SelectableListListener<Music>,
+    private val describeLocation: (Playlist) -> String? = { null },
+) : SelectionIndicatorAdapter<Item, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
 
     override fun getItemViewType(position: Int) =
         when (getItem(position)) {
@@ -79,7 +81,9 @@ class SearchAdapter(private val listener: SelectableListListener<Music>) :
             is Album -> (holder as AlbumViewHolder).bind(item, listener)
             is Artist -> (holder as ArtistViewHolder).bind(item, listener)
             is Genre -> (holder as GenreViewHolder).bind(item, listener)
-            is Playlist -> (holder as PlaylistViewHolder).bind(item, listener)
+            // Nested playlists show where they are, so ones with the same name can be told apart.
+            is Playlist ->
+                (holder as PlaylistViewHolder).bind(item, listener, 0, describeLocation(item))
             is BasicHeader -> (holder as BasicHeaderViewHolder).bind(item)
         }
     }
