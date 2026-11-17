@@ -39,6 +39,16 @@
         android:title="@string/lbl_share"
         app:showAsAction="always" />
     <item
+        android:id="@+id/action_save_queue"
+        android:icon="@drawable/ic_save_24"
+        android:title="@string/lbl_save_queue"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_settings"
+        android:icon="@drawable/ic_config_24"
+        android:title="@string/set_root_title"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/action_song_menu"
         android:icon="@drawable/ic_more_vert_24"
         android:title="@string/lbl_more"
