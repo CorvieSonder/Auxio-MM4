@@ -5,35 +5,45 @@
         android:id="@+id/action_selection_play_next"
         android:icon="@drawable/ic_play_next_24"
         android:title="@string/lbl_play_next"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_selection_queue_add"
+        android:icon="@drawable/ic_queue_add_24"
+        android:title="@string/lbl_queue_add"
+        app:showAsAction="always" />
     <item
         android:id="@+id/action_selection_playlist_add"
         android:icon="@drawable/ic_playlist_add_24"
         android:title="@string/lbl_playlist_add"
-        app:showAsAction="ifRoom" />
-    <item
-        android:id="@+id/action_selection_move"
-        android:icon="@drawable/ic_move_24"
-        android:title="@string/lbl_move_to"
-        android:visible="false"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
     <item
         android:id="@+id/action_selection_select_all"
         android:icon="@drawable/ic_select_all_24"
         android:title="@string/lbl_select_all"
         app:showAsAction="always" />
     <item
+        android:id="@+id/action_selection_invert"
+        android:icon="@drawable/ic_select_invert_24"
+        android:title="@string/lbl_invert_selection"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_selection_move"
+        android:icon="@drawable/ic_move_24"
+        android:title="@string/lbl_move_to"
+        android:visible="false"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/action_selection_pin"
         android:icon="@drawable/ic_pin_24"
         android:title="@string/lbl_pin"
         android:visible="false"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
     <item
         android:id="@+id/action_selection_unpin"
         android:icon="@drawable/ic_pin_off_24"
         android:title="@string/lbl_unpin"
         android:visible="false"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
     <item
         android:id="@+id/placeholder"
         android:title=""

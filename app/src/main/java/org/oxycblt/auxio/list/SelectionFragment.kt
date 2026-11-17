@@ -87,14 +87,11 @@ abstract class SelectionFragment<VB : ViewBinding> :
                 )
             }
         }
-        if (getSelectionToolbar(binding) != null) {
-            // Only the fragment that shows the selection toolbar knows which items are shown.
-            collect(listModel.invertRequest.flow) {
-                if (it != null) {
-                    listModel.invertRequest.consume()
-                    listModel.invertSelection(getSelectableItems())
-                }
-            }
+        getSelectionToolbar(binding)?.let { toolbar ->
+            // There are more actions than fit beside the title, so they get their own row,
+            // which only takes up space while something is selected.
+            toolbar.setActionsBelow()
+            collectImmediately(listModel.selected) { toolbar.setActionRowVisible(it.isNotEmpty()) }
         }
         collect(treeModel.moveDecision.flow) { if (it != null) handleMoveDecision() }
     }
@@ -144,6 +141,19 @@ abstract class SelectionFragment<VB : ViewBinding> :
                 val playlists = listModel.selected.value.filterIsInstance<Playlist>()
                 listModel.dropSelection()
                 treeModel.requestMove(playlists)
+                true
+            }
+            R.id.action_selection_queue_add -> {
+                val songs = listModel.peekSelection()
+                if (songs.isNotEmpty()) {
+                    listModel.dropSelection()
+                    playbackModel.addToQueue(songs)
+                    requireContext().showToast(R.string.lng_queue_added)
+                }
+                true
+            }
+            R.id.action_selection_invert -> {
+                listModel.invertSelection(getSelectableItems())
                 true
             }
             R.id.action_selection_select_all -> {
