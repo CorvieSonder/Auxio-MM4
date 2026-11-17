@@ -20,6 +20,7 @@ package org.oxycblt.musikr.model
 
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
+import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Song
 import org.oxycblt.musikr.tag.interpret.PreSong
@@ -32,6 +33,8 @@ internal interface SongCore {
     fun resolveArtists(): List<Artist>
 
     fun resolveGenres(): List<Genre>
+
+    fun resolveComposers(): List<Composer>
 }
 
 /**
@@ -72,6 +75,9 @@ internal class SongImpl(private val handle: SongCore) : Song {
 
     override val genres: List<Genre>
         get() = handle.resolveGenres()
+
+    override val composers: List<Composer>
+        get() = handle.resolveComposers()
 
     private val hashCode = 31 * uid.hashCode() + preSong.hashCode()
 

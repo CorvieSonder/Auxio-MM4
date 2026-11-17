@@ -199,6 +199,11 @@ class GenreDetailFragment : DetailFragment<Genre, Music>() {
                 findNavController()
                     .navigateSafe(GenreDetailFragmentDirections.showArtistChoices(show.album.uid))
             }
+            is Show.ComposerDetails -> {
+                L.d("Navigating to ${show.composer}")
+                findNavController()
+                    .navigateSafe(GenreDetailFragmentDirections.showComposer(show.composer.uid))
+            }
             is Show.GenreDetails -> {
                 L.d("Navigated to this genre")
                 detailModel.toShow.consume()
@@ -216,6 +221,7 @@ class GenreDetailFragment : DetailFragment<Genre, Music>() {
             when (menu) {
                 is Menu.ForSong -> GenreDetailFragmentDirections.openSongMenu(menu.parcel)
                 is Menu.ForArtist -> GenreDetailFragmentDirections.openArtistMenu(menu.parcel)
+                is Menu.ForComposer -> GenreDetailFragmentDirections.openComposerMenu(menu.parcel)
                 is Menu.ForGenre -> GenreDetailFragmentDirections.openGenreMenu(menu.parcel)
                 is Menu.ForSelection -> GenreDetailFragmentDirections.openSelectionMenu(menu.parcel)
                 is Menu.ForAlbum,

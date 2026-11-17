@@ -44,6 +44,7 @@ import org.oxycblt.auxio.detail.DetailViewModel
 import org.oxycblt.auxio.detail.Show
 import org.oxycblt.auxio.home.list.AlbumListFragment
 import org.oxycblt.auxio.home.list.ArtistListFragment
+import org.oxycblt.auxio.home.list.ComposerListFragment
 import org.oxycblt.auxio.home.list.GenreListFragment
 import org.oxycblt.auxio.home.list.PlaylistListFragment
 import org.oxycblt.auxio.home.list.SongListFragment
@@ -214,6 +215,7 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                         MusicType.ARTISTS -> HomeFragmentDirections.sortArtists()
                         MusicType.GENRES -> HomeFragmentDirections.sortGenres()
                         MusicType.PLAYLISTS -> HomeFragmentDirections.sortPlaylists()
+                        MusicType.COMPOSERS -> HomeFragmentDirections.sortComposers()
                     }
                 findNavController().navigateSafe(directions)
                 true
@@ -266,6 +268,7 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                 MusicType.ARTISTS -> R.id.home_artist_recycler
                 MusicType.GENRES -> R.id.home_genre_recycler
                 MusicType.PLAYLISTS -> R.id.home_playlist_recycler
+                MusicType.COMPOSERS -> R.id.home_composer_recycler
             }
     }
 
@@ -425,6 +428,11 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                 findNavController()
                     .navigateSafe(HomeFragmentDirections.showArtistChoices(show.album.uid))
             }
+            is Show.ComposerDetails -> {
+                L.d("Navigating to ${show.composer}")
+                findNavController()
+                    .navigateSafe(HomeFragmentDirections.showComposer(show.composer.uid))
+            }
             is Show.GenreDetails -> {
                 L.d("Navigating to ${show.genre}")
                 findNavController().navigateSafe(HomeFragmentDirections.showGenre(show.genre.uid))
@@ -445,6 +453,7 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                 is Menu.ForSong -> HomeFragmentDirections.openSongMenu(menu.parcel)
                 is Menu.ForAlbum -> HomeFragmentDirections.openAlbumMenu(menu.parcel)
                 is Menu.ForArtist -> HomeFragmentDirections.openArtistMenu(menu.parcel)
+                is Menu.ForComposer -> HomeFragmentDirections.openComposerMenu(menu.parcel)
                 is Menu.ForGenre -> HomeFragmentDirections.openGenreMenu(menu.parcel)
                 is Menu.ForPlaylist -> HomeFragmentDirections.openPlaylistMenu(menu.parcel)
                 is Menu.ForSelection -> HomeFragmentDirections.openSelectionMenu(menu.parcel)
@@ -488,6 +497,7 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                 MusicType.ARTISTS -> ArtistListFragment()
                 MusicType.GENRES -> GenreListFragment()
                 MusicType.PLAYLISTS -> PlaylistListFragment()
+                MusicType.COMPOSERS -> ComposerListFragment()
             }
     }
 }

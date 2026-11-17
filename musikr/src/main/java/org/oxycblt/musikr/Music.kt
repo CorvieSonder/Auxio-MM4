@@ -104,6 +104,7 @@ sealed interface Music {
             ARTIST(0xA109, 'r'),
             GENRE(0xA108, 'g'),
             PLAYLIST(0xA107, 'p'),
+            COMPOSER(0xA106, 'c'),
         }
 
         /**
@@ -327,6 +328,11 @@ interface Song : Music {
      * [Genre] name was specified in the metadata.
      */
     val genres: List<Genre>
+    /**
+     * The parent [Composer]s of this [Song]. Empty if no composer was specified in the metadata,
+     * otherwise often one, but there can be multiple if more than one composer name was specified.
+     */
+    val composers: List<Composer>
 }
 
 /**
@@ -390,6 +396,21 @@ interface Genre : MusicParent {
     /** The total duration of the songs in this genre, in milliseconds. */
     val durationMs: Long
     /** Useful information to quickly obtain a (single) cover for a Genre. */
+    val covers: CoverCollection
+}
+
+/**
+ * A composer.
+ *
+ * Unlike [Artist], songs without a composer are not grouped into an "unknown" composer.
+ */
+interface Composer : MusicParent {
+    override val name: Name.Known
+    /** The artists of the [Song]s in this [Composer]. */
+    val artists: Collection<Artist>
+    /** The total duration of the songs by this composer, in milliseconds. */
+    val durationMs: Long
+    /** Useful information to quickly obtain a (single) cover for a Composer. */
     val covers: CoverCollection
 }
 

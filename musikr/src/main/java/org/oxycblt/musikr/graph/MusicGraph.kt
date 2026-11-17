@@ -26,6 +26,7 @@ import org.oxycblt.musikr.playlist.interpret.PrePlaylist
 import org.oxycblt.musikr.tag.interpret.PreAlbum
 import org.oxycblt.musikr.tag.interpret.PreArtist
 import org.oxycblt.musikr.tag.interpret.PreArtistsFrom
+import org.oxycblt.musikr.tag.interpret.PreComposer
 import org.oxycblt.musikr.tag.interpret.PreGenre
 import org.oxycblt.musikr.tag.interpret.PreSong
 import org.oxycblt.musikr.util.unlikelyToBeNull
@@ -35,6 +36,7 @@ internal data class MusicGraph(
     val albumVertex: List<AlbumVertex>,
     val artistVertex: List<ArtistVertex>,
     val genreVertex: List<GenreVertex>,
+    val composerVertex: List<ComposerVertex>,
     val playlistVertex: Set<PlaylistVertex>,
 ) {
     interface Builder {
@@ -183,6 +185,7 @@ private class MusicGraphBuilderImpl : MusicGraph.Builder {
     private val albumVertices = mutableMapOf<PreAlbum, AlbumVertex>()
     private val artistVertices = mutableMapOf<PreArtist, ArtistVertex>()
     private val genreVertices = mutableMapOf<PreGenre, GenreVertex>()
+    private val composerVertices = mutableMapOf<PreComposer, ComposerVertex>()
     private val playlistVertices = mutableSetOf<PlaylistVertex>()
 
     override fun add(preSong: PreSong) {
@@ -237,6 +240,13 @@ private class MusicGraphBuilderImpl : MusicGraph.Builder {
 
         songGenreVertices.forEach { genreVertex -> genreVertex.songVertices.add(songVertex) }
 
+        preSong.preComposers.forEach { preComposer ->
+            val composerVertex =
+                composerVertices.getOrPut(preComposer) { ComposerVertex(preComposer) }
+            songVertex.composerVertices.add(composerVertex)
+            composerVertex.songVertices.add(songVertex)
+        }
+
         songVertices[uid] = songVertex
     }
 
@@ -248,6 +258,12 @@ private class MusicGraphBuilderImpl : MusicGraph.Builder {
         val genreClusters = genreVertices.values.groupBy { it.preGenre.rawName?.lowercase() }
         for (cluster in genreClusters.values) {
             simplifyGenreCluster(cluster)
+        }
+
+        val composerClusters =
+            composerVertices.values.groupBy { it.preComposer.rawName.lowercase() }
+        for (cluster in composerClusters.values) {
+            simplifyComposerCluster(cluster)
         }
 
         // first pass: cluster artists by name and process MBIDs where valid
@@ -306,6 +322,7 @@ private class MusicGraphBuilderImpl : MusicGraph.Builder {
             val vertex = entry.value
             vertex.artistVertices = vertex.artistVertices.distinct().toMutableList()
             vertex.genreVertices = vertex.genreVertices.distinct().toMutableList()
+            vertex.composerVertices = vertex.composerVertices.distinct().toMutableList()
 
             playlistVertices.forEach {
                 val v363Pointer = SongPointer.UID(entry.key)
@@ -323,6 +340,7 @@ private class MusicGraphBuilderImpl : MusicGraph.Builder {
                 albumVertices.values.toList(),
                 artistVertices.values.toList(),
                 genreVertices.values.toList(),
+                composerVertices.values.toList(),
                 playlistVertices,
             )
 
@@ -364,6 +382,25 @@ private class MusicGraphBuilderImpl : MusicGraph.Builder {
         }
         // Remove the irrelevant genre from the graph.
         genreVertices.remove(src.preGenre)
+    }
+
+    private fun simplifyComposerCluster(cluster: Collection<ComposerVertex>) {
+        if (cluster.size == 1) {
+            return
+        }
+        // Same composer written with different casing. Keep the most popular spelling.
+        val clusterSet = cluster.toMutableSet()
+        val dst = clusterSet.maxBy { it.songVertices.size }
+        clusterSet.remove(dst)
+        for (src in clusterSet) {
+            dst.songVertices.addAll(src.songVertices)
+            src.songVertices.forEach {
+                val index = it.composerVertices.indexOf(src)
+                check(index >= 0) { "Illegal state: directed edge between composer and song" }
+                it.composerVertices[index] = dst
+            }
+            composerVertices.remove(src.preComposer)
+        }
     }
 
     private fun simplifyArtistCluster(cluster: Collection<ArtistVertex>) {
@@ -540,6 +577,8 @@ internal class SongVertex(
 ) : Vertex {
     override var tag: Any? = null
 
+    var composerVertices = mutableListOf<ComposerVertex>()
+
     override fun toString() = "SongVertex(preSong=$preSong)"
 }
 
@@ -576,4 +615,11 @@ internal class PlaylistVertex(val prePlaylist: PrePlaylist) {
             .groupBy { it.value }
             .mapValuesTo(mutableMapOf()) { entry -> entry.value.map { it.index } }
     val tag: Any? = null
+}
+
+internal class ComposerVertex(val preComposer: PreComposer) : Vertex {
+    val songVertices = mutableSetOf<SongVertex>()
+    override var tag: Any? = null
+
+    override fun toString() = "ComposerVertex(preComposer=$preComposer)"
 }

@@ -34,6 +34,7 @@ import org.oxycblt.auxio.util.Event
 import org.oxycblt.auxio.util.MutableEvent
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
+import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
@@ -107,6 +108,18 @@ constructor(
     /** The current [Sort] used for [genreList]. */
     val genreSort: Sort
         get() = listSettings.genreSort
+
+    /** A list of [Composer]s, sorted by the preferred [Sort], to be shown in the home view. */
+    val composerList: StateFlow<List<Composer>>
+        field = MutableStateFlow(listOf<Composer>())
+
+    /** Instructions for how to update [composerList] in the UI. */
+    val composerInstructions: Event<UpdateInstructions>
+        field = MutableEvent<UpdateInstructions>()
+
+    /** The current [Sort] used for [composerList]. */
+    val composerSort: Sort
+        get() = listSettings.composerSort
 
     /** A list of [Playlist]s, sorted by the preferred [Sort], to be shown in the home view. */
     val playlistList: StateFlow<List<Playlist>>
@@ -188,6 +201,10 @@ constructor(
                 playlistInstructions.put(instructions)
                 playlistList.value = homeGenerator.playlists()
             }
+            MusicType.COMPOSERS -> {
+                composerInstructions.put(instructions)
+                composerList.value = homeGenerator.composers()
+            }
         }
     }
 
@@ -230,6 +247,15 @@ constructor(
      */
     fun applyGenreSort(sort: Sort) {
         listSettings.genreSort = sort
+    }
+
+    /**
+     * Apply a new [Sort] to [composerList].
+     *
+     * @param sort The [Sort] to apply.
+     */
+    fun applyComposerSort(sort: Sort) {
+        listSettings.composerSort = sort
     }
 
     /**
