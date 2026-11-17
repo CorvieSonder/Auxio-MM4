@@ -81,6 +81,7 @@ class DBCache private constructor(private val readDao: CacheReadDao) : Cache {
                             genreNames = dbSong.genreNames!!,
                             replayGainTrackAdjustment = dbSong.replayGainTrackAdjustment,
                             replayGainAlbumAdjustment = dbSong.replayGainAlbumAdjustment,
+                            extras = dbSong.extras ?: mapOf(),
                         ),
                         coverId = dbSong.coverId,
                     )
@@ -183,4 +184,5 @@ private fun CachedFile.toDbData() =
         replayGainTrackAdjustment = audio?.tags?.replayGainTrackAdjustment,
         replayGainAlbumAdjustment = audio?.tags?.replayGainAlbumAdjustment,
         coverId = audio?.coverId,
+        extras = audio?.tags?.extras,
     )

@@ -71,6 +71,21 @@
 
     <string name="set_key_force_reload_workaround" translatable="false">auxio_force_reload</string>
 
+    <string name="set_key_rating_source" translatable="false">auxio_rating_source</string>
+    <string name="set_key_rating_lists" translatable="false">auxio_rating_lists</string>
+
+    <string-array name="entries_rating_source">
+        <item>@string/set_rating_source_mediamonkey</item>
+        <item>@string/set_rating_source_musicbee</item>
+        <item>@string/set_rating_source_wmp</item>
+    </string-array>
+
+    <integer-array name="values_rating_source">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </integer-array>
+
     <string-array name="entries_theme">
         <item>@string/set_theme_auto</item>
         <item>@string/set_theme_day</item>

@@ -25,6 +25,10 @@
         android:icon="@drawable/ic_artist_24"
         android:title="@string/lbl_artist_details" />
     <item
+        android:id="@+id/action_rate"
+        android:icon="@drawable/ic_star_outline_24"
+        android:title="@string/lbl_rate" />
+    <item
         android:id="@+id/action_detail"
         android:icon="@drawable/ic_details_24"
         android:title="@string/lbl_song_detail" />

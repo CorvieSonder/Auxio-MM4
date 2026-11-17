@@ -117,6 +117,10 @@
     <string name="lbl_track">Track</string>
     <string name="lbl_date_added">Date added</string>
     <string name="lbl_custom_order">Custom</string>
+    <string name="lbl_rating">Rating</string>
+    <string name="lbl_rate">Rate</string>
+    <string name="lbl_rating_none">Not rated</string>
+    <string name="lbl_rating_reset">Use file</string>
 
     <string name="lbl_sort">Sort</string>
     <string name="lbl_sort_mode">Sort by</string>
@@ -324,6 +328,13 @@
     <string name="set_intelligent_sorting">Intelligent sorting</string>
     <string name="set_intelligent_sorting_desc">Correctly sort names that begin with numbers or words like \"the\" (works best with english-language music)</string>
     <string name="set_hide_collaborators">Hide collaborators</string>
+    <string name="set_ratings">Ratings</string>
+    <string name="set_rating_source">Preferred rating source</string>
+    <string name="set_rating_source_mediamonkey" translatable="false">MediaMonkey</string>
+    <string name="set_rating_source_musicbee" translatable="false">MusicBee</string>
+    <string name="set_rating_source_wmp" translatable="false">Windows Media Player</string>
+    <string name="set_rating_lists">Show ratings in lists</string>
+    <string name="set_rating_lists_desc">Show the rating of rated songs next to their menu button</string>
     <string name="set_hide_collaborators_desc">Only show artists that are directly credited on an album (works best on well-tagged libraries)</string>
     <string name="set_images">Images</string>
     <string name="set_cover_mode">Album covers</string>
@@ -519,6 +530,8 @@
     <string name="fmt_bitrate">%d kbps</string>
     <!-- Use your native country's abbreviation for hertz units. -->
     <string name="fmt_sample_rate">%d Hz</string>
+    <string name="fmt_rating" translatable="false">%s★</string>
+    <string name="fmt_rating_file">In the file: %s</string>
 
     <string name="fmt_indexing">Loading your music library… (%1$d/%2$d)</string>
     <string name="fmt_deletion_info">Delete %s? This cannot be undone.</string>

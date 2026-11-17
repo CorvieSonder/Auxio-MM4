@@ -28,6 +28,7 @@ import org.oxycblt.auxio.list.Item
 import org.oxycblt.auxio.list.SelectableListListener
 import org.oxycblt.auxio.list.adapter.SelectionIndicatorAdapter
 import org.oxycblt.auxio.list.adapter.SimpleDiffCallback
+import org.oxycblt.auxio.music.rating.bindRating
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.util.context
 import org.oxycblt.auxio.util.inflater
@@ -159,6 +160,7 @@ private class ArtistSongViewHolder private constructor(private val binding: Item
         binding.songAlbumCover.bind(song)
         binding.songName.text = song.name.resolve(binding.context)
         binding.songInfo.text = song.album.name.resolve(binding.context)
+        binding.songRating.bindRating(song)
     }
 
     override fun updatePlayingIndicator(isActive: Boolean, isPlaying: Boolean) {

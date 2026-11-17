@@ -38,6 +38,7 @@ import org.oxycblt.auxio.list.SelectableListListener
 import org.oxycblt.auxio.list.adapter.SelectionIndicatorAdapter
 import org.oxycblt.auxio.list.adapter.SimpleDiffCallback
 import org.oxycblt.auxio.music.areNamesTheSame
+import org.oxycblt.auxio.music.rating.bindRating
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
 import org.oxycblt.auxio.playback.formatDurationMs
@@ -241,6 +242,8 @@ private class AlbumSongViewHolder private constructor(private val binding: ItemA
         }
 
         binding.songName.text = song.name.resolve(binding.context)
+
+        binding.songRating.bindRating(song)
         // Show duration, and include featured artists when they differ from the album artists.
         val duration = song.durationMs.formatDurationMs(false)
         val albumArtists = song.album.artists

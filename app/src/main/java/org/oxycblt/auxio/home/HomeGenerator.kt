@@ -24,6 +24,7 @@ import org.oxycblt.auxio.list.ListSettings
 import org.oxycblt.auxio.list.adapter.UpdateInstructions
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.MusicType
+import org.oxycblt.auxio.music.rating.RatingRepository
 import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
@@ -71,6 +72,7 @@ constructor(
     private val listSettings: ListSettings,
     private val musicRepository: MusicRepository,
     private val playlistTreeRepository: PlaylistTreeRepository,
+    private val ratingRepository: RatingRepository,
 ) : HomeGenerator.Factory {
     override fun create(invalidator: HomeGenerator.Invalidator): HomeGenerator =
         HomeGeneratorImpl(
@@ -79,6 +81,7 @@ constructor(
             listSettings,
             musicRepository,
             playlistTreeRepository,
+            ratingRepository,
         )
 }
 
@@ -88,22 +91,30 @@ private class HomeGeneratorImpl(
     private val listSettings: ListSettings,
     private val musicRepository: MusicRepository,
     private val playlistTreeRepository: PlaylistTreeRepository,
+    private val ratingRepository: RatingRepository,
 ) :
     HomeGenerator,
     HomeSettings.Listener,
     ListSettings.Listener,
     MusicRepository.UpdateListener,
-    PlaylistTreeRepository.Listener {
+    PlaylistTreeRepository.Listener,
+    RatingRepository.Listener {
     override fun attach() {
         homeSettings.registerListener(this)
         listSettings.registerListener(this)
         musicRepository.addUpdateListener(this)
         playlistTreeRepository.addListener(this)
+        ratingRepository.addListener(this)
     }
 
     override fun onPlaylistTreeChanged() {
         // Replace rather than diff, so that the child counts of the playlists are rebound.
         invalidator.invalidateMusic(MusicType.PLAYLISTS, UpdateInstructions.Replace(0))
+    }
+
+    override fun onRatingsChanged() {
+        // Replace rather than diff, so that the ratings of the songs are rebound.
+        invalidator.invalidateMusic(MusicType.SONGS, UpdateInstructions.Replace(0))
     }
 
     override fun onTabsChanged() {
@@ -164,6 +175,7 @@ private class HomeGeneratorImpl(
 
     override fun release() {
         playlistTreeRepository.removeListener(this)
+        ratingRepository.removeListener(this)
         musicRepository.removeUpdateListener(this)
         listSettings.unregisterListener(this)
         homeSettings.unregisterListener(this)

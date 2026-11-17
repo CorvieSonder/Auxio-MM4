@@ -29,6 +29,7 @@ import org.oxycblt.auxio.detail.DetailViewModel
 import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.music.delete.DeleteSongsDialog
+import org.oxycblt.auxio.music.rating.RatingDialog
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
 import org.oxycblt.auxio.music.ringtone.setAsRingtone
@@ -87,6 +88,8 @@ class SongMenuDialogFragment : MenuDialogFragment<Menu.ForSong>() {
             R.id.action_artist_details -> detailModel.showArtist(menu.song)
             R.id.action_album_details -> detailModel.showAlbum(menu.song.album)
             R.id.action_share -> requireContext().share(menu.song)
+            R.id.action_rate ->
+                RatingDialog.from(menu.song).show(parentFragmentManager, RatingDialog.TAG)
             R.id.action_detail -> detailModel.showSong(menu.song)
             R.id.action_open_equalizer -> playbackModel.openEqualizer()
             R.id.action_delete_song ->

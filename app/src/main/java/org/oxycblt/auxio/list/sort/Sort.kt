@@ -20,6 +20,7 @@ package org.oxycblt.auxio.list.sort
 
 import org.oxycblt.auxio.IntegerTable
 import org.oxycblt.auxio.R
+import org.oxycblt.auxio.music.rating.rating
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Genre
@@ -389,6 +390,20 @@ data class Sort(val mode: Mode, val direction: Direction) {
             }
         }
 
+        /** Sort by the rating of an item, with unrated items considered the lowest. */
+        data object ByRating : Mode {
+            override val intCode = IntegerTable.SORT_BY_RATING
+            override val stringRes = R.string.lbl_rating
+
+            override fun sortSongs(songs: MutableList<Song>, direction: Direction) {
+                songs.sortBy { it.name }
+                when (direction) {
+                    Direction.ASCENDING -> songs.sortBy { it.rating?.halfStars ?: 0 }
+                    Direction.DESCENDING -> songs.sortByDescending { it.rating?.halfStars ?: 0 }
+                }
+            }
+        }
+
         companion object {
             fun fromIntCode(intCode: Int): Mode? =
                 when (intCode) {
@@ -402,6 +417,7 @@ data class Sort(val mode: Mode, val direction: Direction) {
                     ByTrack.intCode -> ByTrack
                     ByDateAdded.intCode -> ByDateAdded
                     ByCustom.intCode -> ByCustom
+                    ByRating.intCode -> ByRating
                     else -> null
                 }
         }

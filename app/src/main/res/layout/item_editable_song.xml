@@ -53,7 +53,7 @@
                 android:layout_marginEnd="@dimen/spacing_mid_medium"
                 android:textColor="@color/sel_selectable_text_primary"
                 app:layout_constraintBottom_toTopOf="@+id/song_info"
-                app:layout_constraintEnd_toStartOf="@+id/song_drag_handle"
+                app:layout_constraintEnd_toStartOf="@+id/song_rating"
                 app:layout_constraintStart_toEndOf="@+id/song_album_cover"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintVertical_chainStyle="packed"
@@ -67,10 +67,23 @@
                 android:layout_marginEnd="@dimen/spacing_mid_medium"
                 android:textColor="@color/sel_selectable_text_secondary"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/song_drag_handle"
+                app:layout_constraintEnd_toStartOf="@+id/song_rating"
                 app:layout_constraintStart_toEndOf="@+id/song_album_cover"
                 app:layout_constraintTop_toBottomOf="@+id/song_name"
                 tools:text="Artist / Album" />
+
+            <TextView
+                android:id="@+id/song_rating"
+                style="@style/Widget.Auxio.TextView.Item.Secondary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/spacing_small"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/song_drag_handle"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="4.5★"
+                tools:visibility="visible" />
 
             <org.oxycblt.auxio.ui.RippleFixMaterialButton
                 android:id="@+id/song_drag_handle"
