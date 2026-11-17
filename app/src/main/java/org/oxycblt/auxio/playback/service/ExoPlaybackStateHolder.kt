@@ -27,6 +27,7 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
+import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.decoder.ffmpeg.FfmpegAudioRenderer
@@ -40,6 +41,7 @@ import androidx.media3.exoplayer.source.MediaSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlin.math.abs
+import kotlin.math.pow
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -53,6 +55,7 @@ import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.playback.PlaybackSettings
 import org.oxycblt.auxio.playback.persist.PersistenceRepository
 import org.oxycblt.auxio.playback.replaygain.ReplayGainAudioProcessor
+import org.oxycblt.auxio.playback.sleep.SleepTimer
 import org.oxycblt.auxio.playback.state.DeferredPlayback
 import org.oxycblt.auxio.playback.state.PlaybackCommand
 import org.oxycblt.auxio.playback.state.PlaybackStateHolder
@@ -77,12 +80,14 @@ class ExoPlaybackStateHolder(
     private val replayGainProcessor: ReplayGainAudioProcessor,
     private val musicRepository: MusicRepository,
     private val imageSettings: ImageSettings,
+    private val sleepTimer: SleepTimer,
 ) :
     PlaybackStateHolder,
     Player.Listener,
     MusicRepository.UpdateListener,
     PlaybackSettings.Listener,
-    ImageSettings.Listener {
+    ImageSettings.Listener,
+    SleepTimer.Listener {
     private val saveJob = Job()
     private val saveScope = CoroutineScope(Dispatchers.IO + saveJob)
     private val restoreScope = CoroutineScope(Dispatchers.IO + saveJob)
@@ -99,10 +104,13 @@ class ExoPlaybackStateHolder(
         replayGainProcessor.attach()
         playbackSettings.registerListener(this)
         imageSettings.registerListener(this)
+        updatePlaybackParameters()
+        sleepTimer.setListener(this)
     }
 
     fun release() {
         saveJob.cancel()
+        sleepTimer.setListener(null)
         playbackManager.unregisterStateHolder(this)
         musicRepository.removeUpdateListener(this)
         player.removeListener(this)
@@ -120,7 +128,12 @@ class ExoPlaybackStateHolder(
             val mediaItem = player.currentMediaItem ?: return Progression.nil()
             val duration = mediaItem.mediaMetadata.extras?.getLong("durationMs") ?: Long.MAX_VALUE
             val clampedPosition = player.currentPosition.coerceAtLeast(0).coerceAtMost(duration)
-            return Progression.from(player.playWhenReady, player.isPlaying, clampedPosition)
+            return Progression.from(
+                player.playWhenReady,
+                player.isPlaying,
+                clampedPosition,
+                player.playbackParameters.speed,
+            )
         }
 
     override val repeatMode
@@ -515,6 +528,7 @@ class ExoPlaybackStateHolder(
                 Player.EVENT_PLAY_WHEN_READY_CHANGED,
                 Player.EVENT_IS_PLAYING_CHANGED,
                 Player.EVENT_POSITION_DISCONTINUITY,
+                Player.EVENT_PLAYBACK_PARAMETERS_CHANGED,
             )
         ) {
             L.d("Player state changed, must synchronize state")
@@ -558,9 +572,28 @@ class ExoPlaybackStateHolder(
         updatePauseOnRepeat()
     }
 
+    override fun onPlaybackParametersChanged() {
+        super<PlaybackSettings.Listener>.onPlaybackParametersChanged()
+        updatePlaybackParameters()
+    }
+
+    private fun updatePlaybackParameters() {
+        // Pitch is stored in semitones, each one being a twelfth of an octave.
+        val pitch = 2f.pow(playbackSettings.playbackPitch / 12f)
+        player.playbackParameters = PlaybackParameters(playbackSettings.playbackSpeed, pitch)
+    }
+
     private fun updatePauseOnRepeat() {
         player.pauseAtEndOfMediaItems =
-            player.repeatMode == Player.REPEAT_MODE_ONE && playbackSettings.pauseOnRepeat
+            (player.repeatMode == Player.REPEAT_MODE_ONE && playbackSettings.pauseOnRepeat) ||
+                sleepTimer.pauseAtSongEnd
+    }
+
+    // --- SLEEPTIMER OVERRIDES ---
+
+    override fun onSleepTimerChanged() {
+        player.volume = sleepTimer.volume
+        updatePauseOnRepeat()
     }
 
     private fun save(cb: () -> Unit) {
@@ -654,6 +687,7 @@ class ExoPlaybackStateHolder(
         private val replayGainProcessor: ReplayGainAudioProcessor,
         private val musicRepository: MusicRepository,
         private val imageSettings: ImageSettings,
+        private val sleepTimer: SleepTimer,
     ) {
         fun create(): ExoPlaybackStateHolder {
             // Since Auxio is a music player, only specify an audio renderer to save
@@ -698,6 +732,7 @@ class ExoPlaybackStateHolder(
                 replayGainProcessor,
                 musicRepository,
                 imageSettings,
+                sleepTimer,
             )
         }
     }
