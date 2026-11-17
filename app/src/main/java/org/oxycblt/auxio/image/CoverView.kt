@@ -472,6 +472,9 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
             squareishShapeAppearance,
         )
 
+    // Counts binds, so that one that had to wait for a layout can tell if it was replaced.
+    private var bindGeneration = 0
+
     private fun bindImpl(
         img: (Size) -> Any?,
         desc: String,
@@ -492,11 +495,22 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
     ) {
         // for some reason randomly corner radii started breaking on menus
         // fix this by waiting until we are laid out instead
+        val generation = ++bindGeneration
         val size = resolveSize()
         if (size != null) {
             bindSized(img, desc, errorRes, size, shapeAppearanceModel)
         } else {
-            doOnLayout { bindImpl(img, desc, errorRes, shapeAppearanceModel) }
+            doOnLayout {
+                // An image that is already in memory (or has nothing to load) is applied
+                // right away. Inside the layout pass, the layout it asks for is dropped, and
+                // the image stays invisible until something else lays this view out again.
+                // So let the pass finish first, and skip the bind if a newer one came in.
+                post {
+                    if (generation == bindGeneration) {
+                        bindImpl(img, desc, errorRes, shapeAppearanceModel)
+                    }
+                }
+            }
         }
     }
 
