@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.MusicRepository
+import org.oxycblt.auxio.music.auto.AutoPlaylist
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Playlist
 import timber.log.Timber as L
@@ -206,7 +207,11 @@ constructor(
     override fun isPinned(playlist: Playlist) = playlist.uid in pins
 
     override fun setPinned(playlists: List<Playlist>, pinned: Boolean) {
-        val changed = playlists.map { it.uid }.filter { (it in pins) != pinned }
+        val changed =
+            playlists
+                .filter { it !is AutoPlaylist }
+                .map { it.uid }
+                .filter { (it in pins) != pinned }
         if (changed.isEmpty()) {
             return
         }
@@ -279,6 +284,10 @@ constructor(
     }
 
     override fun canMove(playlist: Playlist, parent: Playlist?): Boolean {
+        if (playlist is AutoPlaylist || parent is AutoPlaylist) {
+            // Automatic playlists are not part of the tree.
+            return false
+        }
         if (parent == null) {
             return true
         }

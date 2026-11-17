@@ -26,6 +26,7 @@ import org.oxycblt.auxio.list.ListSettings
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.MusicType
+import org.oxycblt.auxio.music.auto.AutoPlaylistRepository
 import org.oxycblt.auxio.music.rating.RatingRepository
 import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.musikr.Album
@@ -71,6 +72,7 @@ constructor(
     private val playlistSortRepository: PlaylistSortRepository,
     private val playlistTreeRepository: PlaylistTreeRepository,
     private val ratingRepository: RatingRepository,
+    private val autoPlaylistRepository: AutoPlaylistRepository,
 ) : DetailGenerator.Factory {
     override fun create(invalidator: DetailGenerator.Invalidator): DetailGenerator =
         DetailGeneratorImpl(
@@ -80,6 +82,7 @@ constructor(
             playlistSortRepository,
             playlistTreeRepository,
             ratingRepository,
+            autoPlaylistRepository,
         )
 }
 
@@ -90,19 +93,26 @@ private class DetailGeneratorImpl(
     private val playlistSortRepository: PlaylistSortRepository,
     private val playlistTreeRepository: PlaylistTreeRepository,
     private val ratingRepository: RatingRepository,
+    private val autoPlaylistRepository: AutoPlaylistRepository,
 ) :
     DetailGenerator,
     MusicRepository.UpdateListener,
     ListSettings.Listener,
     PlaylistSortRepository.Listener,
     PlaylistTreeRepository.Listener,
-    RatingRepository.Listener {
+    RatingRepository.Listener,
+    AutoPlaylistRepository.Listener {
     override fun attach() {
         listSettings.registerListener(this)
         musicRepository.addUpdateListener(this)
         playlistSortRepository.addListener(this)
         playlistTreeRepository.addListener(this)
         ratingRepository.addListener(this)
+        autoPlaylistRepository.addListener(this)
+    }
+
+    override fun onAutoPlaylistsChanged() {
+        invalidator.invalidate(MusicType.PLAYLISTS, null)
     }
 
     override fun onRatingsChanged() {
@@ -154,6 +164,7 @@ private class DetailGeneratorImpl(
     }
 
     override fun release() {
+        autoPlaylistRepository.removeListener(this)
         ratingRepository.removeListener(this)
         listSettings.unregisterListener(this)
         musicRepository.removeUpdateListener(this)

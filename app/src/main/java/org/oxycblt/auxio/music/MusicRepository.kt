@@ -29,6 +29,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import org.oxycblt.auxio.image.covers.SettingCovers
 import org.oxycblt.auxio.music.MusicRepository.IndexingWorker
+import org.oxycblt.auxio.music.auto.AutoPlaylistRepository
 import org.oxycblt.auxio.music.locations.LocationMode
 import org.oxycblt.auxio.music.shim.WriteOnlyMutableCache
 import org.oxycblt.musikr.Config
@@ -245,12 +246,19 @@ constructor(
     private val storedPlaylists: StoredPlaylists,
     private val settingCovers: SettingCovers,
     private val musicSettings: MusicSettings,
+    private val autoPlaylistRepository: AutoPlaylistRepository,
 ) : MusicRepository {
     private val updateListeners = mutableListOf<MusicRepository.UpdateListener>()
     private val indexingListeners = mutableListOf<MusicRepository.IndexingListener>()
     @Volatile private var indexingWorker: IndexingWorker? = null
 
-    @Volatile override var library: MutableLibrary? = null
+    @Volatile
+    override var library: MutableLibrary? = null
+        // Automatic playlists are not part of the library, but should be found like they were.
+        private set(value) {
+            field = value?.let(autoPlaylistRepository::wrap)
+        }
+
     @Volatile private var previousCompletedState: IndexingState.Completed? = null
     @Volatile private var currentIndexingState: IndexingState? = null
     override val indexingState: IndexingState?

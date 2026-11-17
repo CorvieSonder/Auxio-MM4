@@ -42,6 +42,7 @@ import org.oxycblt.auxio.list.adapter.UpdateInstructions
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.MusicType
+import org.oxycblt.auxio.music.auto.AutoPlaylist
 import org.oxycblt.auxio.music.rating.rating
 import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.auxio.playback.PlaySong
@@ -653,7 +654,8 @@ constructor(
                 playlistSongInstructions,
                 null,
             ) {
-                EditHeader(it)
+                // An automatic playlist cannot be edited, so it only gets the sort button.
+                if (playlist?.parent is AutoPlaylist) SortHeader(it) else EditHeader(it)
             }
             return
         }
