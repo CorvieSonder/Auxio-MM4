@@ -6,4 +6,8 @@
         android:icon="@drawable/ic_config_24"
         android:title="@string/lbl_equalizer"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/action_speed_pitch"
+        android:title="@string/set_speed_pitch"
+        app:showAsAction="never" />
 </menu>

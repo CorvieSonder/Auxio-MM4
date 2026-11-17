@@ -27,6 +27,7 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
+import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.decoder.ffmpeg.FfmpegAudioRenderer
@@ -40,6 +41,7 @@ import androidx.media3.exoplayer.source.MediaSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlin.math.abs
+import kotlin.math.pow
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -99,6 +101,7 @@ class ExoPlaybackStateHolder(
         replayGainProcessor.attach()
         playbackSettings.registerListener(this)
         imageSettings.registerListener(this)
+        updatePlaybackParameters()
     }
 
     fun release() {
@@ -120,7 +123,12 @@ class ExoPlaybackStateHolder(
             val mediaItem = player.currentMediaItem ?: return Progression.nil()
             val duration = mediaItem.mediaMetadata.extras?.getLong("durationMs") ?: Long.MAX_VALUE
             val clampedPosition = player.currentPosition.coerceAtLeast(0).coerceAtMost(duration)
-            return Progression.from(player.playWhenReady, player.isPlaying, clampedPosition)
+            return Progression.from(
+                player.playWhenReady,
+                player.isPlaying,
+                clampedPosition,
+                player.playbackParameters.speed,
+            )
         }
 
     override val repeatMode
@@ -515,6 +523,7 @@ class ExoPlaybackStateHolder(
                 Player.EVENT_PLAY_WHEN_READY_CHANGED,
                 Player.EVENT_IS_PLAYING_CHANGED,
                 Player.EVENT_POSITION_DISCONTINUITY,
+                Player.EVENT_PLAYBACK_PARAMETERS_CHANGED,
             )
         ) {
             L.d("Player state changed, must synchronize state")
@@ -556,6 +565,17 @@ class ExoPlaybackStateHolder(
     override fun onPauseOnRepeatChanged() {
         super.onPauseOnRepeatChanged()
         updatePauseOnRepeat()
+    }
+
+    override fun onPlaybackParametersChanged() {
+        super<PlaybackSettings.Listener>.onPlaybackParametersChanged()
+        updatePlaybackParameters()
+    }
+
+    private fun updatePlaybackParameters() {
+        // Pitch is stored in semitones, each one being a twelfth of an octave.
+        val pitch = 2f.pow(playbackSettings.playbackPitch / 12f)
+        player.playbackParameters = PlaybackParameters(playbackSettings.playbackSpeed, pitch)
     }
 
     private fun updatePauseOnRepeat() {

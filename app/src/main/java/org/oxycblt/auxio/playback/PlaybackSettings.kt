@@ -60,6 +60,10 @@ interface PlaybackSettings : Settings<PlaybackSettings.Listener> {
     val rememberPause: Boolean
     /** Whether to always exit when task is removed, even if playing. */
     val exitOnTaskRemoval: Boolean
+    /** The playback speed, as a multiplier of the normal speed. */
+    var playbackSpeed: Float
+    /** The playback pitch change, in semitones. */
+    var playbackPitch: Int
 
     interface Listener {
         /** Called when one of the ReplayGain configurations have changed. */
@@ -70,6 +74,9 @@ interface PlaybackSettings : Settings<PlaybackSettings.Listener> {
 
         /** Called when [pauseOnRepeat] has changed. */
         fun onPauseOnRepeatChanged() {}
+
+        /** Called when [playbackSpeed] or [playbackPitch] has changed. */
+        fun onPlaybackParametersChanged() {}
     }
 }
 
@@ -137,6 +144,36 @@ class PlaybackSettingsImpl @Inject constructor(@ApplicationContext context: Cont
     override val exitOnTaskRemoval: Boolean
         get() = sharedPreferences.getBoolean(getString(R.string.set_key_task_exit), false)
 
+    override var playbackSpeed: Float
+        get() =
+            sharedPreferences
+                .getFloat(getString(R.string.set_key_playback_speed), 1f)
+                .coerceIn(MIN_SPEED, MAX_SPEED)
+        set(value) {
+            sharedPreferences.edit {
+                putFloat(
+                    getString(R.string.set_key_playback_speed),
+                    value.coerceIn(MIN_SPEED, MAX_SPEED),
+                )
+                apply()
+            }
+        }
+
+    override var playbackPitch: Int
+        get() =
+            sharedPreferences
+                .getInt(getString(R.string.set_key_playback_pitch), 0)
+                .coerceIn(-MAX_PITCH, MAX_PITCH)
+        set(value) {
+            sharedPreferences.edit {
+                putInt(
+                    getString(R.string.set_key_playback_pitch),
+                    value.coerceIn(-MAX_PITCH, MAX_PITCH),
+                )
+                apply()
+            }
+        }
+
     override fun migrate() {
         // MusicMode was converted to PlaySong in 3.2.0
         fun Int.migrateMusicMode() =
@@ -201,10 +238,18 @@ class PlaybackSettingsImpl @Inject constructor(@ApplicationContext context: Cont
                 L.d("Dispatching pause on repeat change")
                 listener.onPauseOnRepeatChanged()
             }
+            getString(R.string.set_key_playback_speed),
+            getString(R.string.set_key_playback_pitch) -> {
+                L.d("Dispatching playback parameters change")
+                listener.onPlaybackParametersChanged()
+            }
         }
     }
 
     private companion object {
+        const val MIN_SPEED = 0.5f
+        const val MAX_SPEED = 2f
+        const val MAX_PITCH = 6
         const val OLD_KEY_LIB_MUSIC_PLAYBACK_MODE = "auxio_library_playback_mode"
         const val OLD_KEY_DETAIL_MUSIC_PLAYBACK_MODE = "auxio_detail_playback_mode"
     }

@@ -20,6 +20,7 @@ package org.oxycblt.auxio.settings.categories
 
 import androidx.navigation.fragment.findNavController
 import org.oxycblt.auxio.R
+import org.oxycblt.auxio.playback.speed.SpeedPitchDialog
 import org.oxycblt.auxio.settings.BasePreferenceFragment
 import org.oxycblt.auxio.settings.ui.WrappedDialogPreference
 import org.oxycblt.auxio.util.navigateSafe
@@ -36,6 +37,9 @@ class AudioPreferenceFragment : BasePreferenceFragment(R.xml.preferences_audio) 
         if (preference.key == getString(R.string.set_key_pre_amp)) {
             L.d("Navigating to pre-amp dialog")
             findNavController().navigateSafe(AudioPreferenceFragmentDirections.preAmpSettings())
+        } else if (preference.key == getString(R.string.set_key_speed_pitch)) {
+            L.d("Showing speed and pitch dialog")
+            SpeedPitchDialog().show(childFragmentManager, SpeedPitchDialog.TAG)
         }
     }
 }

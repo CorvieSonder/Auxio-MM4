@@ -312,6 +312,10 @@
     <string name="set_replay_gain_mode_track">Prefer track</string>
     <string name="set_replay_gain_mode_album">Prefer album</string>
     <string name="set_replay_gain_mode_dynamic">Prefer album if one is playing</string>
+    <string name="set_speed_pitch">Speed and pitch</string>
+    <string name="set_speed_pitch_desc">Change how fast and how high songs play</string>
+    <string name="set_speed">Speed</string>
+    <string name="set_pitch">Pitch</string>
     <string name="set_pre_amp">ReplayGain pre-amp</string>
     <string name="set_pre_amp_desc">The pre-amp is applied to the existing adjustment during playback</string>
     <string name="set_pre_amp_with">Adjustment with tags</string>
@@ -460,6 +464,12 @@
 
     <!-- Use your native country's abbreviation for decibel units. -->
     <string name="fmt_db_pos">+%.1f dB</string>
+    <!-- Playback speed, as a percentage of the normal speed -->
+    <string name="fmt_speed">%d%%</string>
+    <!-- Pitch change in semitones -->
+    <string name="fmt_pitch_pos">+%d st</string>
+    <!-- Pitch change in semitones -->
+    <string name="fmt_pitch_neg">-%d st</string>
     <!-- Use your native country's abbreviation for decibel units. -->
     <string name="fmt_db_neg">-%.1f dB</string>
     <!-- Use your native country's abbreviation for bit rate units. -->
