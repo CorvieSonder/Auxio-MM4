@@ -250,6 +250,12 @@ class PlaybackPanelFragment :
             return true
         }
 
+        if (item.itemId == R.id.action_reshuffle) {
+            playbackModel.reshuffle()
+            requireContext().showToast(R.string.lng_reshuffled)
+            return true
+        }
+
         return false
     }
 
