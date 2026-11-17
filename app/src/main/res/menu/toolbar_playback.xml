@@ -9,5 +9,7 @@
     <item
         android:id="@+id/action_speed_pitch"
         android:title="@string/set_speed_pitch"
+        android:id="@+id/action_reshuffle"
+        android:title="@string/lbl_reshuffle"
         app:showAsAction="never" />
 </menu>

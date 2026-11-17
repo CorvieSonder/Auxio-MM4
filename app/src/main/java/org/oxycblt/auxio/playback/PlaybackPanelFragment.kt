@@ -253,6 +253,9 @@ class PlaybackPanelFragment :
 
         if (item.itemId == R.id.action_speed_pitch) {
             SpeedPitchDialog().show(childFragmentManager, SpeedPitchDialog.TAG)
+        if (item.itemId == R.id.action_reshuffle) {
+            playbackModel.reshuffle()
+            requireContext().showToast(R.string.lng_reshuffled)
             return true
         }
 

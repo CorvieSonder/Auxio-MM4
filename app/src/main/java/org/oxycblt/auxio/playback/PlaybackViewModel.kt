@@ -617,6 +617,12 @@ constructor(
         playbackManager.shuffled(!playbackManager.isShuffled)
     }
 
+    /** Shuffle the queue again around the current song, turning shuffle on if it was off. */
+    fun reshuffle() {
+        L.d("Reshuffling queue")
+        playbackManager.shuffled(true)
+    }
+
     /**
      * Toggle [repeatMode] (ex. from [RepeatMode.NONE] to [RepeatMode.TRACK])
      *
