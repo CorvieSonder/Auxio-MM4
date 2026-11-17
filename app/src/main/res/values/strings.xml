@@ -117,6 +117,11 @@
     <string name="lbl_track">Track</string>
     <string name="lbl_date_added">Date added</string>
     <string name="lbl_custom_order">Custom</string>
+    <string name="lbl_auto_recently_added">Recently added</string>
+    <string name="lbl_auto_recently_played">Recently played</string>
+    <string name="lbl_auto_most_played">Most played</string>
+    <string name="lbl_auto_rated">Rated</string>
+    <string name="lbl_auto_now_playing">Now playing</string>
     <string name="lbl_rating">Rating</string>
     <string name="lbl_rate">Rate</string>
     <string name="lbl_rating_none">Not rated</string>
@@ -328,6 +333,11 @@
     <string name="set_intelligent_sorting">Intelligent sorting</string>
     <string name="set_intelligent_sorting_desc">Correctly sort names that begin with numbers or words like \"the\" (works best with english-language music)</string>
     <string name="set_hide_collaborators">Hide collaborators</string>
+    <string name="set_auto_playlists">Automatic playlists</string>
+    <string name="set_auto_playlists_shown">Shown playlists</string>
+    <string name="set_auto_playlists_shown_desc">Choose the automatic playlists shown above your playlists</string>
+    <string name="set_auto_recent_days">Days a song stays in Recently added</string>
+    <string name="set_auto_rated_minimum">Lowest rating in Rated</string>
     <string name="set_ratings">Ratings</string>
     <string name="set_rating_source">Preferred rating source</string>
     <string name="set_rating_source_mediamonkey" translatable="false">MediaMonkey</string>

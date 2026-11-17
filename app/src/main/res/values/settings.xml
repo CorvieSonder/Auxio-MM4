@@ -74,6 +74,62 @@
     <string name="set_key_rating_source" translatable="false">auxio_rating_source</string>
     <string name="set_key_rating_lists" translatable="false">auxio_rating_lists</string>
 
+    <string name="set_key_auto_playlists" translatable="false">auxio_auto_playlists</string>
+    <string name="set_key_auto_recent_days" translatable="false">auxio_auto_recent_days</string>
+    <string name="set_key_auto_rated_minimum" translatable="false">auxio_auto_rated_minimum</string>
+
+    <string-array name="entries_auto_playlists">
+        <item>@string/lbl_auto_recently_added</item>
+        <item>@string/lbl_auto_recently_played</item>
+        <item>@string/lbl_auto_most_played</item>
+        <item>@string/lbl_auto_rated</item>
+        <item>@string/lbl_auto_now_playing</item>
+    </string-array>
+
+    <string-array name="values_auto_playlists" translatable="false">
+        <item>RECENTLY_ADDED</item>
+        <item>RECENTLY_PLAYED</item>
+        <item>MOST_PLAYED</item>
+        <item>RATED</item>
+        <item>NOW_PLAYING</item>
+    </string-array>
+
+    <string-array name="entries_auto_recent_days" translatable="false">
+        <item>7</item>
+        <item>14</item>
+        <item>30</item>
+        <item>90</item>
+        <item>365</item>
+    </string-array>
+
+    <integer-array name="values_auto_recent_days">
+        <item>7</item>
+        <item>14</item>
+        <item>30</item>
+        <item>90</item>
+        <item>365</item>
+    </integer-array>
+
+    <string-array name="entries_auto_rated_minimum" translatable="false">
+        <item>1★</item>
+        <item>2★</item>
+        <item>3★</item>
+        <item>3.5★</item>
+        <item>4★</item>
+        <item>4.5★</item>
+        <item>5★</item>
+    </string-array>
+
+    <integer-array name="values_auto_rated_minimum">
+        <item>2</item>
+        <item>4</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+    </integer-array>
+
     <string-array name="entries_rating_source">
         <item>@string/set_rating_source_mediamonkey</item>
         <item>@string/set_rating_source_musicbee</item>

@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.MusicRepository
+import org.oxycblt.auxio.music.auto.AutoPlaylist
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
@@ -160,6 +161,8 @@ constructor(
         // Forget the sorts of playlists that no longer exist.
         val library = musicRepository.library ?: return
         val existing = library.playlists.mapTo(mutableSetOf()) { it.uid }
+        // Automatic playlists are not part of the library, but always exist.
+        AutoPlaylist.Kind.entries.mapTo(existing) { it.uid }
         val removed = sorts.keys.filter { it !in existing }
         if (removed.isEmpty()) {
             return

@@ -24,6 +24,7 @@ import org.oxycblt.auxio.list.ListSettings
 import org.oxycblt.auxio.list.adapter.UpdateInstructions
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.MusicType
+import org.oxycblt.auxio.music.auto.AutoPlaylistRepository
 import org.oxycblt.auxio.music.rating.RatingRepository
 import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.musikr.Album
@@ -73,6 +74,7 @@ constructor(
     private val musicRepository: MusicRepository,
     private val playlistTreeRepository: PlaylistTreeRepository,
     private val ratingRepository: RatingRepository,
+    private val autoPlaylistRepository: AutoPlaylistRepository,
 ) : HomeGenerator.Factory {
     override fun create(invalidator: HomeGenerator.Invalidator): HomeGenerator =
         HomeGeneratorImpl(
@@ -82,6 +84,7 @@ constructor(
             musicRepository,
             playlistTreeRepository,
             ratingRepository,
+            autoPlaylistRepository,
         )
 }
 
@@ -92,19 +95,26 @@ private class HomeGeneratorImpl(
     private val musicRepository: MusicRepository,
     private val playlistTreeRepository: PlaylistTreeRepository,
     private val ratingRepository: RatingRepository,
+    private val autoPlaylistRepository: AutoPlaylistRepository,
 ) :
     HomeGenerator,
     HomeSettings.Listener,
     ListSettings.Listener,
     MusicRepository.UpdateListener,
     PlaylistTreeRepository.Listener,
-    RatingRepository.Listener {
+    RatingRepository.Listener,
+    AutoPlaylistRepository.Listener {
     override fun attach() {
         homeSettings.registerListener(this)
         listSettings.registerListener(this)
         musicRepository.addUpdateListener(this)
         playlistTreeRepository.addListener(this)
         ratingRepository.addListener(this)
+        autoPlaylistRepository.addListener(this)
+    }
+
+    override fun onAutoPlaylistsChanged() {
+        invalidator.invalidateMusic(MusicType.PLAYLISTS, UpdateInstructions.Diff)
     }
 
     override fun onPlaylistTreeChanged() {
@@ -175,6 +185,7 @@ private class HomeGeneratorImpl(
 
     override fun release() {
         playlistTreeRepository.removeListener(this)
+        autoPlaylistRepository.removeListener(this)
         ratingRepository.removeListener(this)
         musicRepository.removeUpdateListener(this)
         listSettings.unregisterListener(this)
@@ -204,9 +215,11 @@ private class HomeGeneratorImpl(
 
     override fun playlists() =
         musicRepository.library?.let {
-            playlistTreeRepository.pinnedFirst(
-                listSettings.playlistSort.playlists(playlistTreeRepository.childrenOf(null))
-            )
+            // Automatic playlists always come first, above any pinned playlists.
+            autoPlaylistRepository.playlists(it) +
+                playlistTreeRepository.pinnedFirst(
+                    listSettings.playlistSort.playlists(playlistTreeRepository.childrenOf(null))
+                )
         } ?: emptyList()
 
     override fun tabs() = homeSettings.homeTabs.filterIsInstance<Tab.Visible>().map { it.type }

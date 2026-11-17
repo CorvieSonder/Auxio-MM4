@@ -28,6 +28,7 @@ import org.oxycblt.auxio.databinding.DialogMenuBinding
 import org.oxycblt.auxio.detail.DetailViewModel
 import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.music.MusicViewModel
+import org.oxycblt.auxio.music.auto.AutoPlaylist
 import org.oxycblt.auxio.music.delete.DeleteSongsDialog
 import org.oxycblt.auxio.music.rating.RatingDialog
 import org.oxycblt.auxio.music.resolve
@@ -314,7 +315,21 @@ class PlaylistMenuDialogFragment : MenuDialogFragment<Menu.ForPlaylist>() {
         }
 
     override fun getHiddenItemIds(menu: Menu.ForPlaylist) =
-        setOf(if (treeModel.isPinned(menu.playlist)) R.id.action_pin else R.id.action_unpin)
+        if (menu.playlist is AutoPlaylist) {
+            // An automatic playlist cannot be edited or placed anywhere else.
+            setOf(
+                R.id.action_rename,
+                R.id.action_new_child,
+                R.id.action_pin,
+                R.id.action_unpin,
+                R.id.action_move,
+                R.id.action_import,
+                R.id.action_export,
+                R.id.action_delete,
+            )
+        } else {
+            setOf(if (treeModel.isPinned(menu.playlist)) R.id.action_pin else R.id.action_unpin)
+        }
 
     override fun updateMenu(binding: DialogMenuBinding, menu: Menu.ForPlaylist) {
         val context = requireContext()

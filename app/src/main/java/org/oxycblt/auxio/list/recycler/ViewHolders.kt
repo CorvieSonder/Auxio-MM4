@@ -34,6 +34,7 @@ import org.oxycblt.auxio.list.SelectableListListener
 import org.oxycblt.auxio.list.adapter.SelectionIndicatorAdapter
 import org.oxycblt.auxio.list.adapter.SimpleDiffCallback
 import org.oxycblt.auxio.music.areNamesTheSame
+import org.oxycblt.auxio.music.auto.AutoPlaylist
 import org.oxycblt.auxio.music.rating.bindRating
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
@@ -319,7 +320,11 @@ class PlaylistViewHolder private constructor(private val binding: ItemParentBind
         binding.parentName.compoundDrawablePadding =
             binding.context.resources.getDimensionPixelSize(R.dimen.spacing_tiny)
         binding.parentName.setCompoundDrawablesRelativeWithIntrinsicBounds(
-            if (isPinned) R.drawable.ic_pin_16 else 0,
+            when {
+                playlist is AutoPlaylist -> R.drawable.ic_auto_playlist_16
+                isPinned -> R.drawable.ic_pin_16
+                else -> 0
+            },
             0,
             0,
             0,
