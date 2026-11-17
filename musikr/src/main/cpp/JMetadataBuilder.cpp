@@ -23,6 +23,8 @@
 #include <taglib/mp4tag.h>
 #include <taglib/textidentificationframe.h>
 #include <taglib/attachedpictureframe.h>
+#include <taglib/commentsframe.h>
+#include <taglib/popularimeterframe.h>
 
 #include <taglib/tpropertymap.h>
 
@@ -81,6 +83,22 @@ void JMetadataBuilder::setId3v2(TagLib::ID3v2::Tag &tag) {
                             == TagLib::ID3v2::AttachedPictureFrame::FrontCover) {
                 frontCoverPic = pictureFrame;
             }
+        } else if (auto popmFrame =
+                dynamic_cast<TagLib::ID3v2::PopularimeterFrame*>(frame)) {
+            // Ratings are written per-tagger, with the tagger identified by the email.
+            TagLib::StringList values;
+            values.append(TagLib::String::number(popmFrame->rating()));
+            values.append(TagLib::String(std::to_string(popmFrame->counter())));
+            id3v2.add_combined(frame->frameID(), popmFrame->email(), values);
+        } else if (auto commFrame =
+                dynamic_cast<TagLib::ID3v2::CommentsFrame*>(frame)) {
+            // Only described comments are of interest, as taggers use them as
+            // an alternative to TXXX frames for their own fields.
+            TagLib::String description = commFrame->description();
+            if (description.isEmpty())
+                continue;
+            id3v2.add_combined(frame->frameID(), description,
+                    commFrame->text());
         } else {
             continue;
         }
