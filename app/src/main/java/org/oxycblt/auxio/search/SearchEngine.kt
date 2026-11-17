@@ -23,6 +23,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.text.Normalizer
 import javax.inject.Inject
 import org.oxycblt.auxio.music.resolve
+import org.oxycblt.auxio.music.tags.rawComposers
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Genre
@@ -72,7 +73,8 @@ class SearchEngineImpl @Inject constructor(@ApplicationContext private val conte
         return SearchEngine.Items(
             songs =
                 items.songs?.searchListImpl(query) { q, song ->
-                    song.path.name?.contains(q, ignoreCase = true) == true
+                    song.path.name?.contains(q, ignoreCase = true) == true ||
+                        song.rawComposers.any { it.contains(q, ignoreCase = true) }
                 },
             albums = items.albums?.searchListImpl(query),
             artists = items.artists?.searchListImpl(query),
