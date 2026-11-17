@@ -1,51 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+    <!-- Each group is a section of the selection row, set apart by dividers. -->
+    <group android:id="@+id/group_selection_add">
+        <item
+            android:id="@+id/action_selection_play_next"
+            android:icon="@drawable/ic_play_next_24"
+            android:title="@string/lbl_play_next"
+            app:showAsAction="always" />
+        <item
+            android:id="@+id/action_selection_queue_add"
+            android:icon="@drawable/ic_queue_add_24"
+            android:title="@string/lbl_queue_add"
+            app:showAsAction="always" />
+        <item
+            android:id="@+id/action_selection_playlist_add"
+            android:icon="@drawable/ic_playlist_add_24"
+            android:title="@string/lbl_playlist_add"
+            app:showAsAction="always" />
+    </group>
+    <group android:id="@+id/group_selection_play">
+        <item
+            android:id="@+id/action_selection_play"
+            android:icon="@drawable/ic_play_24"
+            android:title="@string/lbl_play"
+            app:showAsAction="always" />
+        <item
+            android:id="@+id/action_selection_shuffle"
+            android:icon="@drawable/ic_shuffle_off_24"
+            android:title="@string/lbl_shuffle"
+            app:showAsAction="always" />
+    </group>
+    <group android:id="@+id/group_selection_manage">
+        <item
+            android:id="@+id/action_selection_move"
+            android:icon="@drawable/ic_move_24"
+            android:title="@string/lbl_move_to"
+            android:visible="false"
+            app:showAsAction="always" />
+        <item
+            android:id="@+id/action_selection_pin"
+            android:icon="@drawable/ic_pin_24"
+            android:title="@string/lbl_pin"
+            android:visible="false"
+            app:showAsAction="always" />
+        <item
+            android:id="@+id/action_selection_unpin"
+            android:icon="@drawable/ic_pin_off_24"
+            android:title="@string/lbl_unpin"
+            android:visible="false"
+            app:showAsAction="always" />
+        <item
+            android:id="@+id/action_selection_select_all"
+            android:icon="@drawable/ic_select_all_24"
+            android:title="@string/lbl_select_all"
+            app:showAsAction="always" />
+        <item
+            android:id="@+id/action_selection_invert"
+            android:icon="@drawable/ic_select_invert_24"
+            android:title="@string/lbl_invert_selection"
+            app:showAsAction="always" />
+        <item
+            android:id="@+id/action_selection_share"
+            android:icon="@drawable/ic_share_24"
+            android:title="@string/lbl_share"
+            app:showAsAction="always" />
+    </group>
+    <!-- Only for selected playlists, and kept out of the row as it cannot be undone. -->
     <item
-        android:id="@+id/action_selection_play_next"
-        android:icon="@drawable/ic_play_next_24"
-        android:title="@string/lbl_play_next"
-        app:showAsAction="always" />
-    <item
-        android:id="@+id/action_selection_queue_add"
-        android:icon="@drawable/ic_queue_add_24"
-        android:title="@string/lbl_queue_add"
-        app:showAsAction="always" />
-    <item
-        android:id="@+id/action_selection_playlist_add"
-        android:icon="@drawable/ic_playlist_add_24"
-        android:title="@string/lbl_playlist_add"
-        app:showAsAction="always" />
-    <item
-        android:id="@+id/action_selection_select_all"
-        android:icon="@drawable/ic_select_all_24"
-        android:title="@string/lbl_select_all"
-        app:showAsAction="always" />
-    <item
-        android:id="@+id/action_selection_invert"
-        android:icon="@drawable/ic_select_invert_24"
-        android:title="@string/lbl_invert_selection"
-        app:showAsAction="always" />
-    <item
-        android:id="@+id/action_selection_move"
-        android:icon="@drawable/ic_move_24"
-        android:title="@string/lbl_move_to"
+        android:id="@+id/action_selection_delete"
+        android:icon="@drawable/ic_delete_24"
+        android:title="@string/lbl_delete"
         android:visible="false"
-        app:showAsAction="always" />
-    <item
-        android:id="@+id/action_selection_pin"
-        android:icon="@drawable/ic_pin_24"
-        android:title="@string/lbl_pin"
-        android:visible="false"
-        app:showAsAction="always" />
-    <item
-        android:id="@+id/action_selection_unpin"
-        android:icon="@drawable/ic_pin_off_24"
-        android:title="@string/lbl_unpin"
-        android:visible="false"
-        app:showAsAction="always" />
+        app:showAsAction="never" />
+    <!--
+    Kept in case the selection menu dialog is needed again: an item that is never shown as a
+    button forces the overflow button, which SelectionFragment pointed at that dialog.
     <item
         android:id="@+id/placeholder"
         android:title=""
         app:showAsAction="never" />
+    -->
 </menu>

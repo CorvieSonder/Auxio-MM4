@@ -33,6 +33,7 @@ import org.oxycblt.auxio.ui.AuxioToolbar
 import org.oxycblt.auxio.ui.ViewBindingFragment
 import org.oxycblt.auxio.util.collect
 import org.oxycblt.auxio.util.collectImmediately
+import org.oxycblt.auxio.util.share
 import org.oxycblt.auxio.util.showToast
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Playlist
@@ -64,18 +65,20 @@ abstract class SelectionFragment<VB : ViewBinding> :
             // Add cancel and menu item listeners to manage what occurs with the selection.
             setNavigationOnClickListener { listModel.dropSelection() }
             setOnMenuItemClickListener(this@SelectionFragment)
-            setOnOverflowMenuClick {
-                val songs = listModel.peekSelection()
-                val playlists = listModel.selected.value.filterIsInstance<Playlist>()
-                if (playlists.isNotEmpty()) {
-                    // Selected playlists can be deleted, even when they have no songs.
-                    listModel.openMenu(R.menu.selection_playlist, songs, playlists)
-                } else if (songs.isNotEmpty()) {
-                    listModel.openMenu(R.menu.selection, songs)
-                }
-            }
-            // Selected playlists can be moved into another playlist and pinned. Pin is offered
-            // while any of them is not pinned yet, unpin once all of them are.
+            // Kept in case the selection menu dialog is needed again. Everything it offered is
+            // a button now, and the overflow button only holds what does not fit, plus delete.
+            // setOnOverflowMenuClick {
+            //     val songs = listModel.peekSelection()
+            //     val playlists = listModel.selected.value.filterIsInstance<Playlist>()
+            //     if (playlists.isNotEmpty()) {
+            //         // Selected playlists can be deleted, even when they have no songs.
+            //         listModel.openMenu(R.menu.selection_playlist, songs, playlists)
+            //     } else if (songs.isNotEmpty()) {
+            //         listModel.openMenu(R.menu.selection, songs)
+            //     }
+            // }
+            // Selected playlists can be moved into another playlist, pinned and deleted. Pin is
+            // offered while any of them is not pinned yet, unpin once all of them are.
             collectImmediately(listModel.selected) { selected ->
                 val playlists = selected.filterIsInstance<Playlist>()
                 val allPinned = playlists.all(treeModel::isPinned)
@@ -85,12 +88,21 @@ abstract class SelectionFragment<VB : ViewBinding> :
                     R.id.action_selection_unpin,
                     playlists.isNotEmpty() && allPinned,
                 )
+                setMenuItemVisible(R.id.action_selection_delete, playlists.isNotEmpty())
             }
         }
         getSelectionToolbar(binding)?.let { toolbar ->
             // There are more actions than fit beside the title, so they get their own row,
             // which only takes up space while something is selected.
             toolbar.setActionsBelow()
+            toolbar.setOverflowPriority(
+                listOf(
+                    R.id.action_selection_share,
+                    R.id.action_selection_play_next,
+                    R.id.action_selection_queue_add,
+                    R.id.action_selection_playlist_add,
+                )
+            )
             collectImmediately(listModel.selected) { toolbar.setActionRowVisible(it.isNotEmpty()) }
         }
         collect(treeModel.moveDecision.flow) { if (it != null) handleMoveDecision() }
@@ -137,6 +149,12 @@ abstract class SelectionFragment<VB : ViewBinding> :
                 treeModel.setPinned(playlists, item.itemId == R.id.action_selection_pin)
                 true
             }
+            R.id.action_selection_delete -> {
+                val playlists = listModel.selected.value.filterIsInstance<Playlist>()
+                listModel.dropSelection()
+                musicModel.deletePlaylists(playlists)
+                true
+            }
             R.id.action_selection_move -> {
                 val playlists = listModel.selected.value.filterIsInstance<Playlist>()
                 listModel.dropSelection()
@@ -149,6 +167,33 @@ abstract class SelectionFragment<VB : ViewBinding> :
                     listModel.dropSelection()
                     playbackModel.addToQueue(songs)
                     requireContext().showToast(R.string.lng_queue_added)
+                }
+                true
+            }
+            R.id.action_selection_play -> {
+                // A selection of empty playlists has no songs to act on.
+                val songs = listModel.peekSelection()
+                if (songs.isNotEmpty()) {
+                    listModel.dropSelection()
+                    playbackModel.play(songs)
+                }
+                true
+            }
+            R.id.action_selection_shuffle -> {
+                // A selection of empty playlists has no songs to act on.
+                val songs = listModel.peekSelection()
+                if (songs.isNotEmpty()) {
+                    listModel.dropSelection()
+                    playbackModel.shuffle(songs)
+                }
+                true
+            }
+            R.id.action_selection_share -> {
+                // A selection of empty playlists has no songs to act on.
+                val songs = listModel.peekSelection()
+                if (songs.isNotEmpty()) {
+                    listModel.dropSelection()
+                    requireContext().share(songs)
                 }
                 true
             }
