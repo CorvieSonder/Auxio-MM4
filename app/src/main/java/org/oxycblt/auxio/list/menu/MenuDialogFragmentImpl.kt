@@ -301,6 +301,9 @@ class PlaylistMenuDialogFragment : MenuDialogFragment<Menu.ForPlaylist>() {
             setOf()
         }
 
+    override fun getHiddenItemIds(menu: Menu.ForPlaylist) =
+        setOf(if (treeModel.isPinned(menu.playlist)) R.id.action_pin else R.id.action_unpin)
+
     override fun updateMenu(binding: DialogMenuBinding, menu: Menu.ForPlaylist) {
         val context = requireContext()
         binding.menuCover.bind(menu.playlist)
@@ -329,6 +332,8 @@ class PlaylistMenuDialogFragment : MenuDialogFragment<Menu.ForPlaylist>() {
             }
             R.id.action_rename -> musicModel.renamePlaylist(menu.playlist)
             R.id.action_move -> treeModel.requestMove(listOf(menu.playlist))
+            R.id.action_pin -> treeModel.setPinned(listOf(menu.playlist), true)
+            R.id.action_unpin -> treeModel.setPinned(listOf(menu.playlist), false)
             R.id.action_new_child -> musicModel.createPlaylist(parent = menu.playlist)
             R.id.action_import -> musicModel.importPlaylist(target = menu.playlist)
             R.id.action_export -> musicModel.exportPlaylist(menu.playlist)
@@ -350,6 +355,7 @@ class SelectionMenuDialogFragment : MenuDialogFragment<Menu.ForSelection>() {
     override val listModel: ListViewModel by activityViewModels()
     private val musicModel: MusicViewModel by activityViewModels()
     private val playbackModel: PlaybackViewModel by activityViewModels()
+    private val treeModel: PlaylistTreeViewModel by activityViewModels()
     private val args: SelectionMenuDialogFragmentArgs by navArgs()
 
     override val parcel
@@ -368,6 +374,15 @@ class SelectionMenuDialogFragment : MenuDialogFragment<Menu.ForSelection>() {
             )
         } else {
             setOf()
+        }
+
+    override fun getHiddenItemIds(menu: Menu.ForSelection) =
+        when {
+            // The menu for a selection without playlists has neither item.
+            menu.playlists.isEmpty() -> setOf()
+            // Pin while any selected playlist is not pinned yet.
+            menu.playlists.all(treeModel::isPinned) -> setOf(R.id.action_pin)
+            else -> setOf(R.id.action_unpin)
         }
 
     override fun updateMenu(binding: DialogMenuBinding, menu: Menu.ForSelection) {
@@ -402,6 +417,8 @@ class SelectionMenuDialogFragment : MenuDialogFragment<Menu.ForSelection>() {
             }
             R.id.action_playlist_add -> musicModel.addToPlaylist(menu.songs)
             R.id.action_share -> requireContext().share(menu.songs)
+            R.id.action_pin -> treeModel.setPinned(menu.playlists, true)
+            R.id.action_unpin -> treeModel.setPinned(menu.playlists, false)
             R.id.action_delete -> musicModel.deletePlaylists(menu.playlists)
             else -> error("Unexpected menu item selected $item")
         }

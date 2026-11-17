@@ -192,7 +192,9 @@ private class HomeGeneratorImpl(
 
     override fun playlists() =
         musicRepository.library?.let {
-            listSettings.playlistSort.playlists(playlistTreeRepository.childrenOf(null))
+            playlistTreeRepository.pinnedFirst(
+                listSettings.playlistSort.playlists(playlistTreeRepository.childrenOf(null))
+            )
         } ?: emptyList()
 
     override fun tabs() = homeSettings.homeTabs.filterIsInstance<Tab.Visible>().map { it.type }

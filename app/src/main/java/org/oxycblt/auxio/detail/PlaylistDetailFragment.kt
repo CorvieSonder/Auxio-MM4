@@ -77,6 +77,7 @@ class PlaylistDetailFragment :
             this,
             { playlistTreeRepository.childrenOf(it).size },
             { nestTouchHelper?.startDrag(it) },
+            { playlistTreeRepository.isPinned(it) },
         )
     private var nestTouchHelper: ItemTouchHelper? = null
     private var touchHelper: ItemTouchHelper? = null

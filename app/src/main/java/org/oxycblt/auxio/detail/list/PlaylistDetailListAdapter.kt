@@ -62,6 +62,7 @@ class PlaylistDetailListAdapter(
     private val listener: Listener,
     private val childCount: (Playlist) -> Int = { 0 },
     private val pickUpPlaylist: ((RecyclerView.ViewHolder) -> Unit)? = null,
+    private val isPinned: (Playlist) -> Boolean = { false },
 ) : DetailListAdapter(listener, DIFF_CALLBACK) {
     private var isEditing = false
 
@@ -93,7 +94,13 @@ class PlaylistDetailListAdapter(
             when (val item = getItem(position)) {
                 is EditHeader -> (holder as EditHeaderViewHolder).bind(item, listener)
                 is Song -> (holder as PlaylistSongViewHolder).bind(item, listener)
-                is Playlist -> (holder as PlaylistViewHolder).bind(item, listener, childCount(item))
+                is Playlist ->
+                    (holder as PlaylistViewHolder).bind(
+                        item,
+                        listener,
+                        childCount(item),
+                        isPinned = isPinned(item),
+                    )
             }
         }
 
