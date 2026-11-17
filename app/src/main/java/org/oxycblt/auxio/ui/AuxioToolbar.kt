@@ -22,12 +22,14 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.ContextThemeWrapper
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import androidx.annotation.AttrRes
 import androidx.annotation.MenuRes
@@ -65,6 +67,7 @@ constructor(
         ViewToolbarBinding.inflate(LayoutInflater.from(context), this, true)
     private var menuItemClickListener: Toolbar.OnMenuItemClickListener? = null
     private var overflowClickListener: OnClickListener? = null
+    private var actionRow: View? = null
     private val actionButtons = mutableMapOf<Int, RippleFixMaterialButton>()
     @SuppressLint("RestrictedApi") private var menuBuilder = MenuBuilder(context)
 
@@ -205,6 +208,81 @@ constructor(
     }
 
     fun getMenuButton(itemId: Int): RippleFixMaterialButton? = actionButtons[itemId]
+
+    /**
+     * Show or hide a menu item, along with its action button.
+     *
+     * @param itemId The ID of the menu item to change.
+     * @param visible Whether the menu item should be shown.
+     */
+    @SuppressLint("RestrictedApi")
+    fun setMenuItemVisible(itemId: Int, visible: Boolean) {
+        val item = menuBuilder.findItem(itemId) ?: return
+        if (item.isVisible != visible) {
+            item.isVisible = visible
+            rebuildActionButtons()
+        }
+    }
+
+    /**
+     * Move the action buttons out of the title row into a row of their own below it, for toolbars
+     * with more actions than fit beside the title. The row scrolls sideways if it is still too
+     * narrow.
+     */
+    fun setActionsBelow() {
+        if (actionRow != null) {
+            return
+        }
+        val group = binding.toolbarActionGroup
+        binding.toolbarRoot.removeView(group)
+        val row =
+            HorizontalScrollView(context).apply {
+                isHorizontalScrollBarEnabled = false
+                clipChildren = false
+                clipToPadding = false
+                addView(
+                    group,
+                    LayoutParams(
+                        LayoutParams.WRAP_CONTENT,
+                        LayoutParams.WRAP_CONTENT,
+                        Gravity.CENTER_HORIZONTAL,
+                    ),
+                )
+            }
+        val column =
+            LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                clipChildren = false
+                clipToPadding = false
+            }
+        removeView(binding.toolbarRoot)
+        column.addView(
+            binding.toolbarRoot,
+            LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT),
+        )
+        column.addView(
+            row,
+            LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
+                gravity = Gravity.CENTER_HORIZONTAL
+            },
+        )
+        // Children added from outside go to the title container, so add this one like the
+        // inflated layout was.
+        inflatingLayout = true
+        addView(column, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
+        inflatingLayout = false
+        actionRow = row
+    }
+
+    /**
+     * Show or hide the row made by [setActionsBelow], so that it takes no space while its toolbar
+     * is not in use.
+     *
+     * @param visible Whether the row should be shown.
+     */
+    fun setActionRowVisible(visible: Boolean) {
+        actionRow?.isVisible = visible
+    }
 
     @SuppressLint("RestrictedApi")
     fun setMenuItemEnabled(itemId: Int, enabled: Boolean) {
