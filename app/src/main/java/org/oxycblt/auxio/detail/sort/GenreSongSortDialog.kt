@@ -59,6 +59,7 @@ class GenreSongSortDialog : SortDialog() {
             Sort.Mode.ByAlbum,
             Sort.Mode.ByDate,
             Sort.Mode.ByDuration,
+            Sort.Mode.ByRating,
         )
 
     private fun updateGenre(genre: Genre?) {

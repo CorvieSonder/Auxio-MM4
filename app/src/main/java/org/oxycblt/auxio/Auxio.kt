@@ -27,6 +27,7 @@ import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 import org.oxycblt.auxio.home.HomeSettings
 import org.oxycblt.auxio.image.ImageSettings
+import org.oxycblt.auxio.music.rating.RatingRepository
 import org.oxycblt.auxio.playback.PlaybackSettings
 import org.oxycblt.auxio.ui.UISettings
 import org.oxycblt.auxio.util.CopyleftNoticeTree
@@ -43,6 +44,8 @@ class Auxio : Application() {
     @Inject lateinit var playbackSettings: PlaybackSettings
     @Inject lateinit var uiSettings: UISettings
     @Inject lateinit var homeSettings: HomeSettings
+    // Created with the app so that ratings are available wherever songs are shown or sorted.
+    @Inject lateinit var ratingRepository: RatingRepository
 
     override fun onCreate() {
         super.onCreate()

@@ -307,6 +307,11 @@ interface Song : Music {
     /** Useful information to quickly obtain the album cover. */
     val cover: Cover?
     /**
+     * Additional raw tag values that are not interpreted by the library, keyed by their tag
+     * identifier (ex. `POPM:NO@EMAIL`, `TXXX:MOOD`, `TCOM`). Descriptions are uppercased.
+     */
+    val extras: Map<String, List<String>>
+    /**
      * The parent [Album]. If the metadata did not specify an album, it's parent directory is used
      * instead.
      */
