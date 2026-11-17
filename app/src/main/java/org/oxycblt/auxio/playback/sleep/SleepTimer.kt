@@ -104,6 +104,7 @@ class SleepTimerImpl @Inject constructor(private val playbackManager: PlaybackSt
     private var job: Job? = null
     private var listener: SleepTimer.Listener? = null
     private var fade = false
+    private var pausing = false
 
     override val state: StateFlow<SleepTimer.State>
         field = MutableStateFlow<SleepTimer.State>(SleepTimer.State.Off)
@@ -138,21 +139,34 @@ class SleepTimerImpl @Inject constructor(private val playbackManager: PlaybackSt
     override fun cancel() {
         L.d("Cancelling sleep timer")
         job?.cancel()
+        pausing = false
         job = null
         finish()
     }
 
     override fun onProgressionChanged(progression: Progression) {
-        if (state.value is SleepTimer.State.FinishingSong && !progression.isPlaying) {
-            // Either the song has ended and the player paused itself, or the user paused
-            // while waiting for that. Both leave nothing more to do.
-            L.d("Playback paused after the timer ran out, timer is done")
-            finish()
+        if (progression.isPlaying || pausing) {
+            return
+        }
+        when (state.value) {
+            is SleepTimer.State.FinishingSong -> {
+                // Either the song has ended and the player paused itself, or the user paused
+                // while waiting for that. Both leave nothing more to do.
+                L.d("Playback paused after the timer ran out, timer is done")
+                finish()
+            }
+            is SleepTimer.State.Running -> {
+                // Playback was paused by the user, so there is nothing left to pause later.
+                L.d("Playback paused while the timer was running, stopping it")
+                cancel()
+            }
+            is SleepTimer.State.Off -> {}
         }
     }
 
     private fun run(endRealtimeMs: Long, finishSong: Boolean) {
         job?.cancel()
+        pausing = false
         // A previous fade may have been interrupted.
         applyVolume(1f)
         state.value = SleepTimer.State.Running(endRealtimeMs, finishSong)
@@ -178,9 +192,13 @@ class SleepTimerImpl @Inject constructor(private val playbackManager: PlaybackSt
             }
             L.d("Sleep timer ran out, pausing playback")
             applyVolume(0f)
+            // The timer's own pause must not be taken for the user pausing, which would bring
+            // the volume back before the player has stopped.
+            pausing = true
             playbackManager.playing(false)
             // Let the player stop before the volume comes back.
             delay(RESTORE_DELAY_MS)
+            pausing = false
             finish()
         }
     }
