@@ -66,11 +66,17 @@
             android:title="@string/lbl_share"
             app:showAsAction="always" />
     </group>
+    <!-- Kept out of the row, as deleting from the device cannot be undone. -->
+    <item
+        android:id="@+id/action_selection_delete_songs"
+        android:icon="@drawable/ic_delete_24"
+        android:title="@string/lbl_delete_songs"
+        app:showAsAction="never" />
     <!-- Only for selected playlists, and kept out of the row as it cannot be undone. -->
     <item
         android:id="@+id/action_selection_delete"
         android:icon="@drawable/ic_delete_24"
-        android:title="@string/lbl_delete"
+        android:title="@string/lbl_delete_playlists"
         android:visible="false"
         app:showAsAction="never" />
     <!--

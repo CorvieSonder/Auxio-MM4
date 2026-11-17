@@ -12,6 +12,10 @@
         android:icon="@drawable/ic_equalizer_24"
         android:title="@string/lbl_equalizer" />
     <item
+        android:id="@+id/action_ringtone"
+        android:icon="@drawable/ic_ringtone_24"
+        android:title="@string/lbl_ringtone" />
+    <item
         android:id="@+id/action_delete_song"
         android:icon="@drawable/ic_delete_24"
         android:title="@string/lbl_delete_song" />

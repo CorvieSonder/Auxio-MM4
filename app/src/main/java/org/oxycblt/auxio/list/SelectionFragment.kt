@@ -26,6 +26,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.viewbinding.ViewBinding
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.music.MusicViewModel
+import org.oxycblt.auxio.music.delete.DeleteSongsDialog
 import org.oxycblt.auxio.music.tree.MovePlaylistDialogArgs
 import org.oxycblt.auxio.music.tree.PlaylistTreeViewModel
 import org.oxycblt.auxio.playback.PlaybackViewModel
@@ -51,6 +52,13 @@ abstract class SelectionFragment<VB : ViewBinding> :
     private val treeModel: PlaylistTreeViewModel by activityViewModels()
 
     open fun getSelectionToolbar(binding: VB): AuxioToolbar? = null
+
+    /**
+     * Get the playlist the selection is shown in, which songs can be removed from.
+     *
+     * @return The [Playlist] this fragment shows the songs of, or null if it shows none.
+     */
+    open fun getSelectionPlaylist(): Playlist? = null
 
     /**
      * Get the items that "Select all" and "Invert selection" act on.
@@ -149,6 +157,18 @@ abstract class SelectionFragment<VB : ViewBinding> :
                 treeModel.setPinned(playlists, item.itemId == R.id.action_selection_pin)
                 true
             }
+            R.id.action_selection_delete_songs -> {
+                val songs = listModel.peekSelection()
+                if (songs.size > MAX_DELETED_SONGS) {
+                    // More would not fit into the arguments of the dialog.
+                    requireContext().showToast(R.string.err_delete_too_many)
+                } else if (songs.isNotEmpty()) {
+                    listModel.dropSelection()
+                    DeleteSongsDialog.from(songs, getSelectionPlaylist())
+                        .show(childFragmentManager, DeleteSongsDialog.TAG)
+                }
+                true
+            }
             R.id.action_selection_delete -> {
                 val playlists = listModel.selected.value.filterIsInstance<Playlist>()
                 listModel.dropSelection()
@@ -209,4 +229,8 @@ abstract class SelectionFragment<VB : ViewBinding> :
         }
 
     // TODO: Re-add the automatic selection handling
+
+    private companion object {
+        const val MAX_DELETED_SONGS = 1000
+    }
 }

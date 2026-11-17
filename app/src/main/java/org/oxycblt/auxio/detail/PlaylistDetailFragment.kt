@@ -101,6 +101,8 @@ class PlaylistDetailFragment :
         }
     }
 
+    override fun getSelectionPlaylist() = detailModel.currentPlaylist.value
+
     override fun onBindingCreated(binding: FragmentDetailBinding, savedInstanceState: Bundle?) {
         super.onBindingCreated(binding, savedInstanceState)
 

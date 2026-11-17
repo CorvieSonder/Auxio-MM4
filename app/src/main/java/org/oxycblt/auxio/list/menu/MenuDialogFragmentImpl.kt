@@ -31,6 +31,7 @@ import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.music.delete.DeleteSongsDialog
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
+import org.oxycblt.auxio.music.ringtone.setAsRingtone
 import org.oxycblt.auxio.music.tree.PlaylistTreeViewModel
 import org.oxycblt.auxio.playback.PlaybackViewModel
 import org.oxycblt.auxio.playback.formatDurationMs
@@ -93,6 +94,7 @@ class SongMenuDialogFragment : MenuDialogFragment<Menu.ForSong>() {
                 // one the song can be removed from.
                 DeleteSongsDialog.from(listOf(menu.song), playbackModel.parent.value as? Playlist)
                     .show(parentFragmentManager, DeleteSongsDialog.TAG)
+            R.id.action_ringtone -> requireContext().setAsRingtone(menu.song)
             else -> error("Unexpected menu item selected $item")
         }
     }

@@ -94,7 +94,11 @@
     <string name="lbl_rename_playlist">Rename playlist</string>
     <string name="lbl_delete">Delete</string>
     <string name="lbl_delete_song">Delete song…</string>
+    <string name="lbl_delete_songs">Delete songs…</string>
+    <string name="lbl_delete_playlists">Delete playlists…</string>
+    <string name="err_delete_too_many">Select at most 1000 songs to delete at a time</string>
     <string name="lbl_delete_from_device">Delete from device</string>
+    <string name="lbl_ringtone">Use as ringtone</string>
     <string name="lbl_confirm_delete_playlist">Delete playlist?</string>
     <string name="lbl_edit">Edit</string>
 
@@ -221,6 +225,9 @@
     <string name="lng_playlist_deleted">Playlist deleted</string>
     <string name="lng_deleted_from_playlist">Removed from playlist</string>
     <string name="err_delete_failed">Some files could not be deleted</string>
+    <string name="lng_ringtone_set">Ringtone set</string>
+    <string name="lng_ringtone_permission">Allow changing system settings, then try again</string>
+    <string name="err_ringtone">Unable to use this song as the ringtone</string>
     <string name="lng_playlist_added">Added to playlist</string>
     <string name="lng_playlist_moved">Playlist moved</string>
     <string name="lng_playlist_name_taken">A playlist with the same name is already there</string>
