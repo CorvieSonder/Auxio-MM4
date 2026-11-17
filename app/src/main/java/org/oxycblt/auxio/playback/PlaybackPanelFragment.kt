@@ -44,6 +44,8 @@ import org.oxycblt.auxio.detail.DetailViewModel
 import org.oxycblt.auxio.home.HomeViewModel
 import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.music.MusicViewModel
+import org.oxycblt.auxio.music.rating.RatingDialog
+import org.oxycblt.auxio.music.rating.RatingRepository
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
 import org.oxycblt.auxio.playback.queue.QueueViewModel
@@ -62,7 +64,6 @@ import org.oxycblt.auxio.util.collect
 import org.oxycblt.auxio.util.collectImmediately
 import org.oxycblt.auxio.util.dampen
 import org.oxycblt.auxio.util.recycler
-import org.oxycblt.auxio.util.share
 import org.oxycblt.auxio.util.showToast
 import org.oxycblt.auxio.util.smoothScrollByPageTo
 import org.oxycblt.auxio.util.systemBarInsetsCompat
@@ -84,7 +85,8 @@ class PlaybackPanelFragment :
     ViewBindingFragment<FragmentPlaybackPanelBinding>(),
     Toolbar.OnMenuItemClickListener,
     StyledSeekBar.Listener,
-    StepperOverlay.Listener {
+    StepperOverlay.Listener,
+    RatingRepository.Listener {
     private val coverPagerAdapter = CoverPagerAdapter(this)
     private val playbackModel: PlaybackViewModel by activityViewModels()
     private val detailModel: DetailViewModel by activityViewModels()
@@ -93,6 +95,7 @@ class PlaybackPanelFragment :
     private val musicModel: MusicViewModel by activityViewModels()
     private val homeModel: HomeViewModel by activityViewModels()
     @Inject lateinit var sleepTimer: SleepTimer
+    @Inject lateinit var ratingRepository: RatingRepository
     private var equalizerLauncher: ActivityResultLauncher<Intent>? = null
     private var userAwarePagerCallback: UserAwarePagerCallback? = null
 
@@ -193,6 +196,7 @@ class PlaybackPanelFragment :
         collectImmediately(playbackModel.isShuffled, ::updateShuffled)
         collectImmediately(playbackModel.pagerQueue, ::updatePager)
         collectImmediately(sleepTimer.state, ::updateSleepTimer)
+        ratingRepository.addListener(this)
         collect(playbackModel.equalizerRequest.flow, ::handleEqualizerRequest)
     }
 
@@ -232,6 +236,7 @@ class PlaybackPanelFragment :
     //    }
 
     override fun onDestroyBinding(binding: FragmentPlaybackPanelBinding) {
+        ratingRepository.removeListener(this)
         equalizerLauncher = null
         binding.playbackRepeat.clearPendingIcon()
         binding.playbackSong.isSelected = false
@@ -254,7 +259,10 @@ class PlaybackPanelFragment :
             R.id.action_genre_details -> navigateToCurrentGenre()
             R.id.action_save_queue -> musicModel.createPlaylist(songs = playbackModel.queue)
             R.id.action_settings -> homeModel.showSettings()
-            R.id.action_share -> playbackModel.song.value?.let { requireContext().share(it) }
+            R.id.action_rate ->
+                playbackModel.song.value?.let {
+                    RatingDialog.from(it).show(childFragmentManager, RatingDialog.TAG)
+                }
             R.id.action_song_menu -> openSongMenu()
             else -> return false
         }
@@ -313,6 +321,23 @@ class PlaybackPanelFragment :
         }
     }
 
+    override fun onRatingsChanged() {
+        updateRating(playbackModel.song.value)
+    }
+
+    private fun updateRating(song: Song?) {
+        requireBinding()
+            .playbackToolbar
+            .setMenuItemIcon(
+                R.id.action_rate,
+                if (song?.let(ratingRepository::ratingOf) != null) {
+                    R.drawable.ic_star_24
+                } else {
+                    R.drawable.ic_star_outline_24
+                },
+            )
+    }
+
     private fun updateSleepTimer(state: SleepTimer.State) {
         requireBinding()
             .playbackToolbar
@@ -339,6 +364,7 @@ class PlaybackPanelFragment :
         val binding = requireBinding()
         val context = requireContext()
         L.d("Updating song display: $song")
+        updateRating(song)
         binding.playbackSong.text = song.name.resolve(context)
         binding.playbackArtist.text = song.artists.resolveNames(context)
         binding.playbackAlbum?.text = song.album.name.resolve(context)
