@@ -118,6 +118,8 @@ constructor(
                     artists = if (MusicType.ARTISTS in filters) library.artists else null,
                     genres = if (MusicType.GENRES in filters) library.genres else null,
                     playlists = if (MusicType.PLAYLISTS in filters) library.playlists else null,
+                    composers = if (MusicType.COMPOSERS in filters) library.composers else null,
+                    moods = if (MusicType.MOODS in filters) library.moods else null,
                 )
             } else {
                 SearchEngine.Items(
@@ -126,6 +128,8 @@ constructor(
                     artists = library.artists,
                     genres = library.genres,
                     playlists = library.playlists,
+                    composers = library.composers,
+                    moods = library.moods,
                 )
             }
 
@@ -167,6 +171,26 @@ constructor(
 
                 add(header)
                 addAll(SORT.genres(it))
+            }
+            results.composers?.let {
+                L.d("Adding ${it.size} composers to search results")
+                val header = BasicHeader(R.string.lbl_composers)
+                if (isNotEmpty()) {
+                    add(PlainDivider(header))
+                }
+
+                add(header)
+                addAll(SORT.composers(it))
+            }
+            results.moods?.let {
+                L.d("Adding ${it.size} moods to search results")
+                val header = BasicHeader(R.string.lbl_moods)
+                if (isNotEmpty()) {
+                    add(PlainDivider(header))
+                }
+
+                add(header)
+                addAll(SORT.moods(it))
             }
             results.songs?.let {
                 L.d("Adding ${it.size} songs to search results")

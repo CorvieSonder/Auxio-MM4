@@ -31,7 +31,9 @@ import org.oxycblt.auxio.music.rating.RatingRepository
 import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
+import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.MusicParent
 import org.oxycblt.musikr.Playlist
@@ -48,6 +50,10 @@ interface DetailGenerator {
     fun artist(uid: Music.UID): Detail<Artist>?
 
     fun genre(uid: Music.UID): Detail<Genre>?
+
+    fun composer(uid: Music.UID): Detail<Composer>?
+
+    fun mood(uid: Music.UID): Detail<Mood>?
 
     fun playlist(uid: Music.UID): Detail<Playlist>?
 
@@ -152,8 +158,20 @@ private class DetailGeneratorImpl(
         invalidator.invalidate(MusicType.PLAYLISTS, 0)
     }
 
+    override fun onComposerSongSortChanged() {
+        super.onComposerSongSortChanged()
+        invalidator.invalidate(MusicType.COMPOSERS, -1)
+    }
+
+    override fun onMoodSongSortChanged() {
+        super.onMoodSongSortChanged()
+        invalidator.invalidate(MusicType.MOODS, -1)
+    }
+
     override fun onMusicChanges(changes: MusicRepository.Changes) {
         if (changes.deviceLibrary) {
+            invalidator.invalidate(MusicType.COMPOSERS, null)
+            invalidator.invalidate(MusicType.MOODS, null)
             invalidator.invalidate(MusicType.ALBUMS, null)
             invalidator.invalidate(MusicType.ARTISTS, null)
             invalidator.invalidate(MusicType.GENRES, null)
@@ -178,6 +196,8 @@ private class DetailGeneratorImpl(
             is Album -> album(uid)
             is Artist -> artist(uid)
             is Genre -> genre(uid)
+            is Composer -> composer(uid)
+            is Mood -> mood(uid)
             is Playlist -> playlist(uid)
             else -> null
         }
@@ -233,6 +253,20 @@ private class DetailGeneratorImpl(
             sections.add(songs)
         }
         return Detail(artist, sections)
+    }
+
+    override fun composer(uid: Music.UID): Detail<Composer>? {
+        val composer = musicRepository.library?.findComposer(uid) ?: return null
+        val artists = DetailSection.Artists(GENRE_ARTIST_SORT.artists(composer.artists))
+        val songs = DetailSection.Songs(listSettings.composerSongSort.songs(composer.songs))
+        return Detail(composer, listOf(artists, songs))
+    }
+
+    override fun mood(uid: Music.UID): Detail<Mood>? {
+        val mood = musicRepository.library?.findMood(uid) ?: return null
+        val artists = DetailSection.Artists(GENRE_ARTIST_SORT.artists(mood.artists))
+        val songs = DetailSection.Songs(listSettings.moodSongSort.songs(mood.songs))
+        return Detail(mood, listOf(artists, songs))
     }
 
     override fun genre(uid: Music.UID): Detail<Genre>? {

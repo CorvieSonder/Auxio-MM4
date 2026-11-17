@@ -33,7 +33,9 @@ import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.search.SearchEngine
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
+import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
@@ -127,6 +129,10 @@ private constructor(
             is Genre -> music.toMediaItem(context)
             is Playlist -> music.toMediaItem(context)
             is Song -> music.toMediaItem(context)
+            // Not browsable in Android Auto.
+            is Composer -> null
+            // Not browsable in Android Auto.
+            is Mood -> null
         }
     }
 
@@ -191,7 +197,7 @@ private constructor(
     private fun getCategoryMediaItems(node: TabNode, maxTabs: Int) =
         when (node) {
             is TabNode.Root -> {
-                val tabs = homeGenerator.tabs()
+                val tabs = autoTabs()
                 if (maxTabs < tabs.size) {
                     tabs.take(maxTabs - 1).map { TabNode.Home(it).toMediaItem(context) } +
                         TabNode.More.toMediaItem(context)
@@ -200,7 +206,7 @@ private constructor(
                 }
             }
             is TabNode.More -> {
-                homeGenerator.tabs().drop(maxTabs - 1).map { TabNode.Home(it).toMediaItem(context) }
+                autoTabs().drop(maxTabs - 1).map { TabNode.Home(it).toMediaItem(context) }
             }
             is TabNode.Home ->
                 // homeGenerator returns emptyLists
@@ -210,8 +216,14 @@ private constructor(
                     MusicType.ARTISTS -> homeGenerator.artists().map { it.toMediaItem(context) }
                     MusicType.GENRES -> homeGenerator.genres().map { it.toMediaItem(context) }
                     MusicType.PLAYLISTS -> homeGenerator.playlists().map { it.toMediaItem(context) }
+                    MusicType.COMPOSERS -> listOf()
+                    MusicType.MOODS -> listOf()
                 }
         }
+
+    // Composers and moods are not browsable in Android Auto.
+    private fun autoTabs() =
+        homeGenerator.tabs().filter { it != MusicType.COMPOSERS && it != MusicType.MOODS }
 
     private fun getChildMediaItems(uid: Music.UID): List<MediaItem>? {
         val detail = detailGenerator.any(uid) ?: return null

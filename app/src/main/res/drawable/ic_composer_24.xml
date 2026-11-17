@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Composer: a music note next to a quill pen. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:tint="?attr/colorControlNormal"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M4,17a3,3 0,1 0,6 0a3,3 0,1 0,-6 0zM8.5,17h1.5v-12h4v2.5h-4z" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M12.5,21L14,17C15,12 17.5,6.5 21,3C20.5,8 18,13.5 15,16.5Z" />
+</vector>

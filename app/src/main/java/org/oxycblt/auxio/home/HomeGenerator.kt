@@ -29,7 +29,9 @@ import org.oxycblt.auxio.music.rating.RatingRepository
 import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
+import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
 import timber.log.Timber as L
@@ -48,6 +50,10 @@ interface HomeGenerator {
     fun artists(): List<Artist>
 
     fun genres(): List<Genre>
+
+    fun composers(): List<Composer>
+
+    fun moods(): List<Mood>
 
     fun playlists(): List<Playlist>
 
@@ -158,6 +164,16 @@ private class HomeGeneratorImpl(
         invalidator.invalidateMusic(MusicType.GENRES, UpdateInstructions.Replace(0))
     }
 
+    override fun onComposerSortChanged() {
+        super.onComposerSortChanged()
+        invalidator.invalidateMusic(MusicType.COMPOSERS, UpdateInstructions.Replace(0))
+    }
+
+    override fun onMoodSortChanged() {
+        super.onMoodSortChanged()
+        invalidator.invalidateMusic(MusicType.MOODS, UpdateInstructions.Replace(0))
+    }
+
     override fun onPlaylistSortChanged() {
         super.onPlaylistSortChanged()
         invalidator.invalidateMusic(MusicType.PLAYLISTS, UpdateInstructions.Replace(0))
@@ -175,6 +191,8 @@ private class HomeGeneratorImpl(
             invalidator.invalidateMusic(MusicType.ALBUMS, UpdateInstructions.Diff)
             invalidator.invalidateMusic(MusicType.ARTISTS, UpdateInstructions.Diff)
             invalidator.invalidateMusic(MusicType.GENRES, UpdateInstructions.Diff)
+            invalidator.invalidateMusic(MusicType.COMPOSERS, UpdateInstructions.Diff)
+            invalidator.invalidateMusic(MusicType.MOODS, UpdateInstructions.Diff)
         }
 
         if (changes.userLibrary && library != null) {
@@ -209,6 +227,13 @@ private class HomeGeneratorImpl(
                 sorted
             }
         } ?: emptyList()
+
+    override fun composers() =
+        musicRepository.library?.let { listSettings.composerSort.composers(it.composers) }
+            ?: emptyList()
+
+    override fun moods() =
+        musicRepository.library?.let { listSettings.moodSort.moods(it.moods) } ?: emptyList()
 
     override fun genres() =
         musicRepository.library?.let { listSettings.genreSort.genres(it.genres) } ?: emptyList()

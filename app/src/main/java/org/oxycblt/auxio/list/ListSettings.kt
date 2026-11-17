@@ -43,6 +43,14 @@ interface ListSettings : Settings<ListSettings.Listener> {
     var artistSongSort: Sort
     /** The [Sort] mode used in a Genre's Song list. */
     var genreSongSort: Sort
+    /** The [Sort] mode used in Composer lists. */
+    var composerSort: Sort
+    /** The [Sort] mode used in a Composer's Song list. */
+    var composerSongSort: Sort
+    /** The [Sort] mode used in Mood lists. */
+    var moodSort: Sort
+    /** The [Sort] mode used in a Mood's Song list. */
+    var moodSongSort: Sort
 
     interface Listener {
         fun onSongSortChanged() {}
@@ -58,6 +66,14 @@ interface ListSettings : Settings<ListSettings.Listener> {
         fun onGenreSortChanged() {}
 
         fun onGenreSongSortChanged() {}
+
+        fun onComposerSortChanged() {}
+
+        fun onComposerSongSortChanged() {}
+
+        fun onMoodSortChanged() {}
+
+        fun onMoodSongSortChanged() {}
 
         fun onPlaylistSortChanged() {}
     }
@@ -170,6 +186,60 @@ class ListSettingsImpl @Inject constructor(@ApplicationContext val context: Cont
             }
         }
 
+    override var composerSort: Sort
+        get() =
+            Sort.fromIntCode(
+                sharedPreferences.getInt(getString(R.string.set_key_composers_sort), Int.MIN_VALUE)
+            ) ?: Sort(Sort.Mode.ByName, Sort.Direction.ASCENDING)
+        set(value) {
+            sharedPreferences.edit {
+                putInt(getString(R.string.set_key_composers_sort), value.intCode)
+                apply()
+            }
+        }
+
+    override var composerSongSort: Sort
+        get() =
+            Sort.fromIntCode(
+                sharedPreferences.getInt(
+                    getString(R.string.set_key_composer_songs_sort),
+                    Int.MIN_VALUE,
+                )
+            ) ?: Sort(Sort.Mode.ByName, Sort.Direction.ASCENDING)
+        set(value) {
+            sharedPreferences.edit {
+                putInt(getString(R.string.set_key_composer_songs_sort), value.intCode)
+                apply()
+            }
+        }
+
+    override var moodSort: Sort
+        get() =
+            Sort.fromIntCode(
+                sharedPreferences.getInt(getString(R.string.set_key_moods_sort), Int.MIN_VALUE)
+            ) ?: Sort(Sort.Mode.ByName, Sort.Direction.ASCENDING)
+        set(value) {
+            sharedPreferences.edit {
+                putInt(getString(R.string.set_key_moods_sort), value.intCode)
+                apply()
+            }
+        }
+
+    override var moodSongSort: Sort
+        get() =
+            Sort.fromIntCode(
+                sharedPreferences.getInt(
+                    getString(R.string.set_key_mood_songs_sort),
+                    Int.MIN_VALUE,
+                )
+            ) ?: Sort(Sort.Mode.ByName, Sort.Direction.ASCENDING)
+        set(value) {
+            sharedPreferences.edit {
+                putInt(getString(R.string.set_key_mood_songs_sort), value.intCode)
+                apply()
+            }
+        }
+
     override fun onSettingChanged(key: String, listener: ListSettings.Listener) {
         when (key) {
             getString(R.string.set_key_songs_sort) -> listener.onSongSortChanged()
@@ -180,6 +250,10 @@ class ListSettingsImpl @Inject constructor(@ApplicationContext val context: Cont
             getString(R.string.set_key_genres_sort) -> listener.onGenreSortChanged()
             getString(R.string.set_key_genre_songs_sort) -> listener.onGenreSongSortChanged()
             getString(R.string.set_key_playlists_sort) -> listener.onPlaylistSortChanged()
+            getString(R.string.set_key_composers_sort) -> listener.onComposerSortChanged()
+            getString(R.string.set_key_composer_songs_sort) -> listener.onComposerSongSortChanged()
+            getString(R.string.set_key_moods_sort) -> listener.onMoodSortChanged()
+            getString(R.string.set_key_mood_songs_sort) -> listener.onMoodSongSortChanged()
         }
     }
 }

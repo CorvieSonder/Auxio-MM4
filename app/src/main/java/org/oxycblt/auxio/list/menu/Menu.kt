@@ -24,7 +24,9 @@ import kotlinx.parcelize.Parcelize
 import org.oxycblt.auxio.playback.PlaySong
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
+import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
@@ -51,6 +53,8 @@ sealed interface Menu {
                         is PlaySong.FromArtist -> playWith.which?.uid
                         is PlaySong.FromGenre -> playWith.which?.uid
                         is PlaySong.FromPlaylist -> playWith.which.uid
+                        is PlaySong.FromComposer -> playWith.which.uid
+                        is PlaySong.FromMood -> playWith.which.uid
                         is PlaySong.FromAll,
                         is PlaySong.FromAlbum,
                         is PlaySong.ByItself -> null
@@ -90,6 +94,22 @@ sealed interface Menu {
             get() = Parcel(res, genre.uid)
 
         @Parcelize data class Parcel(val res: Int, val genreUid: Music.UID) : Menu.Parcel
+    }
+
+    /** Navigate to a [Composer] menu dialog. */
+    class ForComposer(@MenuRes override val res: Int, val composer: Composer) : Menu {
+        override val parcel
+            get() = Parcel(res, composer.uid)
+
+        @Parcelize data class Parcel(val res: Int, val composerUid: Music.UID) : Menu.Parcel
+    }
+
+    /** Navigate to a [Mood] menu dialog. */
+    class ForMood(@MenuRes override val res: Int, val mood: Mood) : Menu {
+        override val parcel
+            get() = Parcel(res, mood.uid)
+
+        @Parcelize data class Parcel(val res: Int, val moodUid: Music.UID) : Menu.Parcel
     }
 
     /** Navigate to a [Playlist] menu dialog. */

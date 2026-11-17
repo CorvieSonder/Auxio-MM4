@@ -402,6 +402,16 @@ class PlaylistDetailFragment :
                         )
                 }
             }
+            is Show.ComposerDetails -> {
+                L.d("Navigating to ${show.composer}")
+                findNavController()
+                    .navigateSafe(PlaylistDetailFragmentDirections.showComposer(show.composer.uid))
+            }
+            is Show.MoodDetails -> {
+                L.d("Navigating to ${show.mood}")
+                findNavController()
+                    .navigateSafe(PlaylistDetailFragmentDirections.showMood(show.mood.uid))
+            }
             is Show.GenreDetails -> {
                 error("Unexpected show command $show")
             }
@@ -420,6 +430,8 @@ class PlaylistDetailFragment :
                     PlaylistDetailFragmentDirections.openSelectionMenu(menu.parcel)
                 is Menu.ForArtist,
                 is Menu.ForAlbum,
+                is Menu.ForComposer,
+                is Menu.ForMood,
                 is Menu.ForGenre -> error("Unexpected menu $menu")
             }
         findNavController().navigateSafe(directions)

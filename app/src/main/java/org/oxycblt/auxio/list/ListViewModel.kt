@@ -32,7 +32,9 @@ import org.oxycblt.auxio.util.Event
 import org.oxycblt.auxio.util.MutableEvent
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
+import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.MusicParent
 import org.oxycblt.musikr.Playlist
@@ -77,6 +79,8 @@ constructor(
                     is Album -> library.findAlbum(it.uid)
                     is Artist -> library.findArtist(it.uid)
                     is Genre -> library.findGenre(it.uid)
+                    is Composer -> library.findComposer(it.uid)
+                    is Mood -> library.findMood(it.uid)
                     is Playlist -> library.findPlaylist(it.uid)
                 }
             }
@@ -160,6 +164,9 @@ constructor(
                 is Artist ->
                     listSettings.artistSongSort.songs(music.songs).filterTo(songs, seen::add)
                 is Genre -> listSettings.genreSongSort.songs(music.songs).filterTo(songs, seen::add)
+                is Composer ->
+                    listSettings.composerSongSort.songs(music.songs).filterTo(songs, seen::add)
+                is Mood -> listSettings.moodSongSort.songs(music.songs).filterTo(songs, seen::add)
                 is Playlist -> {
                     // A selected playlist adds only its own songs, in the order shown on its page.
                     val own = playlistSortRepository.songs(music)
@@ -239,6 +246,30 @@ constructor(
     fun openMenu(@MenuRes menuRes: Int, genre: Genre) {
         L.d("Opening menu for $genre")
         openImpl(Menu.ForGenre(menuRes, genre))
+    }
+
+    /**
+     * Open a menu for a [Composer]. This is not a popup menu, instead actually a dialog of menu
+     * options with additional information.
+     *
+     * @param menuRes The resource of the menu to use.
+     * @param composer The [Composer] to show.
+     */
+    fun openMenu(@MenuRes menuRes: Int, composer: Composer) {
+        L.d("Opening menu for $composer")
+        openImpl(Menu.ForComposer(menuRes, composer))
+    }
+
+    /**
+     * Open a menu for a [Mood]. This is not a popup menu, instead actually a dialog of menu options
+     * with additional information.
+     *
+     * @param menuRes The resource of the menu to use.
+     * @param mood The [Mood] to show.
+     */
+    fun openMenu(@MenuRes menuRes: Int, mood: Mood) {
+        L.d("Opening menu for $mood")
+        openImpl(Menu.ForMood(menuRes, mood))
     }
 
     /**
