@@ -227,7 +227,16 @@ constructor(
                 refreshDetail(genre, currentGenre, _genreSongList, genreSongInstructions, replace)
             }
             MusicType.PLAYLISTS -> {
-                refreshPlaylist(currentPlaylist.value?.uid ?: return)
+                refreshPlaylist(
+                    currentPlaylist.value?.uid ?: return,
+                    // Only a tree change asks for a replace, so that the pins and child counts
+                    // of the child playlists are rebound.
+                    if (replace != null && replace >= 0) {
+                        UpdateInstructions.Replace(replace)
+                    } else {
+                        UpdateInstructions.Diff
+                    },
+                )
             }
             else -> error("Unexpected music type $type")
         }

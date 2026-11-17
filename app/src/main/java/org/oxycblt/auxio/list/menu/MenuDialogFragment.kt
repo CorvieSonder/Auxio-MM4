@@ -59,6 +59,14 @@ abstract class MenuDialogFragment<M : Menu> :
     abstract fun getDisabledItemIds(menu: M): Set<Int>
 
     /**
+     * Get the menu item IDs that should be left out of the menu entirely.
+     *
+     * @param menu The [Menu] to hide items for.
+     * @return A set of menu item IDs to hide.
+     */
+    open fun getHiddenItemIds(menu: M): Set<Int> = setOf()
+
+    /**
      * Update the displayed information about the currently shown [M].
      *
      * @param binding The [DialogMenuBinding] to bind information to.
@@ -120,11 +128,14 @@ abstract class MenuDialogFragment<M : Menu> :
 
         // Disable any menu options as specified by the impl
         val disabledIds = getDisabledItemIds(casted)
+        val hiddenIds = getHiddenItemIds(casted)
         val visible =
-            builder.children.mapTo(mutableListOf()) {
-                it.isEnabled = !disabledIds.contains(it.itemId)
-                it
-            }
+            builder.children
+                .filterNot { hiddenIds.contains(it.itemId) }
+                .mapTo(mutableListOf()) {
+                    it.isEnabled = !disabledIds.contains(it.itemId)
+                    it
+                }
         menuAdapter.update(visible, UpdateInstructions.Diff)
 
         // Delegate to impl how to show music

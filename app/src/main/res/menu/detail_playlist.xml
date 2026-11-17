@@ -25,6 +25,14 @@
         android:icon="@drawable/ic_add_24"
         android:title="@string/lbl_new_playlist_here" />
     <item
+        android:id="@+id/action_pin"
+        android:icon="@drawable/ic_pin_24"
+        android:title="@string/lbl_pin" />
+    <item
+        android:id="@+id/action_unpin"
+        android:icon="@drawable/ic_pin_off_24"
+        android:title="@string/lbl_unpin" />
+    <item
         android:id="@+id/action_move"
         android:icon="@drawable/ic_move_24"
         android:title="@string/lbl_move_to" />

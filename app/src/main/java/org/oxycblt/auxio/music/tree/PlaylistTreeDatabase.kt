@@ -27,13 +27,19 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import org.oxycblt.musikr.Music
 
 /**
  * Stores which playlist each nested playlist belongs to. A playlist without a [PlaylistNode] is a
  * top-level playlist.
  */
-@Database(entities = [PlaylistNode::class], version = 1, exportSchema = false)
+@Database(
+    entities = [PlaylistNode::class, PinnedPlaylist::class],
+    version = 2,
+    exportSchema = false,
+)
 @TypeConverters(Music.UID.TypeConverters::class)
 abstract class PlaylistTreeDatabase : RoomDatabase() {
     /**
@@ -42,6 +48,19 @@ abstract class PlaylistTreeDatabase : RoomDatabase() {
      * @return A [PlaylistTreeDao] providing control of the database's playlist tree table.
      */
     abstract fun playlistTreeDao(): PlaylistTreeDao
+
+    companion object {
+        /** Adds the table of pinned playlists. */
+        val MIGRATION_1_2 =
+            object : Migration(1, 2) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        "CREATE TABLE IF NOT EXISTS `PinnedPlaylist` " +
+                            "(`playlistUid` TEXT NOT NULL, PRIMARY KEY(`playlistUid`))"
+                    )
+                }
+            }
+    }
 }
 
 @Dao
@@ -68,6 +87,29 @@ interface PlaylistTreeDao {
      */
     @Query("DELETE FROM PlaylistNode WHERE playlistUid IN (:playlistUids)")
     suspend fun deleteNodes(playlistUids: List<Music.UID>)
+
+    /**
+     * Get every persisted [PinnedPlaylist].
+     *
+     * @return A list of every persisted [PinnedPlaylist].
+     */
+    @Query("SELECT * FROM PinnedPlaylist") suspend fun getPins(): List<PinnedPlaylist>
+
+    /**
+     * Insert or replace [PinnedPlaylist]s.
+     *
+     * @param pins The [PinnedPlaylist]s to insert.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPins(pins: List<PinnedPlaylist>)
+
+    /**
+     * Unpin the given playlists.
+     *
+     * @param playlistUids The [Music.UID]s of the playlists to unpin.
+     */
+    @Query("DELETE FROM PinnedPlaylist WHERE playlistUid IN (:playlistUids)")
+    suspend fun deletePins(playlistUids: List<Music.UID>)
 }
 
 /**
@@ -77,3 +119,10 @@ interface PlaylistTreeDao {
  * @param parentUid The [Music.UID] of the playlist it belongs to.
  */
 @Entity data class PlaylistNode(@PrimaryKey val playlistUid: Music.UID, val parentUid: Music.UID)
+
+/**
+ * A playlist that is pinned to the top of the level it is in.
+ *
+ * @param playlistUid The [Music.UID] of the pinned playlist.
+ */
+@Entity data class PinnedPlaylist(@PrimaryKey val playlistUid: Music.UID)

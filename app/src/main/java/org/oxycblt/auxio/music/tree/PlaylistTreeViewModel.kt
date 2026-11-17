@@ -33,7 +33,9 @@ import timber.log.Timber as L
 
 /** Requests playlist tree dialogs from anywhere in the app. Scoped to the activity. */
 @HiltViewModel
-class PlaylistTreeViewModel @Inject constructor() : ViewModel() {
+class PlaylistTreeViewModel
+@Inject
+constructor(private val playlistTreeRepository: PlaylistTreeRepository) : ViewModel() {
     /** The [Music.UID]s of playlists the user wants to move. Shown with the move dialog. */
     val moveDecision: Event<List<Music.UID>>
         field = MutableEvent<List<Music.UID>>()
@@ -49,6 +51,23 @@ class PlaylistTreeViewModel @Inject constructor() : ViewModel() {
         }
         L.d("Requesting a move of ${playlists.size} playlists")
         moveDecision.put(playlists.map { it.uid })
+    }
+
+    /**
+     * Whether a playlist is pinned to the top of the level it is in.
+     *
+     * @param playlist The [Playlist] to look up.
+     */
+    fun isPinned(playlist: Playlist) = playlistTreeRepository.isPinned(playlist)
+
+    /**
+     * Pin playlists to the top of the level they are in, or unpin them.
+     *
+     * @param playlists The [Playlist]s to pin or unpin.
+     * @param pinned true to pin [playlists], false to unpin them.
+     */
+    fun setPinned(playlists: List<Playlist>, pinned: Boolean) {
+        playlistTreeRepository.setPinned(playlists, pinned)
     }
 }
 
@@ -149,8 +168,10 @@ constructor(
         newChoices.add(if (current == null) TreeChoice.TopLevel else TreeChoice.Up(current))
         // The playlists being moved are left out, which also hides all of their descendants.
         val children =
-            listSettings.playlistSort.playlists(
-                playlistTreeRepository.childrenOf(current).filter { it.uid !in moving }
+            playlistTreeRepository.pinnedFirst(
+                listSettings.playlistSort.playlists(
+                    playlistTreeRepository.childrenOf(current).filter { it.uid !in moving }
+                )
             )
         for (child in children) {
             newChoices.add(

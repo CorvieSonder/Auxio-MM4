@@ -302,16 +302,26 @@ class PlaylistViewHolder private constructor(private val binding: ItemParentBind
      * @param listener An [SelectableListListener] to bind interactions to.
      * @param childCount The number of playlists nested inside [playlist].
      * @param location Where [playlist] is nested, shown instead of its counts. Null to show them.
+     * @param isPinned Whether [playlist] is pinned to the top of its level.
      */
     fun bind(
         playlist: Playlist,
         listener: SelectableListListener<Playlist>,
         childCount: Int,
         location: String? = null,
+        isPinned: Boolean = false,
     ) {
         listener.bind(playlist, this, menuButton = binding.parentMenu)
         binding.parentImage.bind(playlist)
         binding.parentName.text = playlist.name.resolve(binding.context)
+        binding.parentName.compoundDrawablePadding =
+            binding.context.resources.getDimensionPixelSize(R.dimen.spacing_tiny)
+        binding.parentName.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            if (isPinned) R.drawable.ic_pin_16 else 0,
+            0,
+            0,
+            0,
+        )
         val context = binding.context
         val songs =
             if (playlist.songs.isNotEmpty()) {

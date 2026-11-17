@@ -125,7 +125,7 @@ private class DetailGeneratorImpl(
     }
 
     override fun onPlaylistTreeChanged() {
-        invalidator.invalidate(MusicType.PLAYLISTS, null)
+        invalidator.invalidate(MusicType.PLAYLISTS, 0)
     }
 
     override fun onMusicChanges(changes: MusicRepository.Changes) {
@@ -221,7 +221,13 @@ private class DetailGeneratorImpl(
         val sections = mutableListOf<DetailSection>()
         val children = playlistTreeRepository.childrenOf(playlist)
         if (children.isNotEmpty()) {
-            sections.add(DetailSection.Playlists(listSettings.playlistSort.playlists(children)))
+            sections.add(
+                DetailSection.Playlists(
+                    playlistTreeRepository.pinnedFirst(
+                        listSettings.playlistSort.playlists(children)
+                    )
+                )
+            )
         }
         if (playlist.songs.isNotEmpty()) {
             sections.add(DetailSection.Songs(playlistSortRepository.songs(playlist)))

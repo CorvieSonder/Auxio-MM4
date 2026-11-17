@@ -219,6 +219,8 @@
     <string name="lng_playlist_added">Added to playlist</string>
     <string name="lng_playlist_moved">Playlist moved</string>
     <string name="lng_playlist_name_taken">A playlist with the same name is already there</string>
+    <string name="lbl_pin">Pin to top</string>
+    <string name="lbl_unpin">Unpin</string>
     <string name="lbl_move_to">Move to…</string>
     <string name="lbl_top_level">Top level</string>
     <string name="lbl_new_playlist_here">New playlist here</string>

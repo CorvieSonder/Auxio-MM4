@@ -358,8 +358,10 @@ constructor(
             choices.add(TreeChoice.Up(level))
         }
         val children =
-            Sort(Sort.Mode.ByName, Sort.Direction.ASCENDING)
-                .playlists(playlistTreeRepository.childrenOf(level))
+            playlistTreeRepository.pinnedFirst(
+                Sort(Sort.Mode.ByName, Sort.Direction.ASCENDING)
+                    .playlists(playlistTreeRepository.childrenOf(level))
+            )
         for (child in children) {
             val songSet = child.songs.toSet()
             choices.add(

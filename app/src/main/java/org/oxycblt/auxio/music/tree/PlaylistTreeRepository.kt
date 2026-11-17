@@ -25,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Playlist
@@ -100,7 +101,32 @@ interface PlaylistTreeRepository {
     fun move(playlists: List<Playlist>, parent: Playlist?)
 
     /**
-     * Forget the position of deleted playlists.
+     * Whether a playlist is pinned to the top of the level it is in.
+     *
+     * @param playlist The [Playlist] to look up.
+     * @return true if [playlist] is pinned.
+     */
+    fun isPinned(playlist: Playlist): Boolean
+
+    /**
+     * Pin playlists to the top of the level they are in, or unpin them. A pin stays with its
+     * playlist when the playlist is moved.
+     *
+     * @param playlists The [Playlist]s to pin or unpin.
+     * @param pinned true to pin [playlists], false to unpin them.
+     */
+    fun setPinned(playlists: List<Playlist>, pinned: Boolean)
+
+    /**
+     * Put the pinned playlists of a level first.
+     *
+     * @param playlists The [Playlist]s of one level, already sorted.
+     * @return The pinned [Playlist]s sorted by name, followed by the others in the order given.
+     */
+    fun pinnedFirst(playlists: List<Playlist>): List<Playlist>
+
+    /**
+     * Forget the position and pin of deleted playlists.
      *
      * @param playlists The [Playlist]s that were deleted.
      */
@@ -122,7 +148,7 @@ interface PlaylistTreeRepository {
 
     /** A listener for changes to the playlist tree. */
     interface Listener {
-        /** Called when a playlist was moved, or when the tree was loaded. */
+        /** Called when a playlist was moved, pinned or unpinned, or when the tree was loaded. */
         fun onPlaylistTreeChanged()
     }
 }
@@ -139,6 +165,10 @@ constructor(
     // Child playlist UID -> parent playlist UID. Entries of deleted playlists are only removed by
     // forget(), never on library changes, so a library that is still loading cannot wipe the tree.
     @Volatile private var parents = mapOf<Music.UID, Music.UID>()
+    // Changes made before the persisted pins were loaded, to be applied on top of them.
+    private val earlyPinChanges = mutableMapOf<Music.UID, Boolean>()
+    private var pinsLoaded = false
+    @Volatile private var pins = setOf<Music.UID>()
 
     init {
         scope.launch {
@@ -150,11 +180,63 @@ constructor(
                     L.e(e.stackTraceToString())
                     return@launch
                 }
-            L.d("Loaded ${loaded.size} nested playlists")
-            // Moves made while loading take priority over the persisted ones.
-            parents = loaded + parents
-            withContext(Dispatchers.Main) { dispatchTreeChanged() }
+            val loadedPins =
+                try {
+                    playlistTreeDao.getPins().mapTo(mutableSetOf()) { it.playlistUid }
+                } catch (e: Exception) {
+                    L.e("Unable to load pinned playlists")
+                    L.e(e.stackTraceToString())
+                    mutableSetOf()
+                }
+            L.d("Loaded ${loaded.size} nested playlists and ${loadedPins.size} pins")
+            withContext(Dispatchers.Main) {
+                // Moves and pins made while loading take priority over the persisted ones.
+                parents = loaded + parents
+                for ((uid, pinned) in earlyPinChanges) {
+                    if (pinned) loadedPins.add(uid) else loadedPins.remove(uid)
+                }
+                earlyPinChanges.clear()
+                pinsLoaded = true
+                pins = loadedPins
+                dispatchTreeChanged()
+            }
         }
+    }
+
+    override fun isPinned(playlist: Playlist) = playlist.uid in pins
+
+    override fun setPinned(playlists: List<Playlist>, pinned: Boolean) {
+        val changed = playlists.map { it.uid }.filter { (it in pins) != pinned }
+        if (changed.isEmpty()) {
+            return
+        }
+        L.d("Setting ${changed.size} playlists to pinned=$pinned")
+        pins = if (pinned) pins + changed else pins - changed.toSet()
+        if (!pinsLoaded) {
+            changed.forEach { earlyPinChanges[it] = pinned }
+        }
+        dispatchTreeChanged()
+        scope.launch {
+            try {
+                if (pinned) {
+                    playlistTreeDao.insertPins(changed.map(::PinnedPlaylist))
+                } else {
+                    playlistTreeDao.deletePins(changed)
+                }
+            } catch (e: Exception) {
+                L.e("Unable to persist the pins of ${changed.size} playlists")
+                L.e(e.stackTraceToString())
+            }
+        }
+    }
+
+    override fun pinnedFirst(playlists: List<Playlist>): List<Playlist> {
+        val pins = pins
+        if (playlists.none { it.uid in pins }) {
+            return playlists
+        }
+        val (pinned, others) = playlists.partition { it.uid in pins }
+        return PIN_SORT.playlists(pinned) + others
     }
 
     override fun parentOf(playlist: Playlist): Playlist? {
@@ -243,15 +325,18 @@ constructor(
         val uids = playlists.mapTo(mutableSetOf()) { it.uid }
         // Children of a forgotten playlist become top-level playlists.
         val removed = parents.filter { (child, parent) -> child in uids || parent in uids }.keys
-        if (removed.isEmpty()) {
+        val unpinned = pins.intersect(uids)
+        if (removed.isEmpty() && unpinned.isEmpty()) {
             return
         }
-        L.d("Forgetting ${removed.size} tree entries")
+        L.d("Forgetting ${removed.size} tree entries and ${unpinned.size} pins")
         parents = parents - removed
+        pins = pins - unpinned
         dispatchTreeChanged()
         scope.launch {
             try {
                 playlistTreeDao.deleteNodes(removed.toList())
+                playlistTreeDao.deletePins(unpinned.toList())
             } catch (e: Exception) {
                 L.e("Unable to forget ${removed.size} tree entries")
                 L.e(e.stackTraceToString())
@@ -274,5 +359,9 @@ constructor(
         for (listener in listeners) {
             listener.onPlaylistTreeChanged()
         }
+    }
+
+    private companion object {
+        val PIN_SORT = Sort(Sort.Mode.ByName, Sort.Direction.ASCENDING)
     }
 }

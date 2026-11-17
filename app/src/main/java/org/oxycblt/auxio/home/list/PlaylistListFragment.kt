@@ -73,6 +73,7 @@ class PlaylistListFragment :
             this,
             { playlistTreeRepository.childrenOf(it).size },
             { nestTouchHelper?.startDrag(it) },
+            { playlistTreeRepository.isPinned(it) },
         )
     private var nestTouchHelper: ItemTouchHelper? = null
 
@@ -216,13 +217,14 @@ class PlaylistListFragment :
         private val listener: SelectableListListener<Playlist>,
         private val childCount: (Playlist) -> Int,
         private val pickUp: (RecyclerView.ViewHolder) -> Unit,
+        private val isPinned: (Playlist) -> Boolean,
     ) : SelectionIndicatorAdapter<Playlist, PlaylistViewHolder>(PlaylistViewHolder.DIFF_CALLBACK) {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
             PlaylistViewHolder.from(parent).also { it.onPickUp = pickUp }
 
         override fun onBindViewHolder(holder: PlaylistViewHolder, position: Int) {
             val playlist = getItem(position)
-            holder.bind(playlist, listener, childCount(playlist))
+            holder.bind(playlist, listener, childCount(playlist), isPinned = isPinned(playlist))
         }
     }
 }
