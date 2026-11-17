@@ -40,7 +40,9 @@ import org.oxycblt.auxio.list.PlainHeader
 import org.oxycblt.auxio.list.adapter.UpdateInstructions
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.MusicRepository
+import org.oxycblt.auxio.music.MusicSettings
 import org.oxycblt.auxio.music.MusicType
+import org.oxycblt.auxio.music.tags.composers
 import org.oxycblt.auxio.playback.PlaySong
 import org.oxycblt.auxio.playback.PlaybackSettings
 import org.oxycblt.auxio.util.Event
@@ -53,6 +55,7 @@ import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.MusicParent
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
+import org.oxycblt.musikr.tag.interpret.Separators
 import timber.log.Timber as L
 
 /**
@@ -67,6 +70,7 @@ class DetailViewModel
 constructor(
     private val listSettings: ListSettings,
     private val musicRepository: MusicRepository,
+    private val musicSettings: MusicSettings,
     private val playbackSettings: PlaybackSettings,
     detailGeneratorFactory: DetailGenerator.Factory,
 ) : ViewModel(), DetailGenerator.Invalidator {
@@ -505,11 +509,16 @@ constructor(
     }
 
     private fun refreshAudioInfo(song: Song) {
+        val separators = Separators.from(musicSettings.separators)
         currentSongProperties.value = buildList {
             add(SongProperty(R.string.lbl_name, SongProperty.Value.MusicName(song)))
             add(SongProperty(R.string.lbl_album, SongProperty.Value.MusicName(song.album)))
             add(SongProperty(R.string.lbl_artists, SongProperty.Value.MusicNames(song.artists)))
             add(SongProperty(R.string.lbl_genres, SongProperty.Value.MusicNames(song.genres)))
+            song
+                .composers(separators)
+                .takeIf { it.isNotEmpty() }
+                ?.let { add(SongProperty(R.string.lbl_composer, SongProperty.Value.Text(it))) }
             song.date?.let { add(SongProperty(R.string.lbl_date, SongProperty.Value.ItemDate(it))) }
             song.track?.let {
                 add(SongProperty(R.string.lbl_track, SongProperty.Value.Number(it, null)))
