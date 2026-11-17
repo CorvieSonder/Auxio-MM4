@@ -107,6 +107,8 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
     override fun getSelectionToolbar(binding: FragmentSearchBinding) =
         binding.searchSelectionToolbar
 
+    override fun getSelectableItems() = searchModel.searchResults.value.filterIsInstance<Music>()
+
     override fun onBindingCreated(binding: FragmentSearchBinding, savedInstanceState: Bundle?) {
         super.onBindingCreated(binding, savedInstanceState)
 

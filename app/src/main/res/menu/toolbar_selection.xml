@@ -18,6 +18,11 @@
         android:visible="false"
         app:showAsAction="ifRoom" />
     <item
+        android:id="@+id/action_selection_select_all"
+        android:icon="@drawable/ic_select_all_24"
+        android:title="@string/lbl_select_all"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/placeholder"
         android:title=""
         app:showAsAction="never" />

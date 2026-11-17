@@ -186,6 +186,8 @@
     <string name="lbl_library_counts">Library statistics</string>
 
     <string name="lbl_selection">Selection</string>
+    <string name="lbl_select_all">Select all</string>
+    <string name="lbl_invert_selection">Invert selection</string>
 
     <string name="lbl_error_info">Error information</string>
     <!-- As in copied to the system clipboard -->

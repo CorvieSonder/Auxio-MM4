@@ -34,6 +34,7 @@ import org.oxycblt.auxio.ui.ViewBindingFragment
 import org.oxycblt.auxio.util.collect
 import org.oxycblt.auxio.util.collectImmediately
 import org.oxycblt.auxio.util.showToast
+import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Playlist
 
 /**
@@ -49,6 +50,13 @@ abstract class SelectionFragment<VB : ViewBinding> :
     private val treeModel: PlaylistTreeViewModel by activityViewModels()
 
     open fun getSelectionToolbar(binding: VB): AuxioToolbar? = null
+
+    /**
+     * Get the items that "Select all" and "Invert selection" act on.
+     *
+     * @return The [Music] items currently shown by this fragment.
+     */
+    open fun getSelectableItems(): List<Music> = listOf()
 
     override fun onBindingCreated(binding: VB, savedInstanceState: Bundle?) {
         super.onBindingCreated(binding, savedInstanceState)
@@ -71,6 +79,15 @@ abstract class SelectionFragment<VB : ViewBinding> :
             if (moveItem != null) {
                 collectImmediately(listModel.selected) { selected ->
                     moveItem.isVisible = selected.any { it is Playlist }
+                }
+            }
+        }
+        if (getSelectionToolbar(binding) != null) {
+            // Only the fragment that shows the selection toolbar knows which items are shown.
+            collect(listModel.invertRequest.flow) {
+                if (it != null) {
+                    listModel.invertRequest.consume()
+                    listModel.invertSelection(getSelectableItems())
                 }
             }
         }
@@ -115,6 +132,10 @@ abstract class SelectionFragment<VB : ViewBinding> :
                 val playlists = listModel.selected.value.filterIsInstance<Playlist>()
                 listModel.dropSelection()
                 treeModel.requestMove(playlists)
+                true
+            }
+            R.id.action_selection_select_all -> {
+                listModel.selectAll(getSelectableItems())
                 true
             }
             else -> false

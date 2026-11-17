@@ -77,6 +77,8 @@ abstract class DetailFragment<P : MusicParent, C : Music> :
     override fun getSelectionToolbar(binding: FragmentDetailBinding) =
         binding.detailSelectionToolbar
 
+    override fun getSelectableItems() = getDetailListAdapter().currentList.filterIsInstance<Music>()
+
     override fun onBindingCreated(binding: FragmentDetailBinding, savedInstanceState: Bundle?) {
         super.onBindingCreated(binding, savedInstanceState)
         // The straightforward "lets save the instance state from the view state"

@@ -56,6 +56,10 @@ constructor(
     val selected: StateFlow<List<Music>>
         field = MutableStateFlow(listOf<Music>())
 
+    private val _invertRequest = MutableEvent<Unit>()
+    /** A request to invert the selection, awaiting a view that knows which items are shown. */
+    val invertRequest: Event<Unit> = _invertRequest
+
     private val _menu = MutableEvent<Menu>()
     /**
      * A [Menu] command that is awaiting a view capable of responding to it. Null if none currently.
@@ -111,21 +115,70 @@ constructor(
     }
 
     /**
-     * Clear the current selection and return it.
+     * Select every one of the given [Music] items that is not selected yet.
      *
-     * @return A list of [Song]s collated from each item selected.
+     * @param items The [Music] items currently shown.
      */
-    fun peekSelection() =
-        selected.value.flatMap {
-            when (it) {
-                is Song -> listOf(it)
-                is Album -> listSettings.albumSongSort.songs(it.songs)
-                is Artist -> listSettings.artistSongSort.songs(it.songs)
-                is Genre -> listSettings.genreSongSort.songs(it.songs)
-                // A selected playlist adds only its own songs, in the order shown on its page.
-                is Playlist -> playlistSortRepository.songs(it)
+    fun selectAll(items: List<Music>) {
+        val selected = selected.value
+        val selectedSet = selected.toSet()
+        val added = items.distinct().filter { it !in selectedSet && it.isSelectable() }
+        L.d("Adding ${added.size} items to selection")
+        this.selected.value = selected + added
+    }
+
+    /**
+     * Invert the selection within the given [Music] items: selected items become unselected and the
+     * other way around. Selected items outside of [items] are left as they are.
+     *
+     * @param items The [Music] items currently shown.
+     */
+    fun invertSelection(items: List<Music>) {
+        val selected = selected.value
+        val selectedSet = selected.toSet()
+        val itemSet = items.toSet()
+        val kept = selected.filter { it !in itemSet }
+        val added = items.distinct().filter { it !in selectedSet && it.isSelectable() }
+        L.d("Inverting selection [kept=${kept.size} added=${added.size}]")
+        this.selected.value = kept + added
+    }
+
+    /** Ask the view currently showing the selection to invert it. */
+    fun requestInvertSelection() {
+        _invertRequest.put(Unit)
+    }
+
+    // Empty playlists can still be selected, as they can hold other playlists.
+    private fun Music.isSelectable() =
+        this !is MusicParent || this is Playlist || songs.isNotEmpty()
+
+    /**
+     * Get the songs of the current selection without clearing it.
+     *
+     * @return A list of [Song]s collated from each item selected. A song that is part of several
+     *   selected items is only included once, except for a playlist, which always contributes all
+     *   of its songs.
+     */
+    fun peekSelection(): List<Song> {
+        val songs = mutableListOf<Song>()
+        val seen = mutableSetOf<Song>()
+        for (music in selected.value) {
+            when (music) {
+                is Song -> if (seen.add(music)) songs.add(music)
+                is Album -> listSettings.albumSongSort.songs(music.songs).filterTo(songs, seen::add)
+                is Artist ->
+                    listSettings.artistSongSort.songs(music.songs).filterTo(songs, seen::add)
+                is Genre -> listSettings.genreSongSort.songs(music.songs).filterTo(songs, seen::add)
+                is Playlist -> {
+                    // A selected playlist adds only its own songs, in the order shown on its page.
+                    val own = playlistSortRepository.songs(music)
+                    songs.addAll(own)
+                    seen.addAll(own)
+                }
             }
         }
+        return songs
+    }
 
     /**
      * Clear the current selection and return it.
