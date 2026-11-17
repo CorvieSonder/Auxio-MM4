@@ -122,8 +122,6 @@
     <string name="lbl_equalizer">Equalizer</string>
     <string name="lbl_play">Play</string>
     <string name="lbl_shuffle">Shuffle</string>
-    <string name="lbl_reshuffle">Reshuffle queue</string>
-    <string name="lbl_quick_settings">Quick settings</string>
     <string name="lbl_sleep_timer">Sleep timer</string>
     <string name="lbl_sleep_off">Off</string>
     <string name="lbl_sleep_song_end">Until the song ends</string>
@@ -211,7 +209,6 @@
     <string name="lng_observing">Monitoring your music library for changes…</string>
     <string name="lng_queue_added">Added to queue</string>
     <string name="lng_play_next">Song will play next</string>
-    <string name="lng_reshuffled">Queue reshuffled</string>
     <string name="lng_sleep_finishing">Playback pauses when this song ends</string>
     <string name="lng_playlist_created">Playlist created</string>
     <string name="lng_playlist_imported">Playlist imported</string>

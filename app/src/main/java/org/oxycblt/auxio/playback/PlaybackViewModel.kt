@@ -103,6 +103,10 @@ constructor(
     val openPanel: Event<OpenPanel>
         field = MutableEvent<OpenPanel>()
 
+    /** A request to open the system equalizer, awaiting the view that is able to launch it. */
+    val equalizerRequest: Event<Unit>
+        field = MutableEvent<Unit>()
+
     private val _pagerQueue = MutableStateFlow(PagerQueue(listOf(), 0))
     /** The current queue in a special bundled format suitable for the cover ViewPager2. */
     val pagerQueue: StateFlow<PagerQueue> = _pagerQueue
@@ -619,12 +623,6 @@ constructor(
         playbackManager.shuffled(!playbackManager.isShuffled)
     }
 
-    /** Shuffle the queue again around the current song, turning shuffle on if it was off. */
-    fun reshuffle() {
-        L.d("Reshuffling queue")
-        playbackManager.shuffled(true)
-    }
-
     /**
      * Toggle [repeatMode] (ex. from [RepeatMode.NONE] to [RepeatMode.TRACK])
      *
@@ -636,6 +634,11 @@ constructor(
     }
 
     // --- UI CONTROL ---
+
+    /** Ask for the system equalizer to be opened. */
+    fun openEqualizer() {
+        equalizerRequest.put(Unit)
+    }
 
     /** Open the main panel, closing all other panels. */
     fun openMain() = openImpl(OpenPanel.MAIN)
