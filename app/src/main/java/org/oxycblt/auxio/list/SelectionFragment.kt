@@ -28,6 +28,7 @@ import org.oxycblt.auxio.playback.PlaybackViewModel
 import org.oxycblt.auxio.ui.AuxioToolbar
 import org.oxycblt.auxio.ui.ViewBindingFragment
 import org.oxycblt.auxio.util.collectImmediately
+import org.oxycblt.auxio.util.share
 import org.oxycblt.auxio.util.showToast
 import org.oxycblt.musikr.Music
 
@@ -57,14 +58,24 @@ abstract class SelectionFragment<VB : ViewBinding> :
             // Add cancel and menu item listeners to manage what occurs with the selection.
             setNavigationOnClickListener { listModel.dropSelection() }
             setOnMenuItemClickListener(this@SelectionFragment)
-            setOnOverflowMenuClick {
-                listModel.openMenu(R.menu.selection, listModel.peekSelection())
-            }
+            // Kept in case the selection menu dialog is needed again. Everything it offered is
+            // a button now, and the overflow button only holds what does not fit.
+            // setOnOverflowMenuClick {
+            //     listModel.openMenu(R.menu.selection, listModel.peekSelection())
+            // }
         }
         getSelectionToolbar(binding)?.let { toolbar ->
             // There are more actions than fit beside the title, so they get their own row,
             // which only takes up space while something is selected.
             toolbar.setActionsBelow()
+            toolbar.setOverflowPriority(
+                listOf(
+                    R.id.action_selection_share,
+                    R.id.action_selection_play_next,
+                    R.id.action_selection_queue_add,
+                    R.id.action_selection_playlist_add,
+                )
+            )
             collectImmediately(listModel.selected) { toolbar.setActionRowVisible(it.isNotEmpty()) }
         }
     }
@@ -88,6 +99,18 @@ abstract class SelectionFragment<VB : ViewBinding> :
             R.id.action_selection_queue_add -> {
                 playbackModel.addToQueue(listModel.takeSelection())
                 requireContext().showToast(R.string.lng_queue_added)
+                true
+            }
+            R.id.action_selection_play -> {
+                playbackModel.play(listModel.takeSelection())
+                true
+            }
+            R.id.action_selection_shuffle -> {
+                playbackModel.shuffle(listModel.takeSelection())
+                true
+            }
+            R.id.action_selection_share -> {
+                requireContext().share(listModel.takeSelection())
                 true
             }
             R.id.action_selection_invert -> {
