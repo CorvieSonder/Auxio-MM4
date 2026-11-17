@@ -17,8 +17,30 @@
         android:title="@string/set_speed_pitch"
         app:showAsAction="always" />
     <item
+        android:id="@+id/action_go_to"
+        android:icon="@drawable/ic_goto_24"
+        android:title="@string/lbl_go_to"
+        app:showAsAction="always">
+        <menu>
+            <item
+                android:id="@+id/action_artist_details"
+                android:title="@string/lbl_artist" />
+            <item
+                android:id="@+id/action_album_details"
+                android:title="@string/lbl_album" />
+            <item
+                android:id="@+id/action_genre_details"
+                android:title="@string/lbl_genre" />
+        </menu>
+    </item>
+    <item
+        android:id="@+id/action_share"
+        android:icon="@drawable/ic_share_24"
+        android:title="@string/lbl_share"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/action_song_menu"
-        android:icon="@drawable/ic_more_24"
+        android:icon="@drawable/ic_more_vert_24"
         android:title="@string/lbl_more"
         app:showAsAction="always" />
 </menu>

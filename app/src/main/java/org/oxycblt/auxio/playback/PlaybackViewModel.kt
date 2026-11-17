@@ -103,6 +103,10 @@ constructor(
     val openPanel: Event<OpenPanel>
         field = MutableEvent<OpenPanel>()
 
+    /** The songs of the current queue, in the order they play. */
+    val queue: List<Song>
+        get() = playbackManager.queue
+
     /** A request to open the system equalizer, awaiting the view that is able to launch it. */
     val equalizerRequest: Event<Unit>
         field = MutableEvent<Unit>()

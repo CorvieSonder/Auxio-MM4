@@ -123,6 +123,8 @@
     <string name="lbl_play">Play</string>
     <string name="lbl_shuffle">Shuffle</string>
     <string name="lbl_sleep_timer">Sleep timer</string>
+    <string name="lbl_go_to">Go to</string>
+    <string name="lbl_save_queue">Save queue as playlist</string>
     <string name="lbl_sleep_off">Off</string>
     <string name="lbl_sleep_song_end">Until the song ends</string>
     <string name="lbl_sleep_pause_after">Pause playback after</string>

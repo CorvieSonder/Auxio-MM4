@@ -60,6 +60,7 @@ import org.oxycblt.auxio.util.collect
 import org.oxycblt.auxio.util.collectImmediately
 import org.oxycblt.auxio.util.dampen
 import org.oxycblt.auxio.util.recycler
+import org.oxycblt.auxio.util.share
 import org.oxycblt.auxio.util.showToast
 import org.oxycblt.auxio.util.smoothScrollByPageTo
 import org.oxycblt.auxio.util.systemBarInsetsCompat
@@ -117,10 +118,8 @@ class PlaybackPanelFragment :
         binding.playbackToolbar.apply {
             setNavigationOnClickListener { playbackModel.openMain() }
             setOnMenuItemClickListener(this@PlaybackPanelFragment)
-            // The actions sit in their own row below the title. Layouts that already show
-            // the song menu button next to the song do not need it here as well.
+            // The actions sit in their own row below the title.
             setActionsBelow()
-            setMenuItemVisible(R.id.action_song_menu, binding.playbackMore == null)
         }
 
         binding.playbackPager?.apply {
@@ -246,6 +245,12 @@ class PlaybackPanelFragment :
             R.id.action_sleep_timer ->
                 SleepTimerDialog().show(childFragmentManager, SleepTimerDialog.TAG)
             R.id.action_playlist_add -> playbackModel.song.value?.let(musicModel::addToPlaylist)
+            R.id.action_artist_details -> navigateToCurrentArtist()
+            R.id.action_album_details -> navigateToCurrentAlbum()
+            R.id.action_genre_details ->
+                // A song with several genres goes to its first one.
+                playbackModel.song.value?.genres?.firstOrNull()?.let(detailModel::showGenre)
+            R.id.action_share -> playbackModel.song.value?.let { requireContext().share(it) }
             R.id.action_song_menu -> openSongMenu()
             else -> return false
         }
@@ -287,13 +292,13 @@ class PlaybackPanelFragment :
     private fun updateSleepTimer(state: SleepTimer.State) {
         requireBinding()
             .playbackToolbar
-            .getMenuButton(R.id.action_sleep_timer)
-            ?.setIconResource(
+            .setMenuItemIcon(
+                R.id.action_sleep_timer,
                 if (state is SleepTimer.State.Off) {
                     R.drawable.ic_sleep_24
                 } else {
                     R.drawable.ic_sleep_on_24
-                }
+                },
             )
     }
 
