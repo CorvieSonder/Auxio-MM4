@@ -81,6 +81,7 @@
     <string name="lbl_genre">Genre</string>
     <string name="lbl_genres">Genres</string>
     <string name="lbl_composer">Composer</string>
+    <string name="lbl_mood">Mood</string>
 
     <string name="lbl_playlist">Playlist</string>
     <string name="lbl_playlists">Playlists</string>
