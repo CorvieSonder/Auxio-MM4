@@ -74,12 +74,17 @@ abstract class SelectionFragment<VB : ViewBinding> :
                     listModel.openMenu(R.menu.selection, songs)
                 }
             }
-            // Selected playlists can be moved into another playlist.
-            val moveItem = menu.findItem(R.id.action_selection_move)
-            if (moveItem != null) {
-                collectImmediately(listModel.selected) { selected ->
-                    moveItem.isVisible = selected.any { it is Playlist }
-                }
+            // Selected playlists can be moved into another playlist and pinned. Pin is offered
+            // while any of them is not pinned yet, unpin once all of them are.
+            collectImmediately(listModel.selected) { selected ->
+                val playlists = selected.filterIsInstance<Playlist>()
+                val allPinned = playlists.all(treeModel::isPinned)
+                setMenuItemVisible(R.id.action_selection_move, playlists.isNotEmpty())
+                setMenuItemVisible(R.id.action_selection_pin, playlists.isNotEmpty() && !allPinned)
+                setMenuItemVisible(
+                    R.id.action_selection_unpin,
+                    playlists.isNotEmpty() && allPinned,
+                )
             }
         }
         if (getSelectionToolbar(binding) != null) {
@@ -126,6 +131,13 @@ abstract class SelectionFragment<VB : ViewBinding> :
                     listModel.dropSelection()
                     musicModel.addToPlaylist(songs)
                 }
+                true
+            }
+            R.id.action_selection_pin,
+            R.id.action_selection_unpin -> {
+                val playlists = listModel.selected.value.filterIsInstance<Playlist>()
+                listModel.dropSelection()
+                treeModel.setPinned(playlists, item.itemId == R.id.action_selection_pin)
                 true
             }
             R.id.action_selection_move -> {

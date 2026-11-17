@@ -23,6 +23,18 @@
         android:title="@string/lbl_select_all"
         app:showAsAction="always" />
     <item
+        android:id="@+id/action_selection_pin"
+        android:icon="@drawable/ic_pin_24"
+        android:title="@string/lbl_pin"
+        android:visible="false"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_selection_unpin"
+        android:icon="@drawable/ic_pin_off_24"
+        android:title="@string/lbl_unpin"
+        android:visible="false"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/placeholder"
         android:title=""
         app:showAsAction="never" />
