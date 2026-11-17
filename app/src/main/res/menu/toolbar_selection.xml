@@ -7,6 +7,11 @@
         android:title="@string/lbl_play_next"
         app:showAsAction="ifRoom" />
     <item
+        android:id="@+id/action_selection_queue_add"
+        android:icon="@drawable/ic_queue_add_24"
+        android:title="@string/lbl_queue_add"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/action_selection_playlist_add"
         android:icon="@drawable/ic_playlist_add_24"
         android:title="@string/lbl_playlist_add"
@@ -15,6 +20,11 @@
         android:id="@+id/action_selection_select_all"
         android:icon="@drawable/ic_select_all_24"
         android:title="@string/lbl_select_all"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_selection_invert"
+        android:icon="@drawable/ic_select_invert_24"
+        android:title="@string/lbl_invert_selection"
         app:showAsAction="always" />
     <item
         android:id="@+id/placeholder"

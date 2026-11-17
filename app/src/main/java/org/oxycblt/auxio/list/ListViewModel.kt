@@ -52,10 +52,6 @@ constructor(private val listSettings: ListSettings, private val musicRepository:
     val selected: StateFlow<List<Music>>
         field = MutableStateFlow(listOf<Music>())
 
-    private val _invertRequest = MutableEvent<Unit>()
-    /** A request to invert the selection, awaiting a view that knows which items are shown. */
-    val invertRequest: Event<Unit> = _invertRequest
-
     private val _menu = MutableEvent<Menu>()
     /**
      * A [Menu] command that is awaiting a view capable of responding to it. Null if none currently.
@@ -136,11 +132,6 @@ constructor(private val listSettings: ListSettings, private val musicRepository:
         val added = items.distinct().filter { it !in selectedSet && it.isSelectable() }
         L.d("Inverting selection [kept=${kept.size} added=${added.size}]")
         this.selected.value = kept + added
-    }
-
-    /** Ask the view currently showing the selection to invert it. */
-    fun requestInvertSelection() {
-        _invertRequest.put(Unit)
     }
 
     private fun Music.isSelectable() = this !is MusicParent || songs.isNotEmpty()

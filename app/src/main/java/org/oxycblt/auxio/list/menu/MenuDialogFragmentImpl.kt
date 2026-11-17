@@ -367,11 +367,6 @@ class SelectionMenuDialogFragment : MenuDialogFragment<Menu.ForSelection>() {
     }
 
     override fun onClick(item: MenuItem, menu: Menu.ForSelection) {
-        if (item.itemId == R.id.action_invert_selection) {
-            // Keeps the selection, so it must not be dropped like the other actions do.
-            listModel.requestInvertSelection()
-            return
-        }
         listModel.dropSelection()
         when (item.itemId) {
             R.id.action_play -> playbackModel.play(menu.songs)

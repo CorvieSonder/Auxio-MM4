@@ -27,7 +27,7 @@ import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.playback.PlaybackViewModel
 import org.oxycblt.auxio.ui.AuxioToolbar
 import org.oxycblt.auxio.ui.ViewBindingFragment
-import org.oxycblt.auxio.util.collect
+import org.oxycblt.auxio.util.collectImmediately
 import org.oxycblt.auxio.util.showToast
 import org.oxycblt.musikr.Music
 
@@ -61,14 +61,11 @@ abstract class SelectionFragment<VB : ViewBinding> :
                 listModel.openMenu(R.menu.selection, listModel.peekSelection())
             }
         }
-        if (getSelectionToolbar(binding) != null) {
-            // Only the fragment that shows the selection toolbar knows which items are shown.
-            collect(listModel.invertRequest.flow) {
-                if (it != null) {
-                    listModel.invertRequest.consume()
-                    listModel.invertSelection(getSelectableItems())
-                }
-            }
+        getSelectionToolbar(binding)?.let { toolbar ->
+            // There are more actions than fit beside the title, so they get their own row,
+            // which only takes up space while something is selected.
+            toolbar.setActionsBelow()
+            collectImmediately(listModel.selected) { toolbar.setActionRowVisible(it.isNotEmpty()) }
         }
     }
 
@@ -86,6 +83,15 @@ abstract class SelectionFragment<VB : ViewBinding> :
             }
             R.id.action_selection_playlist_add -> {
                 musicModel.addToPlaylist(listModel.takeSelection())
+                true
+            }
+            R.id.action_selection_queue_add -> {
+                playbackModel.addToQueue(listModel.takeSelection())
+                requireContext().showToast(R.string.lng_queue_added)
+                true
+            }
+            R.id.action_selection_invert -> {
+                listModel.invertSelection(getSelectableItems())
                 true
             }
             R.id.action_selection_select_all -> {
