@@ -43,6 +43,7 @@ import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
 import org.oxycblt.auxio.playback.queue.QueueViewModel
+import org.oxycblt.auxio.playback.sleep.SleepTimerDialog
 import org.oxycblt.auxio.playback.state.RepeatMode
 import org.oxycblt.auxio.playback.ui.StyledSeekBar
 import org.oxycblt.auxio.playback.ui.stepper.Direction
@@ -247,6 +248,11 @@ class PlaybackPanelFragment :
             } catch (e: ActivityNotFoundException) {
                 requireContext().showToast(R.string.err_no_app)
             }
+            return true
+        }
+
+        if (item.itemId == R.id.action_sleep_timer) {
+            SleepTimerDialog().show(childFragmentManager, SleepTimerDialog.TAG)
             return true
         }
 
