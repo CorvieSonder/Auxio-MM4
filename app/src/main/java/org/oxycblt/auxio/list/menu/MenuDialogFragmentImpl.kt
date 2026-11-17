@@ -26,7 +26,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.DialogMenuBinding
 import org.oxycblt.auxio.detail.DetailViewModel
-import org.oxycblt.auxio.home.HomeViewModel
 import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.music.resolve
@@ -53,7 +52,6 @@ class SongMenuDialogFragment : MenuDialogFragment<Menu.ForSong>() {
     private val detailModel: DetailViewModel by activityViewModels()
     private val musicModel: MusicViewModel by activityViewModels()
     private val playbackModel: PlaybackViewModel by activityViewModels()
-    private val homeModel: HomeViewModel by activityViewModels()
     private val args: SongMenuDialogFragmentArgs by navArgs()
 
     override val parcel
@@ -88,8 +86,6 @@ class SongMenuDialogFragment : MenuDialogFragment<Menu.ForSong>() {
             R.id.action_share -> requireContext().share(menu.song)
             R.id.action_detail -> detailModel.showSong(menu.song)
             R.id.action_open_equalizer -> playbackModel.openEqualizer()
-            R.id.action_save_queue -> musicModel.createPlaylist(songs = playbackModel.queue)
-            R.id.action_settings -> homeModel.showSettings()
             else -> error("Unexpected menu item selected $item")
         }
     }

@@ -34,12 +34,14 @@ import androidx.core.view.updatePadding
 import androidx.dynamicanimation.animation.SpringForce
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlin.math.abs
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.FragmentPlaybackPanelBinding
 import org.oxycblt.auxio.detail.DetailViewModel
+import org.oxycblt.auxio.home.HomeViewModel
 import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.music.resolve
@@ -66,6 +68,7 @@ import org.oxycblt.auxio.util.smoothScrollByPageTo
 import org.oxycblt.auxio.util.systemBarInsetsCompat
 import org.oxycblt.musikr.MusicParent
 import org.oxycblt.musikr.Song
+import org.oxycblt.musikr.tag.Name
 import timber.log.Timber as L
 
 /**
@@ -88,6 +91,7 @@ class PlaybackPanelFragment :
     private val listModel: ListViewModel by activityViewModels()
     private val queueModel: QueueViewModel by viewModels()
     private val musicModel: MusicViewModel by activityViewModels()
+    private val homeModel: HomeViewModel by activityViewModels()
     @Inject lateinit var sleepTimer: SleepTimer
     private var equalizerLauncher: ActivityResultLauncher<Intent>? = null
     private var userAwarePagerCallback: UserAwarePagerCallback? = null
@@ -247,14 +251,34 @@ class PlaybackPanelFragment :
             R.id.action_playlist_add -> playbackModel.song.value?.let(musicModel::addToPlaylist)
             R.id.action_artist_details -> navigateToCurrentArtist()
             R.id.action_album_details -> navigateToCurrentAlbum()
-            R.id.action_genre_details ->
-                // A song with several genres goes to its first one.
-                playbackModel.song.value?.genres?.firstOrNull()?.let(detailModel::showGenre)
+            R.id.action_genre_details -> navigateToCurrentGenre()
+            R.id.action_save_queue -> musicModel.createPlaylist(songs = playbackModel.queue)
+            R.id.action_settings -> homeModel.showSettings()
             R.id.action_share -> playbackModel.song.value?.let { requireContext().share(it) }
             R.id.action_song_menu -> openSongMenu()
             else -> return false
         }
         return true
+    }
+
+    private fun navigateToCurrentGenre() {
+        val song = playbackModel.song.value ?: return
+        // A song without a genre tag is still given a placeholder genre.
+        val genres = song.genres.filter { it.name is Name.Known }
+        when (genres.size) {
+            0 -> requireContext().showToast(R.string.err_no_genres)
+            1 -> detailModel.showGenre(genres.first())
+            else -> {
+                val context = requireContext()
+                MaterialAlertDialogBuilder(context)
+                    .setTitle(R.string.lbl_genres)
+                    .setItems(genres.map { it.name.resolve(context) }.toTypedArray()) { _, which ->
+                        detailModel.showGenre(genres[which])
+                    }
+                    .setNegativeButton(R.string.lbl_cancel, null)
+                    .show()
+            }
+        }
     }
 
     private fun openSongMenu() {
