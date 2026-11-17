@@ -23,4 +23,8 @@
         android:id="@+id/action_share"
         android:icon="@drawable/ic_share_24"
         android:title="@string/lbl_share" />
+    <item
+        android:id="@+id/action_ringtone"
+        android:icon="@drawable/ic_ringtone_24"
+        android:title="@string/lbl_ringtone" />
 </menu>
