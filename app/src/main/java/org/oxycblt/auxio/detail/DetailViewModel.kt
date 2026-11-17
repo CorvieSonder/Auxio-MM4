@@ -45,9 +45,9 @@ import org.oxycblt.auxio.music.MusicSettings
 import org.oxycblt.auxio.music.MusicType
 import org.oxycblt.auxio.music.auto.AutoPlaylist
 import org.oxycblt.auxio.music.rating.rating
-import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.auxio.music.tags.composers
 import org.oxycblt.auxio.music.tags.moods
+import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.auxio.playback.PlaySong
 import org.oxycblt.auxio.playback.PlaybackSettings
 import org.oxycblt.auxio.util.Event
