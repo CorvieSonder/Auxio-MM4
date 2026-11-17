@@ -29,9 +29,9 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import androidx.annotation.AttrRes
+import androidx.annotation.DrawableRes
 import androidx.annotation.MenuRes
 import androidx.appcompat.R as AR
 import androidx.appcompat.view.SupportMenuInflater
@@ -44,6 +44,8 @@ import androidx.core.view.children
 import androidx.core.view.isNotEmpty
 import androidx.core.view.isVisible
 import com.google.android.material.R as MR
+import com.google.android.material.color.MaterialColors
+import kotlin.math.roundToInt
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.ViewToolbarBinding
 import org.oxycblt.auxio.util.isRtl
@@ -67,7 +69,9 @@ constructor(
         ViewToolbarBinding.inflate(LayoutInflater.from(context), this, true)
     private var menuItemClickListener: Toolbar.OnMenuItemClickListener? = null
     private var overflowClickListener: OnClickListener? = null
-    private var actionRow: View? = null
+    private var actionRow: LinearLayout? = null
+    private var actionRowShown = true
+    private var overflowPriority = listOf<Int>()
     private val actionButtons = mutableMapOf<Int, RippleFixMaterialButton>()
     @SuppressLint("RestrictedApi") private var menuBuilder = MenuBuilder(context)
 
@@ -225,29 +229,35 @@ constructor(
     }
 
     /**
+     * Change the icon of a menu item, along with its action button.
+     *
+     * @param itemId The ID of the menu item to change.
+     * @param iconRes The drawable resource of the new icon.
+     */
+    @SuppressLint("RestrictedApi")
+    fun setMenuItemIcon(itemId: Int, @DrawableRes iconRes: Int) {
+        menuBuilder.findItem(itemId)?.setIcon(iconRes)
+        getMenuButton(itemId)?.setIconResource(iconRes)
+    }
+
+    /**
      * Move the action buttons out of the title row into a row of their own below it, for toolbars
-     * with more actions than fit beside the title. The row scrolls sideways if it is still too
-     * narrow.
+     * with more actions than fit beside the title. Menu items in different menu groups are set
+     * apart by dividers, the first group at the start of the row and the last one at its end.
+     * Actions that do not fit go into the overflow menu, in the order given by
+     * [setOverflowPriority].
      */
     fun setActionsBelow() {
         if (actionRow != null) {
             return
         }
-        val group = binding.toolbarActionGroup
-        binding.toolbarRoot.removeView(group)
+        binding.toolbarRoot.removeView(binding.toolbarActionGroup)
         val row =
-            HorizontalScrollView(context).apply {
-                isHorizontalScrollBarEnabled = false
+            LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
                 clipChildren = false
                 clipToPadding = false
-                addView(
-                    group,
-                    LayoutParams(
-                        LayoutParams.WRAP_CONTENT,
-                        LayoutParams.WRAP_CONTENT,
-                        Gravity.CENTER_HORIZONTAL,
-                    ),
-                )
             }
         val column =
             LinearLayout(context).apply {
@@ -262,9 +272,7 @@ constructor(
         )
         column.addView(
             row,
-            LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
-                gravity = Gravity.CENTER_HORIZONTAL
-            },
+            LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT),
         )
         // Children added from outside go to the title container, so add this one like the
         // inflated layout was.
@@ -272,6 +280,18 @@ constructor(
         addView(column, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
         inflatingLayout = false
         actionRow = row
+        rebuildActionButtons()
+    }
+
+    /**
+     * Set which actions give way first when the row made by [setActionsBelow] is too narrow.
+     *
+     * @param itemIds The IDs of the menu items to move into the overflow menu, in the order they
+     *   should be moved. Items that are not listed always keep their button.
+     */
+    fun setOverflowPriority(itemIds: List<Int>) {
+        overflowPriority = itemIds
+        rebuildActionButtons()
     }
 
     /**
@@ -281,7 +301,16 @@ constructor(
      * @param visible Whether the row should be shown.
      */
     fun setActionRowVisible(visible: Boolean) {
-        actionRow?.isVisible = visible
+        actionRowShown = visible
+        actionRow?.let { it.isVisible = visible && it.isNotEmpty() }
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        if (actionRow != null && w != oldw) {
+            // How many actions fit depends on the width.
+            post { rebuildActionButtons() }
+        }
     }
 
     @SuppressLint("RestrictedApi")
@@ -313,11 +342,14 @@ constructor(
 
     @SuppressLint("RestrictedApi")
     private fun rebuildActionButtons() {
+        val row = actionRow
+        val container: ViewGroup = row ?: binding.toolbarActionGroup
         actionButtons.clear()
-        binding.toolbarActionGroup.removeAllViews()
+        container.removeAllViews()
 
         val actionItems = mutableListOf<MenuItemImpl>()
         val overflowItems = mutableListOf<MenuItemImpl>()
+
         for (i in 0 until menuBuilder.size()) {
             val item = menuBuilder.getItem(i) as MenuItemImpl
             if (!item.isVisible) continue
@@ -328,18 +360,77 @@ constructor(
             }
         }
 
+        if (row != null) {
+            fitActionItems(actionItems, overflowItems)
+        }
+
+        var lastItem: MenuItemImpl? = null
         for (item in actionItems) {
+            if (row != null && lastItem != null && lastItem.groupId != item.groupId) {
+                row.addView(createDivider())
+            }
+            lastItem = item
             val btn = createActionButton(item)
-            binding.toolbarActionGroup.addView(btn)
+            container.addView(btn)
             actionButtons[item.itemId] = btn
         }
 
         if (overflowItems.isNotEmpty()) {
-            binding.toolbarActionGroup.addView(createOverflowButton(overflowItems))
+            container.addView(createOverflowButton(overflowItems))
         }
 
-        binding.toolbarActionGroup.isVisible = binding.toolbarActionGroup.isNotEmpty()
+        container.isVisible = container.isNotEmpty() && (row == null || actionRowShown)
     }
+
+    /** Move actions into the overflow menu until the rest fits into the width of this toolbar. */
+    @SuppressLint("RestrictedApi")
+    private fun fitActionItems(
+        actionItems: MutableList<MenuItemImpl>,
+        overflowItems: MutableList<MenuItemImpl>,
+    ) {
+        val available = width - paddingLeft - paddingRight
+        if (available <= 0) {
+            // Not laid out yet, onSizeChanged will come back to this.
+            return
+        }
+        val buttonSize = resources.getDimensionPixelSize(R.dimen.size_touchable_small)
+        val dividerSize = resources.getDimensionPixelSize(R.dimen.spacing_medium)
+        fun needed(): Int {
+            val buttons = actionItems.size + if (overflowItems.isNotEmpty()) 1 else 0
+            val dividers = (actionItems.map { it.groupId }.distinct().size - 1).coerceAtLeast(0)
+            return buttons * buttonSize + dividers * dividerSize
+        }
+        for (itemId in overflowPriority) {
+            if (needed() <= available) {
+                break
+            }
+            val item = actionItems.find { it.itemId == itemId } ?: continue
+            actionItems.remove(item)
+            overflowItems.add(item)
+        }
+    }
+
+    /** Create a divider that takes up the free space between two groups of actions. */
+    private fun createDivider() =
+        FrameLayout(context).apply {
+            minimumWidth = resources.getDimensionPixelSize(R.dimen.spacing_medium)
+            layoutParams = LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 1f)
+            val line =
+                View(context).apply {
+                    setBackgroundColor(
+                        MaterialColors.getColor(this@AuxioToolbar, MR.attr.colorOutlineVariant)
+                    )
+                }
+            // Not the overridden addView of the toolbar, as this is a plain FrameLayout.
+            addView(
+                line,
+                LayoutParams(
+                    resources.displayMetrics.density.roundToInt().coerceAtLeast(1),
+                    resources.getDimensionPixelSize(R.dimen.size_icon_small),
+                    Gravity.CENTER,
+                ),
+            )
+        }
 
     @SuppressLint("RestrictedApi")
     private fun createActionButton(item: MenuItemImpl) =
