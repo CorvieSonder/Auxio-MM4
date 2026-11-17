@@ -101,6 +101,15 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
 
     override fun getSelectionToolbar(binding: FragmentHomeBinding) = binding.homeSelectionToolbar
 
+    override fun getSelectableItems(): List<Music> =
+        when (homeModel.currentTabType.value) {
+            MusicType.SONGS -> homeModel.songList.value
+            MusicType.ALBUMS -> homeModel.albumList.value
+            MusicType.ARTISTS -> homeModel.artistList.value
+            MusicType.GENRES -> homeModel.genreList.value
+            MusicType.PLAYLISTS -> homeModel.playlistList.value
+        }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onBindingCreated(binding: FragmentHomeBinding, savedInstanceState: Bundle?) {
         super.onBindingCreated(binding, savedInstanceState)

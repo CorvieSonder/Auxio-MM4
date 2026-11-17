@@ -27,7 +27,9 @@ import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.playback.PlaybackViewModel
 import org.oxycblt.auxio.ui.AuxioToolbar
 import org.oxycblt.auxio.ui.ViewBindingFragment
+import org.oxycblt.auxio.util.collect
 import org.oxycblt.auxio.util.showToast
+import org.oxycblt.musikr.Music
 
 /**
  * A subset of ListFragment that implements aspects of the selection UI.
@@ -42,6 +44,13 @@ abstract class SelectionFragment<VB : ViewBinding> :
 
     open fun getSelectionToolbar(binding: VB): AuxioToolbar? = null
 
+    /**
+     * Get the items that "Select all" and "Invert selection" act on.
+     *
+     * @return The [Music] items currently shown by this fragment.
+     */
+    open fun getSelectableItems(): List<Music> = listOf()
+
     override fun onBindingCreated(binding: VB, savedInstanceState: Bundle?) {
         super.onBindingCreated(binding, savedInstanceState)
         getSelectionToolbar(binding)?.apply {
@@ -50,6 +59,15 @@ abstract class SelectionFragment<VB : ViewBinding> :
             setOnMenuItemClickListener(this@SelectionFragment)
             setOnOverflowMenuClick {
                 listModel.openMenu(R.menu.selection, listModel.peekSelection())
+            }
+        }
+        if (getSelectionToolbar(binding) != null) {
+            // Only the fragment that shows the selection toolbar knows which items are shown.
+            collect(listModel.invertRequest.flow) {
+                if (it != null) {
+                    listModel.invertRequest.consume()
+                    listModel.invertSelection(getSelectableItems())
+                }
             }
         }
     }
@@ -68,6 +86,10 @@ abstract class SelectionFragment<VB : ViewBinding> :
             }
             R.id.action_selection_playlist_add -> {
                 musicModel.addToPlaylist(listModel.takeSelection())
+                true
+            }
+            R.id.action_selection_select_all -> {
+                listModel.selectAll(getSelectableItems())
                 true
             }
             else -> false
