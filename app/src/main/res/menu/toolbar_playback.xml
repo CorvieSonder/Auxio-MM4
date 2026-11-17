@@ -34,9 +34,9 @@
         </menu>
     </item>
     <item
-        android:id="@+id/action_share"
-        android:icon="@drawable/ic_share_24"
-        android:title="@string/lbl_share"
+        android:id="@+id/action_rate"
+        android:icon="@drawable/ic_star_outline_24"
+        android:title="@string/lbl_rate"
         app:showAsAction="always" />
     <item
         android:id="@+id/action_save_queue"
