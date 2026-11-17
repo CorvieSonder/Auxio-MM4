@@ -23,8 +23,6 @@ import android.view.LayoutInflater
 import androidx.appcompat.app.AlertDialog
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-import kotlin.math.abs
-import kotlin.math.roundToInt
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.DialogSpeedPitchBinding
 import org.oxycblt.auxio.playback.PlaybackSettings
@@ -52,47 +50,11 @@ class SpeedPitchDialog : ViewBindingMaterialDialogFragment<DialogSpeedPitchBindi
     }
 
     override fun onBindingCreated(binding: DialogSpeedPitchBinding, savedInstanceState: Bundle?) {
-        if (savedInstanceState == null) {
-            // First initialization, we need to supply the sliders with the values from
-            // settings. After this, the sliders save their own state.
-            binding.speedSlider.value =
-                (playbackSettings.playbackSpeed * 100 / SPEED_STEP).roundToInt() * SPEED_STEP
-            binding.pitchSlider.value = playbackSettings.playbackPitch.toFloat()
-        }
-
-        updateSpeedTicker(binding.speedSlider.value)
-        binding.speedSlider.addOnChangeListener { _, value, fromUser ->
-            updateSpeedTicker(value)
-            if (fromUser) {
-                playbackSettings.playbackSpeed = value / 100
-            }
-        }
-
-        updatePitchTicker(binding.pitchSlider.value)
-        binding.pitchSlider.addOnChangeListener { _, value, fromUser ->
-            updatePitchTicker(value)
-            if (fromUser) {
-                playbackSettings.playbackPitch = value.roundToInt()
-            }
-        }
-    }
-
-    private fun updateSpeedTicker(percent: Float) {
-        requireBinding().speedTicker.text = getString(R.string.fmt_speed, percent.roundToInt())
-    }
-
-    private fun updatePitchTicker(semitones: Float) {
-        val pitch = semitones.roundToInt()
-        requireBinding().pitchTicker.text =
-            if (pitch >= 0) {
-                getString(R.string.fmt_pitch_pos, pitch)
-            } else {
-                getString(R.string.fmt_pitch_neg, abs(pitch))
-            }
+        // After the first initialization, the sliders save their own state.
+        binding.bindSpeedPitch(playbackSettings, savedInstanceState == null)
     }
 
     companion object {
         const val TAG = "SpeedPitchDialog"
-        private const val SPEED_STEP = 5f
     }
 }

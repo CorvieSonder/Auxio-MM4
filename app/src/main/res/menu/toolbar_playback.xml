@@ -2,14 +2,42 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/action_open_equalizer"
-        android:icon="@drawable/ic_config_24"
-        android:title="@string/lbl_equalizer"
+        android:id="@+id/action_playlist_add"
+        android:icon="@drawable/ic_playlist_add_24"
+        android:title="@string/lbl_playlist_add"
         app:showAsAction="always" />
     <item
-        android:id="@+id/action_speed_pitch"
-        android:title="@string/set_speed_pitch"
+        android:id="@+id/action_sleep_timer"
+        android:icon="@drawable/ic_sleep_24"
+        android:title="@string/lbl_sleep_timer"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_quick_settings"
+        android:icon="@drawable/ic_tune_24"
+        android:title="@string/lbl_quick_settings"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/action_reshuffle"
         android:title="@string/lbl_reshuffle"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_artist_details"
+        android:title="@string/lbl_artist_details"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_album_details"
+        android:title="@string/lbl_album_details"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_detail"
+        android:title="@string/lbl_song_detail"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_share"
+        android:title="@string/lbl_share"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_open_equalizer"
+        android:title="@string/lbl_equalizer"
         app:showAsAction="never" />
 </menu>

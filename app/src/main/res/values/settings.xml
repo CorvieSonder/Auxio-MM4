@@ -43,6 +43,9 @@
     <string name="set_key_speed_pitch" translatable="false">auxio_speed_pitch</string>
     <string name="set_key_playback_speed" translatable="false">auxio_playback_speed</string>
     <string name="set_key_playback_pitch" translatable="false">auxio_playback_pitch</string>
+    <string name="set_key_sleep_duration" translatable="false">auxio_sleep_duration</string>
+    <string name="set_key_sleep_finish_song" translatable="false">auxio_sleep_finish_song</string>
+    <string name="set_key_sleep_fade" translatable="false">auxio_sleep_fade</string>
     <string name="set_key_remember_pause" translatable="false">auxio_remember_pause</string>
 
     <string name="set_key_home_tabs" translatable="false">auxio_home_tabs</string>

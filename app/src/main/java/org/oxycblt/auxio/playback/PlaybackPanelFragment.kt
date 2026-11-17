@@ -35,15 +35,19 @@ import androidx.dynamicanimation.animation.SpringForce
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlin.math.abs
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.FragmentPlaybackPanelBinding
 import org.oxycblt.auxio.detail.DetailViewModel
 import org.oxycblt.auxio.list.ListViewModel
+import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
 import org.oxycblt.auxio.playback.queue.QueueViewModel
-import org.oxycblt.auxio.playback.speed.SpeedPitchDialog
+import org.oxycblt.auxio.playback.quick.QuickSettingsSheet
+import org.oxycblt.auxio.playback.sleep.SleepTimer
+import org.oxycblt.auxio.playback.sleep.SleepTimerDialog
 import org.oxycblt.auxio.playback.state.RepeatMode
 import org.oxycblt.auxio.playback.ui.StyledSeekBar
 import org.oxycblt.auxio.playback.ui.stepper.Direction
@@ -55,6 +59,7 @@ import org.oxycblt.auxio.ui.ViewBindingFragment
 import org.oxycblt.auxio.util.collectImmediately
 import org.oxycblt.auxio.util.dampen
 import org.oxycblt.auxio.util.recycler
+import org.oxycblt.auxio.util.share
 import org.oxycblt.auxio.util.showToast
 import org.oxycblt.auxio.util.smoothScrollByPageTo
 import org.oxycblt.auxio.util.systemBarInsetsCompat
@@ -81,6 +86,8 @@ class PlaybackPanelFragment :
     private val detailModel: DetailViewModel by activityViewModels()
     private val listModel: ListViewModel by activityViewModels()
     private val queueModel: QueueViewModel by viewModels()
+    private val musicModel: MusicViewModel by activityViewModels()
+    @Inject lateinit var sleepTimer: SleepTimer
     private var equalizerLauncher: ActivityResultLauncher<Intent>? = null
     private var userAwarePagerCallback: UserAwarePagerCallback? = null
 
@@ -182,6 +189,7 @@ class PlaybackPanelFragment :
         collectImmediately(playbackModel.isPlaying, ::updatePlaying)
         collectImmediately(playbackModel.isShuffled, ::updateShuffled)
         collectImmediately(playbackModel.pagerQueue, ::updatePager)
+        collectImmediately(sleepTimer.state, ::updateSleepTimer)
     }
 
     // FIXME: Old code!! Maybe not necessary anymore?
@@ -231,35 +239,56 @@ class PlaybackPanelFragment :
     }
 
     override fun onMenuItemClick(item: MenuItem): Boolean {
-        if (item.itemId == R.id.action_open_equalizer) {
-            // Launch the system equalizer app, if possible.
-            L.d("Launching equalizer")
-            val equalizerIntent =
-                Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL)
-                    // Provide audio session ID so the equalizer can show options for this app
-                    // in particular.
-                    .putExtra(AudioEffect.EXTRA_AUDIO_SESSION, playbackModel.currentAudioSessionId)
-                    // Signal music type so that the equalizer settings are appropriate for
-                    // music playback.
-                    .putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC)
-            try {
-                requireNotNull(equalizerLauncher) { "Equalizer panel launcher was not available" }
-                    .launch(equalizerIntent)
-            } catch (e: ActivityNotFoundException) {
-                requireContext().showToast(R.string.err_no_app)
+        when (item.itemId) {
+            R.id.action_open_equalizer -> openEqualizer()
+            R.id.action_quick_settings ->
+                QuickSettingsSheet().show(childFragmentManager, QuickSettingsSheet.TAG)
+            R.id.action_sleep_timer ->
+                SleepTimerDialog().show(childFragmentManager, SleepTimerDialog.TAG)
+            R.id.action_reshuffle -> {
+                playbackModel.reshuffle()
+                requireContext().showToast(R.string.lng_reshuffled)
             }
-            return true
+            R.id.action_playlist_add -> playbackModel.song.value?.let(musicModel::addToPlaylist)
+            R.id.action_artist_details -> navigateToCurrentArtist()
+            R.id.action_album_details -> navigateToCurrentAlbum()
+            R.id.action_detail -> playbackModel.song.value?.let(detailModel::showSong)
+            R.id.action_share -> playbackModel.song.value?.let { requireContext().share(it) }
+            else -> return false
         }
+        return true
+    }
 
-        if (item.itemId == R.id.action_speed_pitch) {
-            SpeedPitchDialog().show(childFragmentManager, SpeedPitchDialog.TAG)
-        if (item.itemId == R.id.action_reshuffle) {
-            playbackModel.reshuffle()
-            requireContext().showToast(R.string.lng_reshuffled)
-            return true
+    private fun openEqualizer() {
+        // Launch the system equalizer app, if possible.
+        L.d("Launching equalizer")
+        val equalizerIntent =
+            Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL)
+                // Provide audio session ID so the equalizer can show options for this app
+                // in particular.
+                .putExtra(AudioEffect.EXTRA_AUDIO_SESSION, playbackModel.currentAudioSessionId)
+                // Signal music type so that the equalizer settings are appropriate for
+                // music playback.
+                .putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC)
+        try {
+            requireNotNull(equalizerLauncher) { "Equalizer panel launcher was not available" }
+                .launch(equalizerIntent)
+        } catch (e: ActivityNotFoundException) {
+            requireContext().showToast(R.string.err_no_app)
         }
+    }
 
-        return false
+    private fun updateSleepTimer(state: SleepTimer.State) {
+        requireBinding()
+            .playbackToolbar
+            .getMenuButton(R.id.action_sleep_timer)
+            ?.setIconResource(
+                if (state is SleepTimer.State.Off) {
+                    R.drawable.ic_sleep_24
+                } else {
+                    R.drawable.ic_sleep_on_24
+                }
+            )
     }
 
     override fun onSeekConfirmed(positionDs: Long) {

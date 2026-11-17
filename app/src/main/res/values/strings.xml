@@ -122,6 +122,16 @@
     <string name="lbl_play">Play</string>
     <string name="lbl_shuffle">Shuffle</string>
     <string name="lbl_reshuffle">Reshuffle queue</string>
+    <string name="lbl_quick_settings">Quick settings</string>
+    <string name="lbl_sleep_timer">Sleep timer</string>
+    <string name="lbl_sleep_off">Off</string>
+    <string name="lbl_sleep_song_end">Until the song ends</string>
+    <string name="lbl_sleep_pause_after">Pause playback after</string>
+    <string name="lbl_sleep_finish_song">Finish the current song</string>
+    <string name="lbl_sleep_fade">Fade out</string>
+    <string name="lbl_sleep_start">Start</string>
+    <string name="lbl_sleep_stop">Stop timer</string>
+    <string name="lbl_sleep_extend">+5 min</string>
 
     <string name="lbl_queue">Queue</string>
     <string name="lbl_play_next">Play next</string>
@@ -199,6 +209,7 @@
     <string name="lng_queue_added">Added to queue</string>
     <string name="lng_play_next">Song will play next</string>
     <string name="lng_reshuffled">Queue reshuffled</string>
+    <string name="lng_sleep_finishing">Playback pauses when this song ends</string>
     <string name="lng_playlist_created">Playlist created</string>
     <string name="lng_playlist_imported">Playlist imported</string>
     <string name="lng_playlist_renamed">Playlist renamed</string>
@@ -505,6 +516,15 @@
         <item quantity="other">%d artists</item>
     </plurals>
 
+    <!-- Time left on the sleep timer, like 12:34 -->
+    <string name="fmt_sleep_remaining">Playback pauses in %s</string>
+    <!-- Time left on the sleep timer, like 12:34 -->
+    <string name="fmt_sleep_remaining_song">Playback pauses after the song playing in %s</string>
+
+    <plurals name="fmt_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
     <plurals name="fmt_seconds">
         <item quantity="one">%d second</item>
         <item quantity="other">%d seconds</item>

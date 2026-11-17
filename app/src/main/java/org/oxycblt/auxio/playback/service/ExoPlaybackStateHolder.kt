@@ -55,6 +55,7 @@ import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.playback.PlaybackSettings
 import org.oxycblt.auxio.playback.persist.PersistenceRepository
 import org.oxycblt.auxio.playback.replaygain.ReplayGainAudioProcessor
+import org.oxycblt.auxio.playback.sleep.SleepTimer
 import org.oxycblt.auxio.playback.state.DeferredPlayback
 import org.oxycblt.auxio.playback.state.PlaybackCommand
 import org.oxycblt.auxio.playback.state.PlaybackStateHolder
@@ -79,12 +80,14 @@ class ExoPlaybackStateHolder(
     private val replayGainProcessor: ReplayGainAudioProcessor,
     private val musicRepository: MusicRepository,
     private val imageSettings: ImageSettings,
+    private val sleepTimer: SleepTimer,
 ) :
     PlaybackStateHolder,
     Player.Listener,
     MusicRepository.UpdateListener,
     PlaybackSettings.Listener,
-    ImageSettings.Listener {
+    ImageSettings.Listener,
+    SleepTimer.Listener {
     private val saveJob = Job()
     private val saveScope = CoroutineScope(Dispatchers.IO + saveJob)
     private val restoreScope = CoroutineScope(Dispatchers.IO + saveJob)
@@ -102,10 +105,12 @@ class ExoPlaybackStateHolder(
         playbackSettings.registerListener(this)
         imageSettings.registerListener(this)
         updatePlaybackParameters()
+        sleepTimer.setListener(this)
     }
 
     fun release() {
         saveJob.cancel()
+        sleepTimer.setListener(null)
         playbackManager.unregisterStateHolder(this)
         musicRepository.removeUpdateListener(this)
         player.removeListener(this)
@@ -580,7 +585,15 @@ class ExoPlaybackStateHolder(
 
     private fun updatePauseOnRepeat() {
         player.pauseAtEndOfMediaItems =
-            player.repeatMode == Player.REPEAT_MODE_ONE && playbackSettings.pauseOnRepeat
+            (player.repeatMode == Player.REPEAT_MODE_ONE && playbackSettings.pauseOnRepeat) ||
+                sleepTimer.pauseAtSongEnd
+    }
+
+    // --- SLEEPTIMER OVERRIDES ---
+
+    override fun onSleepTimerChanged() {
+        player.volume = sleepTimer.volume
+        updatePauseOnRepeat()
     }
 
     private fun save(cb: () -> Unit) {
@@ -674,6 +687,7 @@ class ExoPlaybackStateHolder(
         private val replayGainProcessor: ReplayGainAudioProcessor,
         private val musicRepository: MusicRepository,
         private val imageSettings: ImageSettings,
+        private val sleepTimer: SleepTimer,
     ) {
         fun create(): ExoPlaybackStateHolder {
             // Since Auxio is a music player, only specify an audio renderer to save
@@ -718,6 +732,7 @@ class ExoPlaybackStateHolder(
                 replayGainProcessor,
                 musicRepository,
                 imageSettings,
+                sleepTimer,
             )
         }
     }
