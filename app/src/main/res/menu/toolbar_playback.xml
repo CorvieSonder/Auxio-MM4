@@ -13,31 +13,12 @@
         app:showAsAction="always" />
     <item
         android:id="@+id/action_quick_settings"
-        android:icon="@drawable/ic_tune_24"
-        android:title="@string/lbl_quick_settings"
+        android:icon="@drawable/ic_speed_24"
+        android:title="@string/set_speed_pitch"
         app:showAsAction="always" />
     <item
-        android:id="@+id/action_reshuffle"
-        android:title="@string/lbl_reshuffle"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_artist_details"
-        android:title="@string/lbl_artist_details"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_album_details"
-        android:title="@string/lbl_album_details"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_detail"
-        android:title="@string/lbl_song_detail"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_share"
-        android:title="@string/lbl_share"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_open_equalizer"
-        android:title="@string/lbl_equalizer"
-        app:showAsAction="never" />
+        android:id="@+id/action_song_menu"
+        android:icon="@drawable/ic_more_24"
+        android:title="@string/lbl_more"
+        app:showAsAction="always" />
 </menu>

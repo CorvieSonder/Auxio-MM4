@@ -56,10 +56,10 @@ import org.oxycblt.auxio.playback.ui.swiper.CarouselTransformer
 import org.oxycblt.auxio.playback.ui.swiper.CoverPagerAdapter
 import org.oxycblt.auxio.playback.ui.swiper.UserAwarePagerCallback
 import org.oxycblt.auxio.ui.ViewBindingFragment
+import org.oxycblt.auxio.util.collect
 import org.oxycblt.auxio.util.collectImmediately
 import org.oxycblt.auxio.util.dampen
 import org.oxycblt.auxio.util.recycler
-import org.oxycblt.auxio.util.share
 import org.oxycblt.auxio.util.showToast
 import org.oxycblt.auxio.util.smoothScrollByPageTo
 import org.oxycblt.auxio.util.systemBarInsetsCompat
@@ -117,6 +117,10 @@ class PlaybackPanelFragment :
         binding.playbackToolbar.apply {
             setNavigationOnClickListener { playbackModel.openMain() }
             setOnMenuItemClickListener(this@PlaybackPanelFragment)
+            // The actions sit in their own row below the title. Layouts that already show
+            // the song menu button next to the song do not need it here as well.
+            setActionsBelow()
+            setMenuItemVisible(R.id.action_song_menu, binding.playbackMore == null)
         }
 
         binding.playbackPager?.apply {
@@ -175,11 +179,7 @@ class PlaybackPanelFragment :
         }
         binding.playbackSkipNext.setOnClickListener { playbackModel.next() }
         binding.playbackShuffle.setOnClickListener { playbackModel.toggleShuffled() }
-        binding.playbackMore?.setOnClickListener {
-            playbackModel.song.value?.let {
-                listModel.openMenu(R.menu.playback_song, it, PlaySong.ByItself)
-            }
-        }
+        binding.playbackMore?.setOnClickListener { openSongMenu() }
 
         // --- VIEWMODEL SETUP --
         collectImmediately(playbackModel.song, ::updateSong)
@@ -190,6 +190,7 @@ class PlaybackPanelFragment :
         collectImmediately(playbackModel.isShuffled, ::updateShuffled)
         collectImmediately(playbackModel.pagerQueue, ::updatePager)
         collectImmediately(sleepTimer.state, ::updateSleepTimer)
+        collect(playbackModel.equalizerRequest.flow, ::handleEqualizerRequest)
     }
 
     // FIXME: Old code!! Maybe not necessary anymore?
@@ -240,23 +241,28 @@ class PlaybackPanelFragment :
 
     override fun onMenuItemClick(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.action_open_equalizer -> openEqualizer()
             R.id.action_quick_settings ->
                 QuickSettingsSheet().show(childFragmentManager, QuickSettingsSheet.TAG)
             R.id.action_sleep_timer ->
                 SleepTimerDialog().show(childFragmentManager, SleepTimerDialog.TAG)
-            R.id.action_reshuffle -> {
-                playbackModel.reshuffle()
-                requireContext().showToast(R.string.lng_reshuffled)
-            }
             R.id.action_playlist_add -> playbackModel.song.value?.let(musicModel::addToPlaylist)
-            R.id.action_artist_details -> navigateToCurrentArtist()
-            R.id.action_album_details -> navigateToCurrentAlbum()
-            R.id.action_detail -> playbackModel.song.value?.let(detailModel::showSong)
-            R.id.action_share -> playbackModel.song.value?.let { requireContext().share(it) }
+            R.id.action_song_menu -> openSongMenu()
             else -> return false
         }
         return true
+    }
+
+    private fun openSongMenu() {
+        playbackModel.song.value?.let {
+            listModel.openMenu(R.menu.playback_song, it, PlaySong.ByItself)
+        }
+    }
+
+    private fun handleEqualizerRequest(request: Unit?) {
+        if (request != null) {
+            playbackModel.equalizerRequest.consume()
+            openEqualizer()
+        }
     }
 
     private fun openEqualizer() {
