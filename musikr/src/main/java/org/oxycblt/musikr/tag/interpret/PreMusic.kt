@@ -52,6 +52,7 @@ internal data class PreSong(
     val modifiedMs: Long,
     val addedMs: Long,
     val cover: Cover?,
+    val extras: Map<String, List<String>>,
     val preAlbum: PreAlbum,
     val preArtists: List<PreArtist>,
     val preGenres: List<PreGenre>,

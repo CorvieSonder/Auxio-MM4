@@ -32,11 +32,13 @@ import androidx.room.RoomDatabase
 import androidx.room.Transaction
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import org.oxycblt.musikr.tag.Date
 import org.oxycblt.musikr.util.correctWhitespace
 import org.oxycblt.musikr.util.splitEscaped
 
-@Database(entities = [CachedFileData::class], version = 70, exportSchema = false)
+@Database(entities = [CachedFileData::class], version = 71, exportSchema = false)
 internal abstract class CacheDatabase : RoomDatabase() {
     abstract fun readDao(): CacheReadDao
 
@@ -49,8 +51,21 @@ internal abstract class CacheDatabase : RoomDatabase() {
                     CacheDatabase::class.java,
                     "music_cache.db",
                 )
+                .addMigrations(MIGRATION_70_71)
                 .fallbackToDestructiveMigration(true)
                 .build()
+
+        /**
+         * Adds the extras column. Every entry is marked as stale rather than dropped so that the
+         * new field is extracted while the date added values are retained.
+         */
+        private val MIGRATION_70_71 =
+            object : Migration(70, 71) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL("ALTER TABLE CachedFileData ADD COLUMN extras TEXT")
+                    db.execSQL("UPDATE CachedFileData SET modifiedMs = -1")
+                }
+            }
     }
 }
 
@@ -111,6 +126,7 @@ internal data class CachedFileData(
     val replayGainTrackAdjustment: Float?,
     val replayGainAlbumAdjustment: Float?,
     val coverId: String?,
+    val extras: Map<String, List<String>>?,
 ) {
     object Converters {
         @TypeConverter
@@ -120,6 +136,25 @@ internal data class CachedFileData(
         @TypeConverter
         fun toMultiValue(string: String) = string.splitEscaped { it == ';' }.correctWhitespace()
 
+        @TypeConverter
+        fun fromExtras(extras: Map<String, List<String>>?) =
+            extras?.entries?.joinToString(EXTRA_ENTRY_SEPARATOR) { (key, values) ->
+                (listOf(key) + values).joinToString(EXTRA_VALUE_SEPARATOR) {
+                    it.replace(EXTRA_ENTRY_SEPARATOR, "").replace(EXTRA_VALUE_SEPARATOR, "")
+                }
+            }
+
+        @TypeConverter
+        fun toExtras(string: String?) = string?.let {
+            if (it.isEmpty()) {
+                return@let mapOf()
+            }
+            it.split(EXTRA_ENTRY_SEPARATOR).associate { entry ->
+                val fields = entry.split(EXTRA_VALUE_SEPARATOR)
+                fields.first() to fields.drop(1)
+            }
+        }
+
         @TypeConverter fun fromDate(date: Date?) = date?.toString()
 
         @TypeConverter fun toDate(string: String?) = string?.let(Date::from)
@@ -127,5 +162,9 @@ internal data class CachedFileData(
         @TypeConverter fun toUri(string: String) = Uri.parse(string)
 
         @TypeConverter fun fromUri(uri: Uri) = uri.toString()
+
+        // ASCII record and unit separators, which should never appear in tag text.
+        private const val EXTRA_ENTRY_SEPARATOR = "\u001E"
+        private const val EXTRA_VALUE_SEPARATOR = "\u001F"
     }
 }

@@ -28,6 +28,23 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory app:title="@string/set_ratings">
+
+        <org.oxycblt.auxio.settings.ui.IntListPreference
+            app:defaultValue="0"
+            app:entries="@array/entries_rating_source"
+            app:entryValues="@array/values_rating_source"
+            app:key="@string/set_key_rating_source"
+            app:title="@string/set_rating_source" />
+
+        <SwitchPreferenceCompat
+            app:defaultValue="true"
+            app:key="@string/set_key_rating_lists"
+            app:summary="@string/set_rating_lists_desc"
+            app:title="@string/set_rating_lists" />
+
+    </PreferenceCategory>
+
     <PreferenceCategory app:title="@string/set_images">
 
         <org.oxycblt.auxio.settings.ui.IntListPreference

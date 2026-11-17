@@ -42,6 +42,7 @@ import org.oxycblt.auxio.list.adapter.UpdateInstructions
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.MusicType
+import org.oxycblt.auxio.music.rating.rating
 import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.auxio.playback.PlaySong
 import org.oxycblt.auxio.playback.PlaybackSettings
@@ -548,6 +549,9 @@ constructor(
             add(SongProperty(R.string.lbl_artists, SongProperty.Value.MusicNames(song.artists)))
             add(SongProperty(R.string.lbl_genres, SongProperty.Value.MusicNames(song.genres)))
             song.date?.let { add(SongProperty(R.string.lbl_date, SongProperty.Value.ItemDate(it))) }
+            song.rating?.let {
+                add(SongProperty(R.string.lbl_rating, SongProperty.Value.ItemRating(it)))
+            }
             song.track?.let {
                 add(SongProperty(R.string.lbl_track, SongProperty.Value.Number(it, null)))
             }

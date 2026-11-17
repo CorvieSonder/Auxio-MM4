@@ -38,6 +38,8 @@ import org.oxycblt.auxio.list.recycler.SongViewHolder
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.IndexingState
 import org.oxycblt.auxio.music.MusicViewModel
+import org.oxycblt.auxio.music.rating.format
+import org.oxycblt.auxio.music.rating.rating
 import org.oxycblt.auxio.playback.PlaybackViewModel
 import org.oxycblt.auxio.playback.formatDurationMsPopup
 import org.oxycblt.auxio.util.collectImmediately
@@ -142,6 +144,12 @@ class SongListFragment :
                     getString(R.string.fmt_number, calendar.get(Calendar.YEAR))
                 )
             }
+
+            // Rating -> Use the rating
+            is Sort.Mode.ByRating ->
+                song.rating?.let {
+                    FastScrollRecyclerView.PopupProvider.PopupData(it.format(requireContext()))
+                }
 
             // Unsupported sort, error gracefully
             else -> null

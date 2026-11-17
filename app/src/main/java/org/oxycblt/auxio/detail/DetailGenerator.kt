@@ -26,6 +26,7 @@ import org.oxycblt.auxio.list.ListSettings
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.MusicType
+import org.oxycblt.auxio.music.rating.RatingRepository
 import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
@@ -69,6 +70,7 @@ constructor(
     private val musicRepository: MusicRepository,
     private val playlistSortRepository: PlaylistSortRepository,
     private val playlistTreeRepository: PlaylistTreeRepository,
+    private val ratingRepository: RatingRepository,
 ) : DetailGenerator.Factory {
     override fun create(invalidator: DetailGenerator.Invalidator): DetailGenerator =
         DetailGeneratorImpl(
@@ -77,6 +79,7 @@ constructor(
             musicRepository,
             playlistSortRepository,
             playlistTreeRepository,
+            ratingRepository,
         )
 }
 
@@ -86,17 +89,28 @@ private class DetailGeneratorImpl(
     private val musicRepository: MusicRepository,
     private val playlistSortRepository: PlaylistSortRepository,
     private val playlistTreeRepository: PlaylistTreeRepository,
+    private val ratingRepository: RatingRepository,
 ) :
     DetailGenerator,
     MusicRepository.UpdateListener,
     ListSettings.Listener,
     PlaylistSortRepository.Listener,
-    PlaylistTreeRepository.Listener {
+    PlaylistTreeRepository.Listener,
+    RatingRepository.Listener {
     override fun attach() {
         listSettings.registerListener(this)
         musicRepository.addUpdateListener(this)
         playlistSortRepository.addListener(this)
         playlistTreeRepository.addListener(this)
+        ratingRepository.addListener(this)
+    }
+
+    override fun onRatingsChanged() {
+        // Replace the lists so that the ratings of the songs are rebound.
+        invalidator.invalidate(MusicType.ALBUMS, -1)
+        invalidator.invalidate(MusicType.ARTISTS, -1)
+        invalidator.invalidate(MusicType.GENRES, -1)
+        invalidator.invalidate(MusicType.PLAYLISTS, 0)
     }
 
     override fun onAlbumSongSortChanged() {
@@ -140,6 +154,7 @@ private class DetailGeneratorImpl(
     }
 
     override fun release() {
+        ratingRepository.removeListener(this)
         listSettings.unregisterListener(this)
         musicRepository.removeUpdateListener(this)
         playlistSortRepository.removeListener(this)
