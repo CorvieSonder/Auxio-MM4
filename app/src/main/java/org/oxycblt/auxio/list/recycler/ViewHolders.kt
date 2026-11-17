@@ -40,6 +40,7 @@ import org.oxycblt.auxio.util.getPlural
 import org.oxycblt.auxio.util.inflater
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
+import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
@@ -265,6 +266,60 @@ class GenreViewHolder private constructor(private val binding: ItemParentBinding
         val DIFF_CALLBACK =
             object : SimpleDiffCallback<Genre>() {
                 override fun areContentsTheSame(oldItem: Genre, newItem: Genre) =
+                    oldItem.name == newItem.name &&
+                        oldItem.artists.size == newItem.artists.size &&
+                        oldItem.songs.size == newItem.songs.size
+            }
+    }
+}
+
+/** A [RecyclerView.ViewHolder] that displays a [Composer]. Use [from] to create an instance. */
+class ComposerViewHolder private constructor(private val binding: ItemParentBinding) :
+    SelectionIndicatorAdapter.ViewHolder(binding.root) {
+    /**
+     * Bind new data to this instance.
+     *
+     * @param composer The new [Composer] to bind.
+     * @param listener An [SelectableListListener] to bind interactions to.
+     */
+    fun bind(composer: Composer, listener: SelectableListListener<Composer>) {
+        listener.bind(composer, this, menuButton = binding.parentMenu)
+        binding.parentImage.bind(composer)
+        binding.parentName.text = composer.name.resolve(binding.context)
+        binding.parentInfo.text =
+            binding.context.getString(
+                R.string.fmt_two,
+                binding.context.getPlural(R.plurals.fmt_artist_count, composer.artists.size),
+                binding.context.getPlural(R.plurals.fmt_song_count, composer.songs.size),
+            )
+    }
+
+    override fun updatePlayingIndicator(isActive: Boolean, isPlaying: Boolean) {
+        binding.root.isSelected = isActive
+        binding.parentImage.setPlaying(isPlaying)
+    }
+
+    override fun updateSelectionIndicator(isSelected: Boolean) {
+        binding.root.isActivated = isSelected
+    }
+
+    companion object {
+        /** Unique ID for this ViewHolder type. */
+        const val VIEW_TYPE = IntegerTable.VIEW_TYPE_COMPOSER
+
+        /**
+         * Create a new instance.
+         *
+         * @param parent The parent to inflate this instance from.
+         * @return A new instance.
+         */
+        fun from(parent: ViewGroup) =
+            ComposerViewHolder(ItemParentBinding.inflate(parent.context.inflater, parent, false))
+
+        /** A comparator that can be used with DiffUtil. */
+        val DIFF_CALLBACK =
+            object : SimpleDiffCallback<Composer>() {
+                override fun areContentsTheSame(oldItem: Composer, newItem: Composer) =
                     oldItem.name == newItem.name &&
                         oldItem.artists.size == newItem.artists.size &&
                         oldItem.songs.size == newItem.songs.size

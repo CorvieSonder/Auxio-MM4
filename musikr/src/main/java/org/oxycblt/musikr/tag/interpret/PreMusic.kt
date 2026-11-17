@@ -56,6 +56,7 @@ internal data class PreSong(
     val preAlbum: PreAlbum,
     val preArtists: List<PreArtist>,
     val preGenres: List<PreGenre>,
+    val preComposers: List<PreComposer>,
 )
 
 internal data class PreAlbum(
@@ -93,3 +94,5 @@ internal data class PreArtist(val musicBrainzId: UUID?, val name: Name, val rawN
 }
 
 internal data class PreGenre(val name: Name, val rawName: String?)
+
+internal data class PreComposer(val name: Name.Known, val rawName: String)

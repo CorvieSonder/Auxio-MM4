@@ -35,6 +35,7 @@ import org.oxycblt.auxio.util.Event
 import org.oxycblt.auxio.util.MutableEvent
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
+import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
@@ -319,6 +320,17 @@ constructor(
     fun addToPlaylist(artist: Artist, playlist: Playlist? = null) {
         L.d("Adding $artist to playlist")
         addToPlaylist(listSettings.artistSongSort.songs(artist.songs), playlist)
+    }
+
+    /**
+     * Add a [Composer] to a [Playlist].
+     *
+     * @param composer The [Composer] to add to the [Playlist].
+     * @param playlist The [Playlist] to add to. If null, the user will be prompted for one.
+     */
+    fun addToPlaylist(composer: Composer, playlist: Playlist? = null) {
+        L.d("Adding $composer to playlist")
+        addToPlaylist(listSettings.composerSongSort.songs(composer.songs), playlist)
     }
 
     /**

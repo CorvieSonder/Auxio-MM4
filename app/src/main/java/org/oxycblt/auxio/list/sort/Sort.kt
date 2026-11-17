@@ -22,6 +22,7 @@ import org.oxycblt.auxio.IntegerTable
 import org.oxycblt.auxio.R
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
+import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
@@ -85,6 +86,18 @@ data class Sort(val mode: Mode, val direction: Direction) {
     }
 
     /**
+     * Sort a list of [Composer]s.
+     *
+     * @param composers The list of [Composer]s.
+     * @return A new list of [Composer]s sorted by this [Sort]'s configuration.
+     */
+    fun composers(composers: Collection<Composer>): List<Composer> {
+        val mutable = composers.toMutableList()
+        mode.sortComposers(mutable, direction)
+        return mutable
+    }
+
+    /**
      * Sort a list of [Playlist]s.
      *
      * @param playlists The list of [Playlist]s.
@@ -136,6 +149,10 @@ data class Sort(val mode: Mode, val direction: Direction) {
             throw NotImplementedError("Sorting playlists is not supported for this mode")
         }
 
+        fun sortComposers(composers: MutableList<Composer>, direction: Direction) {
+            throw NotImplementedError("Sorting composers is not supported for this mode")
+        }
+
         data object ByName : Mode {
             override val intCode = IntegerTable.SORT_BY_NAME
             override val stringRes = R.string.lbl_name
@@ -165,6 +182,13 @@ data class Sort(val mode: Mode, val direction: Direction) {
                 when (direction) {
                     Direction.ASCENDING -> genres.sortBy { it.name }
                     Direction.DESCENDING -> genres.sortByDescending { it.name }
+                }
+            }
+
+            override fun sortComposers(composers: MutableList<Composer>, direction: Direction) {
+                when (direction) {
+                    Direction.ASCENDING -> composers.sortBy { it.name }
+                    Direction.DESCENDING -> composers.sortByDescending { it.name }
                 }
             }
 
@@ -279,6 +303,14 @@ data class Sort(val mode: Mode, val direction: Direction) {
                 }
             }
 
+            override fun sortComposers(composers: MutableList<Composer>, direction: Direction) {
+                composers.sortBy { it.name }
+                when (direction) {
+                    Direction.ASCENDING -> composers.sortBy { it.durationMs }
+                    Direction.DESCENDING -> composers.sortByDescending { it.durationMs }
+                }
+            }
+
             override fun sortPlaylists(playlists: MutableList<Playlist>, direction: Direction) {
                 playlists.sortBy { it.name }
                 when (direction) {
@@ -313,6 +345,14 @@ data class Sort(val mode: Mode, val direction: Direction) {
                 when (direction) {
                     Direction.ASCENDING -> genres.sortBy { it.songs.size }
                     Direction.DESCENDING -> genres.sortByDescending { it.songs.size }
+                }
+            }
+
+            override fun sortComposers(composers: MutableList<Composer>, direction: Direction) {
+                composers.sortBy { it.name }
+                when (direction) {
+                    Direction.ASCENDING -> composers.sortBy { it.songs.size }
+                    Direction.DESCENDING -> composers.sortByDescending { it.songs.size }
                 }
             }
 

@@ -20,6 +20,7 @@ package org.oxycblt.auxio.playback
 
 import org.oxycblt.auxio.IntegerTable
 import org.oxycblt.musikr.Artist
+import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.MusicParent
 import org.oxycblt.musikr.Playlist
@@ -82,6 +83,15 @@ sealed interface PlaySong {
         override val intCode = IntegerTable.PLAY_SONG_FROM_PLAYLIST
     }
 
+    /**
+     * Play a song from one of it's [Composer]s.
+     *
+     * @param which The [Composer] to specifically play from. This must be provided.
+     */
+    data class FromComposer(val which: Composer) : PlaySong {
+        override val intCode = IntegerTable.PLAY_SONG_FROM_COMPOSER
+    }
+
     /** Only play the given song, include nothing else in the queue. */
     data object ByItself : PlaySong {
         override val intCode = IntegerTable.PLAY_SONG_BY_ITSELF
@@ -118,6 +128,12 @@ sealed interface PlaySong {
                 IntegerTable.PLAY_SONG_FROM_PLAYLIST ->
                     if (which is Playlist) {
                         FromPlaylist(which)
+                    } else {
+                        null
+                    }
+                IntegerTable.PLAY_SONG_FROM_COMPOSER ->
+                    if (which is Composer) {
+                        FromComposer(which)
                     } else {
                         null
                     }

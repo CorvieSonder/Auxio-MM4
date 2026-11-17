@@ -30,6 +30,7 @@ interface Library {
     val albums: Collection<Album>
     val artists: Collection<Artist>
     val genres: Collection<Genre>
+    val composers: Collection<Composer>
     val playlists: Collection<Playlist>
 
     /**
@@ -78,6 +79,14 @@ interface Library {
      * @return the genre if found, null otherwise
      */
     fun findGenre(uid: Music.UID): Genre?
+
+    /**
+     * Find a [Composer] by it's [Music.UID]
+     *
+     * @param uid the [Music.UID] of the composer
+     * @return the composer if found, null otherwise
+     */
+    fun findComposer(uid: Music.UID): Composer?
 
     /**
      * Find a [Playlist] by it's [Music.UID]

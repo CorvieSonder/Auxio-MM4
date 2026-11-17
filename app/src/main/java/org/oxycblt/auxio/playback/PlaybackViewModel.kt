@@ -42,6 +42,7 @@ import org.oxycblt.auxio.util.Event
 import org.oxycblt.auxio.util.MutableEvent
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
+import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.MusicParent
 import org.oxycblt.musikr.Playlist
@@ -256,6 +257,7 @@ constructor(
             is PlaySong.FromArtist -> playFromArtistImpl(song, with.which, shuffle)
             is PlaySong.FromGenre -> playFromGenreImpl(song, with.which, shuffle)
             is PlaySong.FromPlaylist -> playFromPlaylistImpl(song, with.which, shuffle)
+            is PlaySong.FromComposer -> playFromComposerImpl(song, with.which, shuffle)
             is PlaySong.ByItself -> playItselfImpl(song, shuffle)
         }
     }
@@ -313,6 +315,11 @@ constructor(
         playImpl(commandFactory.songFromPlaylist(song, playlist, shuffle))
     }
 
+    private fun playFromComposerImpl(song: Song, composer: Composer, shuffle: ShuffleMode) {
+        L.d("Playing $song from $composer")
+        playImpl(commandFactory.songFromComposer(song, composer, shuffle))
+    }
+
     private fun startPlaybackDecision(decision: PlaybackDecision) {
         val existing = playbackDecision.flow.value
         if (existing != null) {
@@ -360,6 +367,46 @@ constructor(
     fun shuffle(artist: Artist) {
         L.d("Shuffling $artist")
         playImpl(commandFactory.artist(artist, ShuffleMode.ON))
+    }
+
+    /**
+     * Play a [Composer].
+     *
+     * @param composer The [Composer] to play.
+     */
+    fun play(composer: Composer) {
+        L.d("Playing $composer")
+        playImpl(commandFactory.composer(composer, ShuffleMode.OFF))
+    }
+
+    /**
+     * Shuffle a [Composer].
+     *
+     * @param composer The [Composer] to shuffle.
+     */
+    fun shuffle(composer: Composer) {
+        L.d("Shuffling $composer")
+        playImpl(commandFactory.composer(composer, ShuffleMode.ON))
+    }
+
+    /**
+     * Add a [Composer] to the top of the queue.
+     *
+     * @param composer The [Composer] to add.
+     */
+    fun playNext(composer: Composer) {
+        L.d("Playing $composer next")
+        playbackManager.playNext(listSettings.composerSongSort.songs(composer.songs))
+    }
+
+    /**
+     * Add a [Composer] to the end of the queue.
+     *
+     * @param composer The [Composer] to add.
+     */
+    fun addToQueue(composer: Composer) {
+        L.d("Adding $composer to queue")
+        playbackManager.addToQueue(listSettings.composerSongSort.songs(composer.songs))
     }
 
     /**
