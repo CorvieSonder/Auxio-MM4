@@ -40,6 +40,7 @@ import org.oxycblt.auxio.list.adapter.SelectionIndicatorAdapter
 import org.oxycblt.auxio.list.adapter.SimpleDiffCallback
 import org.oxycblt.auxio.list.recycler.MaterialDragCallback
 import org.oxycblt.auxio.list.recycler.SongViewHolder
+import org.oxycblt.auxio.music.rating.bindRating
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
 import org.oxycblt.auxio.util.context
@@ -264,6 +265,7 @@ private constructor(private val binding: ItemEditableSongBinding) :
         binding.songAlbumCover.bind(song)
         binding.songName.text = song.name.resolve(binding.context)
         binding.songInfo.text = song.artists.resolveNames(binding.context)
+        binding.songRating.bindRating(song)
         // Not swiping this ViewHolder if it's being re-bound, ensure that the background is
         // not visible. See MaterialDragCallback for why this is done.
         binding.background.isInvisible = true
