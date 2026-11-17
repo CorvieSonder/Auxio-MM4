@@ -42,6 +42,7 @@ import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
 
@@ -320,6 +321,60 @@ class ComposerViewHolder private constructor(private val binding: ItemParentBind
         val DIFF_CALLBACK =
             object : SimpleDiffCallback<Composer>() {
                 override fun areContentsTheSame(oldItem: Composer, newItem: Composer) =
+                    oldItem.name == newItem.name &&
+                        oldItem.artists.size == newItem.artists.size &&
+                        oldItem.songs.size == newItem.songs.size
+            }
+    }
+}
+
+/** A [RecyclerView.ViewHolder] that displays a [Mood]. Use [from] to create an instance. */
+class MoodViewHolder private constructor(private val binding: ItemParentBinding) :
+    SelectionIndicatorAdapter.ViewHolder(binding.root) {
+    /**
+     * Bind new data to this instance.
+     *
+     * @param mood The new [Mood] to bind.
+     * @param listener An [SelectableListListener] to bind interactions to.
+     */
+    fun bind(mood: Mood, listener: SelectableListListener<Mood>) {
+        listener.bind(mood, this, menuButton = binding.parentMenu)
+        binding.parentImage.bind(mood)
+        binding.parentName.text = mood.name.resolve(binding.context)
+        binding.parentInfo.text =
+            binding.context.getString(
+                R.string.fmt_two,
+                binding.context.getPlural(R.plurals.fmt_artist_count, mood.artists.size),
+                binding.context.getPlural(R.plurals.fmt_song_count, mood.songs.size),
+            )
+    }
+
+    override fun updatePlayingIndicator(isActive: Boolean, isPlaying: Boolean) {
+        binding.root.isSelected = isActive
+        binding.parentImage.setPlaying(isPlaying)
+    }
+
+    override fun updateSelectionIndicator(isSelected: Boolean) {
+        binding.root.isActivated = isSelected
+    }
+
+    companion object {
+        /** Unique ID for this ViewHolder type. */
+        const val VIEW_TYPE = IntegerTable.VIEW_TYPE_MOOD
+
+        /**
+         * Create a new instance.
+         *
+         * @param parent The parent to inflate this instance from.
+         * @return A new instance.
+         */
+        fun from(parent: ViewGroup) =
+            MoodViewHolder(ItemParentBinding.inflate(parent.context.inflater, parent, false))
+
+        /** A comparator that can be used with DiffUtil. */
+        val DIFF_CALLBACK =
+            object : SimpleDiffCallback<Mood>() {
+                override fun areContentsTheSame(oldItem: Mood, newItem: Mood) =
                     oldItem.name == newItem.name &&
                         oldItem.artists.size == newItem.artists.size &&
                         oldItem.songs.size == newItem.songs.size

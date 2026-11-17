@@ -201,6 +201,11 @@ class ComposerDetailFragment : DetailFragment<Composer, Music>() {
                 L.d("Navigated to this composer")
                 detailModel.toShow.consume()
             }
+            is Show.MoodDetails -> {
+                L.d("Navigating to ${show.mood}")
+                findNavController()
+                    .navigateSafe(ComposerDetailFragmentDirections.showMood(show.mood.uid))
+            }
             is Show.GenreDetails -> {
                 L.d("Navigating to ${show.genre}")
                 findNavController()
@@ -225,6 +230,7 @@ class ComposerDetailFragment : DetailFragment<Composer, Music>() {
                     ComposerDetailFragmentDirections.openSelectionMenu(menu.parcel)
                 is Menu.ForAlbum,
                 is Menu.ForGenre,
+                is Menu.ForMood,
                 is Menu.ForPlaylist -> error("Unexpected menu $menu")
             }
         findNavController().navigateSafe(directions)

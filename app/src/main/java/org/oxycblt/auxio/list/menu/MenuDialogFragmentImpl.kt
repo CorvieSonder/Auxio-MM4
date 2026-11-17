@@ -38,6 +38,7 @@ import org.oxycblt.auxio.util.showToast
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
 
@@ -309,6 +310,54 @@ class ComposerMenuDialogFragment : MenuDialogFragment<Menu.ForComposer>() {
             }
             R.id.action_playlist_add -> musicModel.addToPlaylist(menu.composer)
             R.id.action_share -> requireContext().share(menu.composer)
+            else -> error("Unexpected menu item $item")
+        }
+    }
+}
+
+/** [MenuDialogFragment] implementation for a [Mood]. */
+@AndroidEntryPoint
+class MoodMenuDialogFragment : MenuDialogFragment<Menu.ForMood>() {
+    override val menuModel: MenuViewModel by viewModels()
+    override val listModel: ListViewModel by activityViewModels()
+    private val detailModel: DetailViewModel by activityViewModels()
+    private val musicModel: MusicViewModel by activityViewModels()
+    private val playbackModel: PlaybackViewModel by activityViewModels()
+    private val args: MoodMenuDialogFragmentArgs by navArgs()
+
+    override val parcel
+        get() = args.parcel
+
+    override fun getDisabledItemIds(menu: Menu.ForMood) = setOf<Int>()
+
+    override fun updateMenu(binding: DialogMenuBinding, menu: Menu.ForMood) {
+        val context = requireContext()
+        binding.menuCover.bind(menu.mood)
+        binding.menuType.text = getString(R.string.lbl_mood)
+        binding.menuName.text = menu.mood.name.resolve(context)
+        binding.menuInfo.text =
+            getString(
+                R.string.fmt_two,
+                context.getPlural(R.plurals.fmt_artist_count, menu.mood.artists.size),
+                context.getPlural(R.plurals.fmt_song_count, menu.mood.songs.size),
+            )
+    }
+
+    override fun onClick(item: MenuItem, menu: Menu.ForMood) {
+        when (item.itemId) {
+            R.id.action_play -> playbackModel.play(menu.mood)
+            R.id.action_shuffle -> playbackModel.shuffle(menu.mood)
+            R.id.action_detail -> detailModel.showMood(menu.mood)
+            R.id.action_play_next -> {
+                playbackModel.playNext(menu.mood)
+                requireContext().showToast(R.string.lng_play_next)
+            }
+            R.id.action_queue_add -> {
+                playbackModel.addToQueue(menu.mood)
+                requireContext().showToast(R.string.lng_queue_added)
+            }
+            R.id.action_playlist_add -> musicModel.addToPlaylist(menu.mood)
+            R.id.action_share -> requireContext().share(menu.mood)
             else -> error("Unexpected menu item $item")
         }
     }

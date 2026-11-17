@@ -36,6 +36,7 @@ import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
 import timber.log.Timber as L
@@ -121,6 +122,18 @@ constructor(
     val composerSort: Sort
         get() = listSettings.composerSort
 
+    /** A list of [Mood]s, sorted by the preferred [Sort], to be shown in the home view. */
+    val moodList: StateFlow<List<Mood>>
+        field = MutableStateFlow(listOf<Mood>())
+
+    /** Instructions for how to update [moodList] in the UI. */
+    val moodInstructions: Event<UpdateInstructions>
+        field = MutableEvent<UpdateInstructions>()
+
+    /** The current [Sort] used for [moodList]. */
+    val moodSort: Sort
+        get() = listSettings.moodSort
+
     /** A list of [Playlist]s, sorted by the preferred [Sort], to be shown in the home view. */
     val playlistList: StateFlow<List<Playlist>>
         field = MutableStateFlow(listOf<Playlist>())
@@ -205,6 +218,10 @@ constructor(
                 composerInstructions.put(instructions)
                 composerList.value = homeGenerator.composers()
             }
+            MusicType.MOODS -> {
+                moodInstructions.put(instructions)
+                moodList.value = homeGenerator.moods()
+            }
         }
     }
 
@@ -256,6 +273,15 @@ constructor(
      */
     fun applyComposerSort(sort: Sort) {
         listSettings.composerSort = sort
+    }
+
+    /**
+     * Apply a new [Sort] to [moodList].
+     *
+     * @param sort The [Sort] to apply.
+     */
+    fun applyMoodSort(sort: Sort) {
+        listSettings.moodSort = sort
     }
 
     /**

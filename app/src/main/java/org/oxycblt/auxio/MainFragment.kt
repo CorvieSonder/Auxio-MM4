@@ -565,6 +565,7 @@ class MainFragment :
             is Show.AlbumArtistDecision,
             is Show.GenreDetails,
             is Show.ComposerDetails,
+            is Show.MoodDetails,
             is Show.PlaylistDetails,
             null -> {}
         }

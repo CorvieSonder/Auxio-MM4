@@ -84,6 +84,7 @@ sealed class Tab(open val type: MusicType) {
                 MusicType.GENRES,
                 MusicType.PLAYLISTS,
                 MusicType.COMPOSERS,
+                MusicType.MOODS,
             )
 
         /**

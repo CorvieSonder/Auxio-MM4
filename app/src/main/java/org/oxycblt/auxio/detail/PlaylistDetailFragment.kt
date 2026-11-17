@@ -325,6 +325,11 @@ class PlaylistDetailFragment :
                 findNavController()
                     .navigateSafe(PlaylistDetailFragmentDirections.showComposer(show.composer.uid))
             }
+            is Show.MoodDetails -> {
+                L.d("Navigating to ${show.mood}")
+                findNavController()
+                    .navigateSafe(PlaylistDetailFragmentDirections.showMood(show.mood.uid))
+            }
             is Show.GenreDetails -> {
                 error("Unexpected show command $show")
             }
@@ -344,6 +349,7 @@ class PlaylistDetailFragment :
                 is Menu.ForArtist,
                 is Menu.ForAlbum,
                 is Menu.ForComposer,
+                is Menu.ForMood,
                 is Menu.ForGenre -> error("Unexpected menu $menu")
             }
         findNavController().navigateSafe(directions)

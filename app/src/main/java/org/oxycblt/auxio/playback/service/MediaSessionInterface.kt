@@ -42,6 +42,7 @@ import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Library
+import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.MusicParent
 import org.oxycblt.musikr.Playlist
@@ -283,6 +284,7 @@ constructor(
             is Artist -> commandFactory.artist(music, ShuffleMode.IMPLICIT)
             is Genre -> commandFactory.genre(music, ShuffleMode.IMPLICIT)
             is Composer -> commandFactory.composer(music, ShuffleMode.IMPLICIT)
+            is Mood -> commandFactory.mood(music, ShuffleMode.IMPLICIT)
             is Playlist -> commandFactory.playlist(music, ShuffleMode.IMPLICIT)
         }
 
@@ -297,6 +299,7 @@ constructor(
                     ?: commandFactory.songFromGenre(music, music.genres[0], ShuffleMode.IMPLICIT)
             is Playlist -> commandFactory.songFromPlaylist(music, parent, ShuffleMode.IMPLICIT)
             is Composer -> commandFactory.songFromComposer(music, parent, ShuffleMode.IMPLICIT)
+            is Mood -> commandFactory.songFromMood(music, parent, ShuffleMode.IMPLICIT)
             null -> commandFactory.songFromAll(music, ShuffleMode.IMPLICIT)
         }
 

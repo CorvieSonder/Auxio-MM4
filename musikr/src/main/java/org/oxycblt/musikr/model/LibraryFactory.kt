@@ -22,6 +22,7 @@ import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.MutableLibrary
 import org.oxycblt.musikr.Song
@@ -29,6 +30,7 @@ import org.oxycblt.musikr.graph.AlbumVertex
 import org.oxycblt.musikr.graph.ArtistVertex
 import org.oxycblt.musikr.graph.ComposerVertex
 import org.oxycblt.musikr.graph.GenreVertex
+import org.oxycblt.musikr.graph.MoodVertex
 import org.oxycblt.musikr.graph.MusicGraph
 import org.oxycblt.musikr.graph.PlaylistVertex
 import org.oxycblt.musikr.graph.SongVertex
@@ -74,6 +76,10 @@ private class LibraryFactoryImpl : LibraryFactory {
             graph.composerVertex.mapTo(mutableSetOf()) { vertex ->
                 ComposerImpl(ComposerVertexCore(vertex)).also { vertex.tag = it }
             }
+        val moods =
+            graph.moodVertex.mapTo(mutableSetOf()) { vertex ->
+                MoodImpl(MoodVertexCore(vertex)).also { vertex.tag = it }
+            }
         val playlists =
             graph.playlistVertex.mapTo(mutableSetOf()) { vertex ->
                 PlaylistImpl(PlaylistVertexCore(vertex))
@@ -84,6 +90,7 @@ private class LibraryFactoryImpl : LibraryFactory {
             artists,
             genres,
             composers,
+            moods,
             playlists,
             storedPlaylists,
             playlistInterpreter,
@@ -100,6 +107,8 @@ private class LibraryFactoryImpl : LibraryFactory {
         override fun resolveGenres(): List<Genre> = vertex.genreVertices.map { tag(it) }
 
         override fun resolveComposers(): List<Composer> = vertex.composerVertices.map { tag(it) }
+
+        override fun resolveMoods(): List<Mood> = vertex.moodVertices.map { tag(it) }
     }
 
     private class AlbumVertexCore(private val vertex: AlbumVertex) : AlbumCore {
@@ -131,6 +140,17 @@ private class LibraryFactoryImpl : LibraryFactory {
 
     private class ComposerVertexCore(vertex: ComposerVertex) : ComposerCore {
         override val preComposer = vertex.preComposer
+
+        override val songs: Set<Song> = vertex.songVertices.mapTo(mutableSetOf()) { tag(it) }
+
+        override val artists: Set<Artist> =
+            vertex.songVertices.flatMapTo(mutableSetOf()) { song ->
+                song.artistVertices.map { tag<Artist>(it) }
+            }
+    }
+
+    private class MoodVertexCore(vertex: MoodVertex) : MoodCore {
+        override val preMood = vertex.preMood
 
         override val songs: Set<Song> = vertex.songVertices.mapTo(mutableSetOf()) { tag(it) }
 

@@ -53,6 +53,7 @@ import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.MusicParent
 import org.oxycblt.musikr.Playlist
@@ -185,6 +186,31 @@ constructor(
             playbackSettings.inParentPlaybackMode
                 ?: PlaySong.FromComposer(unlikelyToBeNull(currentComposer.value))
 
+    // --- MOOD ---
+
+    /** The current [Mood] to display. Null if there is nothing to show. */
+    val currentMood: StateFlow<Mood?>
+        field = MutableStateFlow<Mood?>(null)
+
+    private val _moodSongList = MutableStateFlow(listOf<Item>())
+
+    /** The current list data derived from [currentMood]. */
+    val moodSongList: StateFlow<List<Item>> = _moodSongList
+
+    /** Instructions for updating [moodSongList] in the UI. */
+    val moodSongInstructions: Event<UpdateInstructions>
+        field = MutableEvent<UpdateInstructions>()
+
+    /** The current [Sort] used for [Song]s in [moodSongList]. */
+    val moodSongSort: Sort
+        get() = listSettings.moodSongSort
+
+    /** The [PlaySong] instructions to use when playing a [Song] from [Mood] details. */
+    val playInMoodWith
+        get() =
+            playbackSettings.inParentPlaybackMode
+                ?: PlaySong.FromMood(unlikelyToBeNull(currentMood.value))
+
     // --- PLAYLIST ---
 
     /** The current [Playlist] to display. Null if there is nothing to do. */
@@ -253,6 +279,16 @@ constructor(
                     currentComposer,
                     _composerSongList,
                     composerSongInstructions,
+                    replace,
+                )
+            }
+            MusicType.MOODS -> {
+                val mood = detailGenerator.mood(currentMood.value?.uid ?: return)
+                refreshDetail(
+                    mood,
+                    currentMood,
+                    _moodSongList,
+                    moodSongInstructions,
                     replace,
                 )
             }
@@ -331,6 +367,13 @@ constructor(
      * @param composer The [Composer] to navigate with.
      */
     fun showComposer(composer: Composer) = showImpl(Show.ComposerDetails(composer))
+
+    /**
+     * Navigate to the details of a [Mood].
+     *
+     * @param mood The [Mood] to navigate with.
+     */
+    fun showMood(mood: Mood) = showImpl(Show.MoodDetails(mood))
 
     /**
      * Navigate to the details of a [Playlist].
@@ -458,6 +501,29 @@ constructor(
      */
     fun applyComposerSongSort(sort: Sort) {
         listSettings.composerSongSort = sort
+    }
+
+    /**
+     * Set a new [currentMood] from it's [Music.UID].
+     *
+     * @param uid The [Music.UID] of the [Mood] to update [currentMood] to. Must be valid.
+     */
+    fun setMood(uid: Music.UID) {
+        L.d("Opening mood $uid")
+        if (uid === currentMood.value?.uid) {
+            return
+        }
+        val mood = detailGenerator.mood(uid)
+        refreshDetail(mood, currentMood, _moodSongList, moodSongInstructions, null)
+    }
+
+    /**
+     * Apply a new [Sort] to [moodSongList].
+     *
+     * @param sort The [Sort] to apply.
+     */
+    fun applyMoodSongSort(sort: Sort) {
+        listSettings.moodSongSort = sort
     }
 
     /**
@@ -769,6 +835,13 @@ sealed interface Show {
      * @param composer The [Composer] to navigate with.
      */
     data class ComposerDetails(val composer: Composer) : Show
+
+    /**
+     * Navigate to the details of a [Mood].
+     *
+     * @param mood The [Mood] to navigate with.
+     */
+    data class MoodDetails(val mood: Mood) : Show
 
     /**
      * Navigate to the details of a [Playlist].

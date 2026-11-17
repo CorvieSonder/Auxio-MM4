@@ -33,6 +33,7 @@ import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.MusicParent
 import org.oxycblt.musikr.Playlist
@@ -75,6 +76,7 @@ constructor(private val listSettings: ListSettings, private val musicRepository:
                     is Artist -> library.findArtist(it.uid)
                     is Genre -> library.findGenre(it.uid)
                     is Composer -> library.findComposer(it.uid)
+                    is Mood -> library.findMood(it.uid)
                     is Playlist -> library.findPlaylist(it.uid)
                 }
             }
@@ -120,6 +122,7 @@ constructor(private val listSettings: ListSettings, private val musicRepository:
                 is Artist -> listSettings.artistSongSort.songs(it.songs)
                 is Genre -> listSettings.genreSongSort.songs(it.songs)
                 is Composer -> listSettings.composerSongSort.songs(it.songs)
+                is Mood -> listSettings.moodSongSort.songs(it.songs)
                 is Playlist -> it.songs
             }
         }
@@ -204,6 +207,18 @@ constructor(private val listSettings: ListSettings, private val musicRepository:
     fun openMenu(@MenuRes menuRes: Int, composer: Composer) {
         L.d("Opening menu for $composer")
         openImpl(Menu.ForComposer(menuRes, composer))
+    }
+
+    /**
+     * Open a menu for a [Mood]. This is not a popup menu, instead actually a dialog of menu options
+     * with additional information.
+     *
+     * @param menuRes The resource of the menu to use.
+     * @param mood The [Mood] to show.
+     */
+    fun openMenu(@MenuRes menuRes: Int, mood: Mood) {
+        L.d("Opening menu for $mood")
+        openImpl(Menu.ForMood(menuRes, mood))
     }
 
     /**

@@ -154,6 +154,7 @@ private class TagInterpreterImpl(private val interpretation: Interpretation) : T
             preArtists = rawArtists,
             preGenres = rawGenres,
             preComposers = makePreComposers(song.tags, interpretation),
+            preMoods = makePreMoods(song.tags, interpretation),
             cover = song.cover,
             extras = song.tags.extras,
         )
@@ -240,7 +241,24 @@ private class TagInterpreterImpl(private val interpretation: Interpretation) : T
             .map { PreComposer(interpretation.naming.name(it, null), it) }
     }
 
+    private fun makePreMoods(
+        parsedTags: ParsedTags,
+        interpretation: Interpretation,
+    ): List<PreMood> {
+        val rawNames = MOOD_KEYS.flatMap { parsedTags.extras[it].orEmpty() }
+        if (rawNames.isEmpty()) {
+            return emptyList()
+        }
+        return interpretation.separators
+            .split(rawNames)
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .distinct()
+            .map { PreMood(interpretation.naming.name(it, null), it) }
+    }
+
     private companion object {
         val COMPOSER_KEYS = listOf("TCOM", "COMPOSER", "©wrt")
+        val MOOD_KEYS = listOf("TMOO", "TXXX:MOOD", "MOOD", "----:COM.APPLE.ITUNES:MOOD")
     }
 }

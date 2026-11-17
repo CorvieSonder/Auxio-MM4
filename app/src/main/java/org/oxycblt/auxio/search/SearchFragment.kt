@@ -61,6 +61,7 @@ import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.MusicParent
 import org.oxycblt.musikr.Playlist
@@ -155,6 +156,7 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
         binding.searchFilterGenres.isChecked = MusicType.GENRES in filters
         binding.searchFilterPlaylists.isChecked = MusicType.PLAYLISTS in filters
         binding.searchFilterComposers.isChecked = MusicType.COMPOSERS in filters
+        binding.searchFilterMoods.isChecked = MusicType.MOODS in filters
         binding.searchFilters.apply {
             setOnCheckedStateChangeListener { _, ids ->
                 val filters =
@@ -166,6 +168,7 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
                             R.id.search_filter_genres -> MusicType.GENRES
                             R.id.search_filter_playlists -> MusicType.PLAYLISTS
                             R.id.search_filter_composers -> MusicType.COMPOSERS
+                            R.id.search_filter_moods -> MusicType.MOODS
                             else -> null
                         }
                     }
@@ -214,6 +217,7 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
             is Artist -> detailModel.showArtist(item)
             is Genre -> detailModel.showGenre(item)
             is Composer -> detailModel.showComposer(item)
+            is Mood -> detailModel.showMood(item)
             is Playlist -> detailModel.showPlaylist(item)
         }
     }
@@ -225,6 +229,7 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
             is Artist -> listModel.openMenu(R.menu.parent, item)
             is Genre -> listModel.openMenu(R.menu.parent, item)
             is Composer -> listModel.openMenu(R.menu.parent, item)
+            is Mood -> listModel.openMenu(R.menu.parent, item)
             is Playlist -> listModel.openMenu(R.menu.playlist, item)
         }
     }
@@ -284,6 +289,10 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
                 findNavController()
                     .navigateSafe(SearchFragmentDirections.showComposer(show.composer.uid))
             }
+            is Show.MoodDetails -> {
+                L.d("Navigating to ${show.mood}")
+                findNavController().navigateSafe(SearchFragmentDirections.showMood(show.mood.uid))
+            }
             is Show.GenreDetails -> {
                 L.d("Navigating to ${show.genre}")
                 findNavController().navigateSafe(SearchFragmentDirections.showGenre(show.genre.uid))
@@ -308,6 +317,7 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
                 is Menu.ForAlbum -> SearchFragmentDirections.openAlbumMenu(menu.parcel)
                 is Menu.ForArtist -> SearchFragmentDirections.openArtistMenu(menu.parcel)
                 is Menu.ForComposer -> SearchFragmentDirections.openComposerMenu(menu.parcel)
+                is Menu.ForMood -> SearchFragmentDirections.openMoodMenu(menu.parcel)
                 is Menu.ForGenre -> SearchFragmentDirections.openGenreMenu(menu.parcel)
                 is Menu.ForPlaylist -> SearchFragmentDirections.openPlaylistMenu(menu.parcel)
                 is Menu.ForSelection -> SearchFragmentDirections.openSelectionMenu(menu.parcel)

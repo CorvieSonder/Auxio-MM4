@@ -44,6 +44,7 @@ import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.MusicParent
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
@@ -258,6 +259,7 @@ constructor(
             is PlaySong.FromGenre -> playFromGenreImpl(song, with.which, shuffle)
             is PlaySong.FromPlaylist -> playFromPlaylistImpl(song, with.which, shuffle)
             is PlaySong.FromComposer -> playFromComposerImpl(song, with.which, shuffle)
+            is PlaySong.FromMood -> playFromMoodImpl(song, with.which, shuffle)
             is PlaySong.ByItself -> playItselfImpl(song, shuffle)
         }
     }
@@ -318,6 +320,11 @@ constructor(
     private fun playFromComposerImpl(song: Song, composer: Composer, shuffle: ShuffleMode) {
         L.d("Playing $song from $composer")
         playImpl(commandFactory.songFromComposer(song, composer, shuffle))
+    }
+
+    private fun playFromMoodImpl(song: Song, mood: Mood, shuffle: ShuffleMode) {
+        L.d("Playing $song from $mood")
+        playImpl(commandFactory.songFromMood(song, mood, shuffle))
     }
 
     private fun startPlaybackDecision(decision: PlaybackDecision) {
@@ -407,6 +414,46 @@ constructor(
     fun addToQueue(composer: Composer) {
         L.d("Adding $composer to queue")
         playbackManager.addToQueue(listSettings.composerSongSort.songs(composer.songs))
+    }
+
+    /**
+     * Play a [Mood].
+     *
+     * @param mood The [Mood] to play.
+     */
+    fun play(mood: Mood) {
+        L.d("Playing $mood")
+        playImpl(commandFactory.mood(mood, ShuffleMode.OFF))
+    }
+
+    /**
+     * Shuffle a [Mood].
+     *
+     * @param mood The [Mood] to shuffle.
+     */
+    fun shuffle(mood: Mood) {
+        L.d("Shuffling $mood")
+        playImpl(commandFactory.mood(mood, ShuffleMode.ON))
+    }
+
+    /**
+     * Add a [Mood] to the top of the queue.
+     *
+     * @param mood The [Mood] to add.
+     */
+    fun playNext(mood: Mood) {
+        L.d("Playing $mood next")
+        playbackManager.playNext(listSettings.moodSongSort.songs(mood.songs))
+    }
+
+    /**
+     * Add a [Mood] to the end of the queue.
+     *
+     * @param mood The [Mood] to add.
+     */
+    fun addToQueue(mood: Mood) {
+        L.d("Adding $mood to queue")
+        playbackManager.addToQueue(listSettings.moodSongSort.songs(mood.songs))
     }
 
     /**

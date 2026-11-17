@@ -47,6 +47,7 @@ class SearchSettingsImpl @Inject constructor(@ApplicationContext context: Contex
             if (intCode and BIT_GENRES == BIT_GENRES) add(MusicType.GENRES)
             if (intCode and BIT_PLAYLISTS == BIT_PLAYLISTS) add(MusicType.PLAYLISTS)
             if (intCode and BIT_COMPOSERS == BIT_COMPOSERS) add(MusicType.COMPOSERS)
+            if (intCode and BIT_MOODS == BIT_MOODS) add(MusicType.MOODS)
         }
         set(value) {
             var intCode = 0
@@ -56,6 +57,7 @@ class SearchSettingsImpl @Inject constructor(@ApplicationContext context: Contex
             if (MusicType.GENRES in value) intCode = intCode or BIT_GENRES
             if (MusicType.PLAYLISTS in value) intCode = intCode or BIT_PLAYLISTS
             if (MusicType.COMPOSERS in value) intCode = intCode or BIT_COMPOSERS
+            if (MusicType.MOODS in value) intCode = intCode or BIT_MOODS
             sharedPreferences.edit { putInt(getString(R.string.set_key_search_filters), intCode) }
         }
 
@@ -81,5 +83,6 @@ class SearchSettingsImpl @Inject constructor(@ApplicationContext context: Contex
         const val BIT_GENRES = 0b01000
         const val BIT_PLAYLISTS = 0b10000
         const val BIT_COMPOSERS = 0b100000
+        const val BIT_MOODS = 0b1000000
     }
 }

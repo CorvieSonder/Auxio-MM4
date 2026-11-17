@@ -31,6 +31,7 @@ interface Library {
     val artists: Collection<Artist>
     val genres: Collection<Genre>
     val composers: Collection<Composer>
+    val moods: Collection<Mood>
     val playlists: Collection<Playlist>
 
     /**
@@ -87,6 +88,14 @@ interface Library {
      * @return the composer if found, null otherwise
      */
     fun findComposer(uid: Music.UID): Composer?
+
+    /**
+     * Find a [Mood] by it's [Music.UID]
+     *
+     * @param uid the [Music.UID] of the mood
+     * @return the mood if found, null otherwise
+     */
+    fun findMood(uid: Music.UID): Mood?
 
     /**
      * Find a [Playlist] by it's [Music.UID]

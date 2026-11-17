@@ -32,7 +32,8 @@ enum class MusicType {
     ARTISTS,
     GENRES,
     PLAYLISTS,
-    COMPOSERS;
+    COMPOSERS,
+    MOODS;
 
     /**
      * The integer representation of this instance.
@@ -48,6 +49,7 @@ enum class MusicType {
                 GENRES -> IntegerTable.MUSIC_MODE_GENRES
                 PLAYLISTS -> IntegerTable.MUSIC_MODE_PLAYLISTS
                 COMPOSERS -> IntegerTable.MUSIC_MODE_COMPOSERS
+                MOODS -> IntegerTable.MUSIC_MODE_MOODS
             }
 
     val nameRes: Int
@@ -59,6 +61,7 @@ enum class MusicType {
                 GENRES -> R.string.lbl_genres
                 PLAYLISTS -> R.string.lbl_playlists
                 COMPOSERS -> R.string.lbl_composers
+                MOODS -> R.string.lbl_moods
             }
 
     companion object {
@@ -77,6 +80,7 @@ enum class MusicType {
                 IntegerTable.MUSIC_MODE_GENRES -> GENRES
                 IntegerTable.MUSIC_MODE_PLAYLISTS -> PLAYLISTS
                 IntegerTable.MUSIC_MODE_COMPOSERS -> COMPOSERS
+                IntegerTable.MUSIC_MODE_MOODS -> MOODS
                 else -> null
             }
     }

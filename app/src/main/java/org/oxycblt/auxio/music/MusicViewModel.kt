@@ -37,6 +37,7 @@ import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
 import org.oxycblt.musikr.playlist.ExportConfig
@@ -331,6 +332,17 @@ constructor(
     fun addToPlaylist(composer: Composer, playlist: Playlist? = null) {
         L.d("Adding $composer to playlist")
         addToPlaylist(listSettings.composerSongSort.songs(composer.songs), playlist)
+    }
+
+    /**
+     * Add a [Mood] to a [Playlist].
+     *
+     * @param mood The [Mood] to add to the [Playlist].
+     * @param playlist The [Playlist] to add to. If null, the user will be prompted for one.
+     */
+    fun addToPlaylist(mood: Mood, playlist: Playlist? = null) {
+        L.d("Adding $mood to playlist")
+        addToPlaylist(listSettings.moodSongSort.songs(mood.songs), playlist)
     }
 
     /**

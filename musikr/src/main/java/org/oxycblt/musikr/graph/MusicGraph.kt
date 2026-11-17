@@ -28,6 +28,7 @@ import org.oxycblt.musikr.tag.interpret.PreArtist
 import org.oxycblt.musikr.tag.interpret.PreArtistsFrom
 import org.oxycblt.musikr.tag.interpret.PreComposer
 import org.oxycblt.musikr.tag.interpret.PreGenre
+import org.oxycblt.musikr.tag.interpret.PreMood
 import org.oxycblt.musikr.tag.interpret.PreSong
 import org.oxycblt.musikr.util.unlikelyToBeNull
 
@@ -37,6 +38,7 @@ internal data class MusicGraph(
     val artistVertex: List<ArtistVertex>,
     val genreVertex: List<GenreVertex>,
     val composerVertex: List<ComposerVertex>,
+    val moodVertex: List<MoodVertex>,
     val playlistVertex: Set<PlaylistVertex>,
 ) {
     interface Builder {
@@ -186,6 +188,7 @@ private class MusicGraphBuilderImpl : MusicGraph.Builder {
     private val artistVertices = mutableMapOf<PreArtist, ArtistVertex>()
     private val genreVertices = mutableMapOf<PreGenre, GenreVertex>()
     private val composerVertices = mutableMapOf<PreComposer, ComposerVertex>()
+    private val moodVertices = mutableMapOf<PreMood, MoodVertex>()
     private val playlistVertices = mutableSetOf<PlaylistVertex>()
 
     override fun add(preSong: PreSong) {
@@ -247,6 +250,12 @@ private class MusicGraphBuilderImpl : MusicGraph.Builder {
             composerVertex.songVertices.add(songVertex)
         }
 
+        preSong.preMoods.forEach { preMood ->
+            val moodVertex = moodVertices.getOrPut(preMood) { MoodVertex(preMood) }
+            songVertex.moodVertices.add(moodVertex)
+            moodVertex.songVertices.add(songVertex)
+        }
+
         songVertices[uid] = songVertex
     }
 
@@ -264,6 +273,11 @@ private class MusicGraphBuilderImpl : MusicGraph.Builder {
             composerVertices.values.groupBy { it.preComposer.rawName.lowercase() }
         for (cluster in composerClusters.values) {
             simplifyComposerCluster(cluster)
+        }
+
+        val moodClusters = moodVertices.values.groupBy { it.preMood.rawName.lowercase() }
+        for (cluster in moodClusters.values) {
+            simplifyMoodCluster(cluster)
         }
 
         // first pass: cluster artists by name and process MBIDs where valid
@@ -323,6 +337,7 @@ private class MusicGraphBuilderImpl : MusicGraph.Builder {
             vertex.artistVertices = vertex.artistVertices.distinct().toMutableList()
             vertex.genreVertices = vertex.genreVertices.distinct().toMutableList()
             vertex.composerVertices = vertex.composerVertices.distinct().toMutableList()
+            vertex.moodVertices = vertex.moodVertices.distinct().toMutableList()
 
             playlistVertices.forEach {
                 val v363Pointer = SongPointer.UID(entry.key)
@@ -341,6 +356,7 @@ private class MusicGraphBuilderImpl : MusicGraph.Builder {
                 artistVertices.values.toList(),
                 genreVertices.values.toList(),
                 composerVertices.values.toList(),
+                moodVertices.values.toList(),
                 playlistVertices,
             )
 
@@ -400,6 +416,25 @@ private class MusicGraphBuilderImpl : MusicGraph.Builder {
                 it.composerVertices[index] = dst
             }
             composerVertices.remove(src.preComposer)
+        }
+    }
+
+    private fun simplifyMoodCluster(cluster: Collection<MoodVertex>) {
+        if (cluster.size == 1) {
+            return
+        }
+        // Same mood written with different casing. Keep the most popular spelling.
+        val clusterSet = cluster.toMutableSet()
+        val dst = clusterSet.maxBy { it.songVertices.size }
+        clusterSet.remove(dst)
+        for (src in clusterSet) {
+            dst.songVertices.addAll(src.songVertices)
+            src.songVertices.forEach {
+                val index = it.moodVertices.indexOf(src)
+                check(index >= 0) { "Illegal state: directed edge between mood and song" }
+                it.moodVertices[index] = dst
+            }
+            moodVertices.remove(src.preMood)
         }
     }
 
@@ -579,6 +614,8 @@ internal class SongVertex(
 
     var composerVertices = mutableListOf<ComposerVertex>()
 
+    var moodVertices = mutableListOf<MoodVertex>()
+
     override fun toString() = "SongVertex(preSong=$preSong)"
 }
 
@@ -622,4 +659,11 @@ internal class ComposerVertex(val preComposer: PreComposer) : Vertex {
     override var tag: Any? = null
 
     override fun toString() = "ComposerVertex(preComposer=$preComposer)"
+}
+
+internal class MoodVertex(val preMood: PreMood) : Vertex {
+    val songVertices = mutableSetOf<SongVertex>()
+    override var tag: Any? = null
+
+    override fun toString() = "MoodVertex(preMood=$preMood)"
 }
