@@ -47,6 +47,7 @@ import org.oxycblt.auxio.music.auto.AutoPlaylist
 import org.oxycblt.auxio.music.rating.rating
 import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.auxio.music.tags.composers
+import org.oxycblt.auxio.music.tags.moods
 import org.oxycblt.auxio.playback.PlaySong
 import org.oxycblt.auxio.playback.PlaybackSettings
 import org.oxycblt.auxio.util.Event
@@ -558,6 +559,10 @@ constructor(
                 .composers(separators)
                 .takeIf { it.isNotEmpty() }
                 ?.let { add(SongProperty(R.string.lbl_composer, SongProperty.Value.Text(it))) }
+            song
+                .moods(separators)
+                .takeIf { it.isNotEmpty() }
+                ?.let { add(SongProperty(R.string.lbl_mood, SongProperty.Value.Text(it))) }
             song.date?.let { add(SongProperty(R.string.lbl_date, SongProperty.Value.ItemDate(it))) }
             song.rating?.let {
                 add(SongProperty(R.string.lbl_rating, SongProperty.Value.ItemRating(it)))

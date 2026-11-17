@@ -36,6 +36,21 @@ val Song.rawComposers: List<String>
  */
 fun Song.composers(separators: Separators) = separators.splitExtras(rawComposers)
 
+/**
+ * The mood values of this [Song] exactly as they were tagged, without any separator handling.
+ * Cheaper than [moods], so prefer it when only matching against the values.
+ */
+val Song.rawMoods: List<String>
+    get() = rawExtras(MOOD_KEYS)
+
+/**
+ * The moods of this [Song].
+ *
+ * @param separators The [Separators] to split multi-value tags with.
+ * @return The moods, or an empty list if the song has none.
+ */
+fun Song.moods(separators: Separators) = separators.splitExtras(rawMoods)
+
 private fun Song.rawExtras(keys: List<String>): List<String> {
     if (extras.isEmpty()) {
         return emptyList()
@@ -51,3 +66,4 @@ private fun Separators.splitExtras(values: List<String>): List<String> {
 }
 
 private val COMPOSER_KEYS = listOf("TCOM", "COMPOSER", "©wrt")
+private val MOOD_KEYS = listOf("TMOO", "TXXX:MOOD", "MOOD", "----:COM.APPLE.ITUNES:MOOD")
