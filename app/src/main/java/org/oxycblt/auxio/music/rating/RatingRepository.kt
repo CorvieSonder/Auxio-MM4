@@ -18,6 +18,7 @@
  
 package org.oxycblt.auxio.music.rating
 
+import dagger.Lazy
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
@@ -122,7 +123,7 @@ class RatingRepositoryImpl
 constructor(
     private val ratingDao: RatingDao,
     private val ratingSettings: RatingSettings,
-    private val tagFileWriter: TagFileWriter,
+    private val tagFileWriter: Lazy<TagFileWriter>,
 ) : RatingRepository, RatingSettings.Listener {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val listeners = mutableListOf<RatingRepository.Listener>()
@@ -213,7 +214,7 @@ constructor(
                 ratingDao.insertRating(
                     RatedSong(song.uid, halfStars, System.currentTimeMillis(), fileWritten = false)
                 )
-                tagFileWriter.flush()
+                tagFileWriter.get().flush()
             } catch (e: Exception) {
                 L.e("Unable to save rating: $e")
             }
