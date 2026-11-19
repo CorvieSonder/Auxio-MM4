@@ -83,6 +83,32 @@ value class Rating(val halfStars: Int) : Comparable<Rating> {
          */
         fun fromFraction(value: Float) =
             fromHalfStars((value * MAX_HALF_STARS).toInt().coerceAtLeast(if (value > 0) 1 else 0))
+
+        /**
+         * Create a [Rating] from a text rating, such as "4.5/5". A bare number is read as out of 5
+         * if it is at most 5, out of 10 if it is at most 10, and out of 100 otherwise.
+         *
+         * @param value The text rating.
+         * @return A [Rating] rounded to the nearest half star, or null if the text is not a rating
+         *   or signifies no rating.
+         */
+        fun fromText(value: String): Rating? {
+            val parts = value.split('/')
+            val amount = parts[0].trim().replace(',', '.').toFloatOrNull() ?: return null
+            val scale =
+                when {
+                    parts.size == 2 -> parts[1].trim().replace(',', '.').toFloatOrNull()
+                    parts.size > 2 -> null
+                    amount <= 5f -> 5f
+                    amount <= 10f -> 10f
+                    else -> 100f
+                }
+            if (scale == null || scale <= 0f || amount <= 0f) {
+                return null
+            }
+            val halfStars = Math.round(amount / scale * MAX_HALF_STARS).coerceAtLeast(1)
+            return fromHalfStars(halfStars)
+        }
     }
 }
 

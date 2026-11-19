@@ -155,6 +155,12 @@ constructor(private val ratingDao: RatingDao, private val ratingSettings: Rating
                 }
             }
         }
+        // Text ratings, such as "4.5/5", are only used when no popularimeter rating exists.
+        for (key in TEXT_KEYS) {
+            extras[key]?.firstOrNull()?.let(Rating::fromText)?.let {
+                return it
+            }
+        }
         return extras[FRACTION_KEY]?.firstOrNull()?.toFloatOrNull()?.let(Rating::fromFraction)
     }
 
@@ -224,5 +230,6 @@ constructor(private val ratingDao: RatingDao, private val ratingSettings: Rating
     private companion object {
         const val POPULARIMETER_PREFIX = "POPM:"
         const val FRACTION_KEY = "FMPS_RATING"
+        val TEXT_KEYS = listOf("TXXX:DISCOGS_RATING", "TXXX:ALBUM RATING")
     }
 }
