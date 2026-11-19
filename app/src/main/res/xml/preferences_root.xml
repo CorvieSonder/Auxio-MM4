@@ -3,6 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:title="@string/set_root_title">
     <Preference
+        app:key="@string/set_key_search"
+        app:layout="@layout/item_settings_search_bar"
+        app:title="@string/set_search" />
+
+    <Preference
         app:icon="@drawable/ic_accent_24"
         app:key="@string/set_key_ui"
         app:summary="@string/set_ui_desc"
