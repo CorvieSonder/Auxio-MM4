@@ -106,6 +106,7 @@ sealed interface Music {
             PLAYLIST(0xA107, 'p'),
             COMPOSER(0xA106, 'c'),
             MOOD(0xA105, 'm'),
+            GROUPING(0xA104, 'i'),
         }
 
         /**
@@ -339,6 +340,11 @@ interface Song : Music {
      * often one, but there can be multiple if more than one mood name was specified.
      */
     val moods: List<Mood>
+    /**
+     * The parent [Grouping]s of this [Song]. Empty if no grouping was specified in the metadata,
+     * otherwise often one, but there can be multiple if more than one grouping name was specified.
+     */
+    val groupings: List<Grouping>
 }
 
 /**
@@ -432,6 +438,21 @@ interface Mood : MusicParent {
     /** The total duration of the songs by this mood, in milliseconds. */
     val durationMs: Long
     /** Useful information to quickly obtain a (single) cover for a Mood. */
+    val covers: CoverCollection
+}
+
+/**
+ * A grouping.
+ *
+ * Unlike [Artist], songs without a grouping are not grouped into an "unknown" grouping.
+ */
+interface Grouping : MusicParent {
+    override val name: Name.Known
+    /** The artists of the [Song]s in this [Grouping]. */
+    val artists: Collection<Artist>
+    /** The total duration of the songs by this grouping, in milliseconds. */
+    val durationMs: Long
+    /** Useful information to quickly obtain a (single) cover for a Grouping. */
     val covers: CoverCollection
 }
 

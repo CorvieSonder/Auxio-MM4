@@ -37,6 +37,8 @@ object IntegerTable {
     const val VIEW_TYPE_COMPOSER = 0xA0D0
     /** MoodViewHolder */
     const val VIEW_TYPE_MOOD = 0xA0D1
+    /** GroupingViewHolder */
+    const val VIEW_TYPE_GROUPING = 0xA0D2
     /** PlaylistViewHolder */
     const val VIEW_TYPE_PLAYLIST = 0xA004
     /** BasicHeaderViewHolder */
@@ -99,6 +101,8 @@ object IntegerTable {
     const val MUSIC_MODE_COMPOSERS = 0xA140
     /** MusicMode.MOODS */
     const val MUSIC_MODE_MOODS = 0xA142
+    /** MusicMode.GROUPINGS */
+    const val MUSIC_MODE_GROUPINGS = 0xA144
     /** Sort.Mode.ByName */
     const val SORT_BY_NAME = 0xA10C
     /** Sort.Mode.ByArtist */
@@ -153,6 +157,8 @@ object IntegerTable {
     const val PLAY_SONG_FROM_COMPOSER = 0xA141
     /** PlaySong.FromMood */
     const val PLAY_SONG_FROM_MOOD = 0xA143
+    /** PlaySong.FromGrouping */
+    const val PLAY_SONG_FROM_GROUPING = 0xA145
     /** CoverMode.SaveSpace */
     const val COVER_MODE_SAVE_SPACE = 0xA125
     /** CoverMode.AsIs */

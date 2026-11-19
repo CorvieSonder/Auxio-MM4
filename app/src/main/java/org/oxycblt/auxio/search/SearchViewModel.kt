@@ -120,6 +120,7 @@ constructor(
                     playlists = if (MusicType.PLAYLISTS in filters) library.playlists else null,
                     composers = if (MusicType.COMPOSERS in filters) library.composers else null,
                     moods = if (MusicType.MOODS in filters) library.moods else null,
+                    groupings = if (MusicType.GROUPINGS in filters) library.groupings else null,
                 )
             } else {
                 SearchEngine.Items(
@@ -130,6 +131,7 @@ constructor(
                     playlists = library.playlists,
                     composers = library.composers,
                     moods = library.moods,
+                    groupings = library.groupings,
                 )
             }
 
@@ -191,6 +193,16 @@ constructor(
 
                 add(header)
                 addAll(SORT.moods(it))
+            }
+            results.groupings?.let {
+                L.d("Adding ${it.size} groupings to search results")
+                val header = BasicHeader(R.string.lbl_groupings)
+                if (isNotEmpty()) {
+                    add(PlainDivider(header))
+                }
+
+                add(header)
+                addAll(SORT.groupings(it))
             }
             results.songs?.let {
                 L.d("Adding ${it.size} songs to search results")

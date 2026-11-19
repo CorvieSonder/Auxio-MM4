@@ -316,6 +316,7 @@ constructor(
                 ?: findGenre(uid)
                 ?: findComposer(uid)
                 ?: findMood(uid)
+                ?: findGrouping(uid)
                 ?: findPlaylist(uid)
         })
 

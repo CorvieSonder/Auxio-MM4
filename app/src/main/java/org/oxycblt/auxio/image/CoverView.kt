@@ -72,6 +72,7 @@ import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
@@ -461,6 +462,26 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
             },
             context.getString(R.string.desc_mood_image, mood.name),
             R.drawable.ic_mood_24,
+            squareishShapeAppearance,
+        )
+
+    /**
+     * Bind a [Grouping]'s image to this view.
+     *
+     * @param grouping The [Grouping] to bind to the view.
+     */
+    fun bind(grouping: Grouping) =
+        bindImpl(
+            { size ->
+                GalleryCoverCollection(
+                    grouping.covers,
+                    grouping.uid.toString().hashCode(),
+                    responsiveCornerRatio(size),
+                    backgroundColor(),
+                )
+            },
+            context.getString(R.string.desc_grouping_image, grouping.name),
+            R.drawable.ic_grouping_24,
             squareishShapeAppearance,
         )
 

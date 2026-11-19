@@ -206,6 +206,11 @@ class ComposerDetailFragment : DetailFragment<Composer, Music>() {
                 findNavController()
                     .navigateSafe(ComposerDetailFragmentDirections.showMood(show.mood.uid))
             }
+            is Show.GroupingDetails -> {
+                L.d("Navigating to ${show.grouping}")
+                findNavController()
+                    .navigateSafe(ComposerDetailFragmentDirections.showGrouping(show.grouping.uid))
+            }
             is Show.GenreDetails -> {
                 L.d("Navigating to ${show.genre}")
                 findNavController()
@@ -231,6 +236,7 @@ class ComposerDetailFragment : DetailFragment<Composer, Music>() {
                 is Menu.ForAlbum,
                 is Menu.ForGenre,
                 is Menu.ForMood,
+                is Menu.ForGrouping,
                 is Menu.ForPlaylist -> error("Unexpected menu $menu")
             }
         findNavController().navigateSafe(directions)

@@ -51,6 +51,10 @@ interface ListSettings : Settings<ListSettings.Listener> {
     var moodSort: Sort
     /** The [Sort] mode used in a Mood's Song list. */
     var moodSongSort: Sort
+    /** The [Sort] mode used in Grouping lists. */
+    var groupingSort: Sort
+    /** The [Sort] mode used in a Grouping's Song list. */
+    var groupingSongSort: Sort
 
     interface Listener {
         fun onSongSortChanged() {}
@@ -74,6 +78,10 @@ interface ListSettings : Settings<ListSettings.Listener> {
         fun onMoodSortChanged() {}
 
         fun onMoodSongSortChanged() {}
+
+        fun onGroupingSortChanged() {}
+
+        fun onGroupingSongSortChanged() {}
 
         fun onPlaylistSortChanged() {}
     }
@@ -240,6 +248,33 @@ class ListSettingsImpl @Inject constructor(@ApplicationContext val context: Cont
             }
         }
 
+    override var groupingSort: Sort
+        get() =
+            Sort.fromIntCode(
+                sharedPreferences.getInt(getString(R.string.set_key_groupings_sort), Int.MIN_VALUE)
+            ) ?: Sort(Sort.Mode.ByName, Sort.Direction.ASCENDING)
+        set(value) {
+            sharedPreferences.edit {
+                putInt(getString(R.string.set_key_groupings_sort), value.intCode)
+                apply()
+            }
+        }
+
+    override var groupingSongSort: Sort
+        get() =
+            Sort.fromIntCode(
+                sharedPreferences.getInt(
+                    getString(R.string.set_key_grouping_songs_sort),
+                    Int.MIN_VALUE,
+                )
+            ) ?: Sort(Sort.Mode.ByName, Sort.Direction.ASCENDING)
+        set(value) {
+            sharedPreferences.edit {
+                putInt(getString(R.string.set_key_grouping_songs_sort), value.intCode)
+                apply()
+            }
+        }
+
     override fun onSettingChanged(key: String, listener: ListSettings.Listener) {
         when (key) {
             getString(R.string.set_key_songs_sort) -> listener.onSongSortChanged()
@@ -254,6 +289,8 @@ class ListSettingsImpl @Inject constructor(@ApplicationContext val context: Cont
             getString(R.string.set_key_composer_songs_sort) -> listener.onComposerSongSortChanged()
             getString(R.string.set_key_moods_sort) -> listener.onMoodSortChanged()
             getString(R.string.set_key_mood_songs_sort) -> listener.onMoodSongSortChanged()
+            getString(R.string.set_key_groupings_sort) -> listener.onGroupingSortChanged()
+            getString(R.string.set_key_grouping_songs_sort) -> listener.onGroupingSongSortChanged()
         }
     }
 }

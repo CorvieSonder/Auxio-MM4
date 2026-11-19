@@ -57,6 +57,7 @@ sealed class TabNode {
                 MusicType.PLAYLISTS -> 'p'
                 MusicType.COMPOSERS -> 'c'
                 MusicType.MOODS -> 'o'
+                MusicType.GROUPINGS -> 'u'
             }}"
         override val bitmapRes: Int
             get() =
@@ -68,6 +69,7 @@ sealed class TabNode {
                     MusicType.PLAYLISTS -> R.drawable.ic_playlist_bitmap_24
                     MusicType.COMPOSERS -> R.drawable.ic_genre_bitmap_24
                     MusicType.MOODS -> R.drawable.ic_genre_bitmap_24
+                    MusicType.GROUPINGS -> R.drawable.ic_genre_bitmap_24
                 }
 
         override val nameRes = type.nameRes
@@ -91,6 +93,7 @@ sealed class TabNode {
                     'p' -> Home(MusicType.PLAYLISTS)
                     'c' -> Home(MusicType.COMPOSERS)
                     'o' -> Home(MusicType.MOODS)
+                    'u' -> Home(MusicType.GROUPINGS)
                     else -> null
                 }
             }

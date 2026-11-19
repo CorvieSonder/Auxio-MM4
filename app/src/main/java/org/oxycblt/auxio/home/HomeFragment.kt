@@ -46,6 +46,7 @@ import org.oxycblt.auxio.home.list.AlbumListFragment
 import org.oxycblt.auxio.home.list.ArtistListFragment
 import org.oxycblt.auxio.home.list.ComposerListFragment
 import org.oxycblt.auxio.home.list.GenreListFragment
+import org.oxycblt.auxio.home.list.GroupingListFragment
 import org.oxycblt.auxio.home.list.MoodListFragment
 import org.oxycblt.auxio.home.list.PlaylistListFragment
 import org.oxycblt.auxio.home.list.SongListFragment
@@ -218,6 +219,7 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                         MusicType.PLAYLISTS -> HomeFragmentDirections.sortPlaylists()
                         MusicType.COMPOSERS -> HomeFragmentDirections.sortComposers()
                         MusicType.MOODS -> HomeFragmentDirections.sortMoods()
+                        MusicType.GROUPINGS -> HomeFragmentDirections.sortGroupings()
                     }
                 findNavController().navigateSafe(directions)
                 true
@@ -272,6 +274,7 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                 MusicType.PLAYLISTS -> R.id.home_playlist_recycler
                 MusicType.COMPOSERS -> R.id.home_composer_recycler
                 MusicType.MOODS -> R.id.home_mood_recycler
+                MusicType.GROUPINGS -> R.id.home_grouping_recycler
             }
     }
 
@@ -440,6 +443,11 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                 L.d("Navigating to ${show.mood}")
                 findNavController().navigateSafe(HomeFragmentDirections.showMood(show.mood.uid))
             }
+            is Show.GroupingDetails -> {
+                L.d("Navigating to ${show.grouping}")
+                findNavController()
+                    .navigateSafe(HomeFragmentDirections.showGrouping(show.grouping.uid))
+            }
             is Show.GenreDetails -> {
                 L.d("Navigating to ${show.genre}")
                 findNavController().navigateSafe(HomeFragmentDirections.showGenre(show.genre.uid))
@@ -462,6 +470,7 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                 is Menu.ForArtist -> HomeFragmentDirections.openArtistMenu(menu.parcel)
                 is Menu.ForComposer -> HomeFragmentDirections.openComposerMenu(menu.parcel)
                 is Menu.ForMood -> HomeFragmentDirections.openMoodMenu(menu.parcel)
+                is Menu.ForGrouping -> HomeFragmentDirections.openGroupingMenu(menu.parcel)
                 is Menu.ForGenre -> HomeFragmentDirections.openGenreMenu(menu.parcel)
                 is Menu.ForPlaylist -> HomeFragmentDirections.openPlaylistMenu(menu.parcel)
                 is Menu.ForSelection -> HomeFragmentDirections.openSelectionMenu(menu.parcel)
@@ -507,6 +516,7 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                 MusicType.PLAYLISTS -> PlaylistListFragment()
                 MusicType.COMPOSERS -> ComposerListFragment()
                 MusicType.MOODS -> MoodListFragment()
+                MusicType.GROUPINGS -> GroupingListFragment()
             }
     }
 }

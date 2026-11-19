@@ -24,6 +24,7 @@ import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
@@ -111,6 +112,18 @@ data class Sort(val mode: Mode, val direction: Direction) {
     }
 
     /**
+     * Sort a list of [Grouping]s.
+     *
+     * @param groupings The list of [Grouping]s.
+     * @return A new list of [Grouping]s sorted by this [Sort]'s configuration.
+     */
+    fun groupings(groupings: Collection<Grouping>): List<Grouping> {
+        val mutable = groupings.toMutableList()
+        mode.sortGroupings(mutable, direction)
+        return mutable
+    }
+
+    /**
      * Sort a list of [Playlist]s.
      *
      * @param playlists The list of [Playlist]s.
@@ -170,6 +183,10 @@ data class Sort(val mode: Mode, val direction: Direction) {
             throw NotImplementedError("Sorting moods is not supported for this mode")
         }
 
+        fun sortGroupings(groupings: MutableList<Grouping>, direction: Direction) {
+            throw NotImplementedError("Sorting groupings is not supported for this mode")
+        }
+
         data object ByName : Mode {
             override val intCode = IntegerTable.SORT_BY_NAME
             override val stringRes = R.string.lbl_name
@@ -215,6 +232,19 @@ data class Sort(val mode: Mode, val direction: Direction) {
                     Direction.DESCENDING -> moods.sortByDescending { it.name }
                 }
             }
+
+            override fun sortGroupings(groupings: MutableList<Grouping>, direction: Direction) {
+                // Decade groupings (ex. "1980s") come first in date order, then the rest by name.
+                val comparator =
+                    compareBy<Grouping> { it.decade ?: Int.MAX_VALUE }.thenBy { it.name }
+                when (direction) {
+                    Direction.ASCENDING -> groupings.sortWith(comparator)
+                    Direction.DESCENDING -> groupings.sortWith(comparator.reversed())
+                }
+            }
+
+            private val Grouping.decade: Int?
+                get() = DECADE_REGEX.matchEntire(name.raw)?.groupValues?.get(1)?.toIntOrNull()
 
             override fun sortPlaylists(playlists: MutableList<Playlist>, direction: Direction) {
                 when (direction) {
@@ -343,6 +373,14 @@ data class Sort(val mode: Mode, val direction: Direction) {
                 }
             }
 
+            override fun sortGroupings(groupings: MutableList<Grouping>, direction: Direction) {
+                groupings.sortBy { it.name }
+                when (direction) {
+                    Direction.ASCENDING -> groupings.sortBy { it.durationMs }
+                    Direction.DESCENDING -> groupings.sortByDescending { it.durationMs }
+                }
+            }
+
             override fun sortPlaylists(playlists: MutableList<Playlist>, direction: Direction) {
                 playlists.sortBy { it.name }
                 when (direction) {
@@ -393,6 +431,14 @@ data class Sort(val mode: Mode, val direction: Direction) {
                 when (direction) {
                     Direction.ASCENDING -> moods.sortBy { it.songs.size }
                     Direction.DESCENDING -> moods.sortByDescending { it.songs.size }
+                }
+            }
+
+            override fun sortGroupings(groupings: MutableList<Grouping>, direction: Direction) {
+                groupings.sortBy { it.name }
+                when (direction) {
+                    Direction.ASCENDING -> groupings.sortBy { it.songs.size }
+                    Direction.DESCENDING -> groupings.sortByDescending { it.songs.size }
                 }
             }
 
@@ -495,3 +541,6 @@ data class Sort(val mode: Mode, val direction: Direction) {
         }
     }
 }
+
+/** Matches decade groupings like "1980s"; the group is the decade's first year. */
+private val DECADE_REGEX = Regex("""(\d{4})s""")

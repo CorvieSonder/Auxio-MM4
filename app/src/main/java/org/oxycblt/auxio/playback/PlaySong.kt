@@ -22,6 +22,7 @@ import org.oxycblt.auxio.IntegerTable
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.MusicParent
 import org.oxycblt.musikr.Playlist
@@ -102,6 +103,15 @@ sealed interface PlaySong {
         override val intCode = IntegerTable.PLAY_SONG_FROM_MOOD
     }
 
+    /**
+     * Play a song from one of it's [Grouping]s.
+     *
+     * @param which The [Grouping] to specifically play from. This must be provided.
+     */
+    data class FromGrouping(val which: Grouping) : PlaySong {
+        override val intCode = IntegerTable.PLAY_SONG_FROM_GROUPING
+    }
+
     /** Only play the given song, include nothing else in the queue. */
     data object ByItself : PlaySong {
         override val intCode = IntegerTable.PLAY_SONG_BY_ITSELF
@@ -150,6 +160,12 @@ sealed interface PlaySong {
                 IntegerTable.PLAY_SONG_FROM_MOOD ->
                     if (which is Mood) {
                         FromMood(which)
+                    } else {
+                        null
+                    }
+                IntegerTable.PLAY_SONG_FROM_GROUPING ->
+                    if (which is Grouping) {
+                        FromGrouping(which)
                     } else {
                         null
                     }
