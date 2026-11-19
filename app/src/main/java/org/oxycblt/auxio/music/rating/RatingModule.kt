@@ -26,7 +26,9 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import javax.inject.Singleton
+import org.oxycblt.auxio.music.write.PendingTagSource
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -34,6 +36,8 @@ interface RatingModule {
     @Binds fun repository(ratingRepository: RatingRepositoryImpl): RatingRepository
 
     @Binds fun settings(ratingSettings: RatingSettingsImpl): RatingSettings
+
+    @Binds @IntoSet fun pendingTags(source: RatingPendingSource): PendingTagSource
 }
 
 @Module
@@ -47,6 +51,7 @@ class RatingRoomModule {
                 RatingDatabase::class.java,
                 "ratings.db",
             )
+            .addMigrations(RatedSong.MIGRATION_1_2)
             .build()
 
     @Provides fun ratingDao(database: RatingDatabase) = database.ratingDao()

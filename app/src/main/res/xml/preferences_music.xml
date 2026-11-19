@@ -26,6 +26,12 @@
             app:summary="@string/set_hide_collaborators_desc"
             app:title="@string/set_hide_collaborators" />
 
+        <SwitchPreferenceCompat
+            app:defaultValue="false"
+            app:key="@string/set_key_write_tags"
+            app:summary="@string/set_write_tags_desc"
+            app:title="@string/set_write_tags" />
+
     </PreferenceCategory>
 
     <PreferenceCategory app:title="@string/set_ratings">

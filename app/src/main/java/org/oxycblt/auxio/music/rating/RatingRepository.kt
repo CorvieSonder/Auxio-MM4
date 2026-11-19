@@ -25,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.oxycblt.auxio.music.write.TagFileWriter
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Song
 import timber.log.Timber as L
@@ -118,8 +119,11 @@ interface RatingRepository {
 @Singleton
 class RatingRepositoryImpl
 @Inject
-constructor(private val ratingDao: RatingDao, private val ratingSettings: RatingSettings) :
-    RatingRepository, RatingSettings.Listener {
+constructor(
+    private val ratingDao: RatingDao,
+    private val ratingSettings: RatingSettings,
+    private val tagFileWriter: TagFileWriter,
+) : RatingRepository, RatingSettings.Listener {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val listeners = mutableListOf<RatingRepository.Listener>()
     @Volatile private var appRatings = mapOf<Music.UID, Int>()
@@ -206,7 +210,10 @@ constructor(private val ratingDao: RatingDao, private val ratingSettings: Rating
         appRatings = appRatings + (song.uid to halfStars)
         scope.launch {
             try {
-                ratingDao.insertRating(RatedSong(song.uid, halfStars, System.currentTimeMillis()))
+                ratingDao.insertRating(
+                    RatedSong(song.uid, halfStars, System.currentTimeMillis(), fileWritten = false)
+                )
+                tagFileWriter.flush()
             } catch (e: Exception) {
                 L.e("Unable to save rating: $e")
             }

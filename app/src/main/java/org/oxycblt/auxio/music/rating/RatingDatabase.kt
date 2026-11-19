@@ -18,6 +18,7 @@
  
 package org.oxycblt.auxio.music.rating
 
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
@@ -27,13 +28,15 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import org.oxycblt.musikr.Music
 
 /**
  * Stores the ratings given to songs in the app. These take priority over the ratings in the audio
- * files, which are never changed.
+ * files, and are written into them when that is turned on.
  */
-@Database(entities = [RatedSong::class], version = 1, exportSchema = false)
+@Database(entities = [RatedSong::class], version = 2, exportSchema = false)
 @TypeConverters(Music.UID.TypeConverters::class)
 abstract class RatingDatabase : RoomDatabase() {
     /**
@@ -67,6 +70,16 @@ interface RatingDao {
      */
     @Query("DELETE FROM RatedSong WHERE songUid = :songUid")
     suspend fun deleteRating(songUid: Music.UID)
+
+    /** Get every [RatedSong] that has not been written into its file yet. */
+    @Query("SELECT * FROM RatedSong WHERE fileWritten = 0")
+    suspend fun getUnwritten(): List<RatedSong>
+
+    /** Mark a rating as written, unless it changed after [changedMs]. */
+    @Query(
+        "UPDATE RatedSong SET fileWritten = 1 WHERE songUid = :songUid AND changedMs = :changedMs"
+    )
+    suspend fun markWritten(songUid: Music.UID, changedMs: Long)
 }
 
 /**
@@ -75,6 +88,24 @@ interface RatingDao {
  * @param songUid The [Music.UID] of the song.
  * @param halfStars The amount of half stars, or 0 if the song was explicitly left unrated.
  * @param changedMs When the rating was given, in milliseconds since the unix epoch.
+ * @param fileWritten Whether this rating has been written into the audio file.
  */
 @Entity
-data class RatedSong(@PrimaryKey val songUid: Music.UID, val halfStars: Int, val changedMs: Long)
+data class RatedSong(
+    @PrimaryKey val songUid: Music.UID,
+    val halfStars: Int,
+    val changedMs: Long,
+    @ColumnInfo(defaultValue = "1") val fileWritten: Boolean = true,
+) {
+    companion object {
+        /** Ratings given before file writing existed count as written, so no bulk write happens. */
+        val MIGRATION_1_2 =
+            object : Migration(1, 2) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        "ALTER TABLE RatedSong ADD COLUMN fileWritten INTEGER NOT NULL DEFAULT 1"
+                    )
+                }
+            }
+    }
+}
