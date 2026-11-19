@@ -21,12 +21,16 @@ package org.oxycblt.auxio.settings.search
 import android.content.Context
 import androidx.annotation.IdRes
 import androidx.annotation.XmlRes
+import androidx.preference.ListPreference
+import androidx.preference.MultiSelectListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceGroup
 import androidx.preference.PreferenceManager
 import androidx.preference.children
 import org.oxycblt.auxio.R
+import org.oxycblt.auxio.music.MusicType
+import org.oxycblt.auxio.settings.ui.IntListPreference
 
 /**
  * A single searchable setting.
@@ -36,6 +40,7 @@ import org.oxycblt.auxio.R
  * @param summary The summary of the setting, if any.
  * @param path The screen and category the setting is found in, for display.
  * @param destination The navigation destination of the screen holding the setting.
+ * @param keywords Extra text to match, such as list options or the items inside a dialog.
  */
 data class SettingsSearchEntry(
     val key: String,
@@ -43,6 +48,7 @@ data class SettingsSearchEntry(
     val summary: String?,
     val path: String,
     @IdRes val destination: Int,
+    val keywords: List<String> = listOf(),
 )
 
 /**
@@ -85,7 +91,7 @@ object SettingsSearchIndex {
      *
      * @param entries The index from [build].
      * @param query The query to match against titles and summaries, ignoring case.
-     * @return Matching entries, with title matches first.
+     * @return Matching entries: title matches first, then summary, location and keyword matches.
      */
     fun search(entries: List<SettingsSearchEntry>, query: String): List<SettingsSearchEntry> {
         val needle = query.trim()
@@ -95,15 +101,19 @@ object SettingsSearchIndex {
         val titleStarts = mutableListOf<SettingsSearchEntry>()
         val titleContains = mutableListOf<SettingsSearchEntry>()
         val summaryContains = mutableListOf<SettingsSearchEntry>()
+        val otherContains = mutableListOf<SettingsSearchEntry>()
         for (entry in entries) {
             when {
                 entry.title.startsWith(needle, ignoreCase = true) -> titleStarts.add(entry)
                 entry.title.contains(needle, ignoreCase = true) -> titleContains.add(entry)
                 entry.summary?.contains(needle, ignoreCase = true) == true ->
                     summaryContains.add(entry)
+                entry.path.contains(needle, ignoreCase = true) ||
+                    entry.keywords.any { it.contains(needle, ignoreCase = true) } ->
+                    otherContains.add(entry)
             }
         }
-        return titleStarts + titleContains + summaryContains
+        return titleStarts + titleContains + summaryContains + otherContains
     }
 
     private fun collect(
@@ -128,7 +138,29 @@ object SettingsSearchIndex {
             if (key == searchKey) {
                 continue
             }
-            entries.add(SettingsSearchEntry(key, title, summaryOf(preference), path, destination))
+            entries.add(
+                SettingsSearchEntry(
+                    key,
+                    title,
+                    summaryOf(preference),
+                    path,
+                    destination,
+                    keywordsOf(preference),
+                )
+            )
+        }
+    }
+
+    private fun keywordsOf(preference: Preference): List<String> {
+        val context = preference.context
+        return when {
+            preference.key == context.getString(R.string.set_key_home_tabs) ->
+                MusicType.entries.map { context.getString(it.nameRes) }
+            preference is IntListPreference -> preference.entries.map { it.toString() }
+            preference is ListPreference -> preference.entries.orEmpty().map { it.toString() }
+            preference is MultiSelectListPreference ->
+                preference.entries.orEmpty().map { it.toString() }
+            else -> listOf()
         }
     }
 
