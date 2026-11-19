@@ -44,6 +44,7 @@ import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.MusicSettings
 import org.oxycblt.auxio.music.MusicType
 import org.oxycblt.auxio.music.auto.AutoPlaylist
+import org.oxycblt.auxio.music.rating.Ratings
 import org.oxycblt.auxio.music.rating.rating
 import org.oxycblt.auxio.music.tags.composers
 import org.oxycblt.auxio.music.tags.moods
@@ -731,7 +732,7 @@ constructor(
         list: MutableStateFlow<List<Item>>,
         instructions: MutableEvent<UpdateInstructions>,
         replace: Int?,
-        songHeader: (Int) -> PlainHeader = { SortHeader(it) },
+        songHeader: (Int) -> PlainHeader = { SortHeader(it, Ratings.repository?.detailMinRating) },
     ) {
         if (detail == null) {
             parent.value = null
@@ -753,7 +754,8 @@ constructor(
                         section.items
                     }
                     is DetailSection.Discs -> {
-                        val header = SortHeader(section.stringRes)
+                        val header =
+                            SortHeader(section.stringRes, Ratings.repository?.detailMinRating)
                         if (newList.isNotEmpty()) {
                             newList.add(PlainDivider(header))
                         }
@@ -801,7 +803,9 @@ constructor(
                 null,
             ) {
                 // An automatic playlist cannot be edited, so it only gets the sort button.
-                if (playlist?.parent is AutoPlaylist) SortHeader(it) else EditHeader(it)
+                val minRating = Ratings.repository?.detailMinRating
+                if (playlist?.parent is AutoPlaylist) SortHeader(it, minRating)
+                else EditHeader(it, minRating)
             }
             return
         }

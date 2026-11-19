@@ -78,6 +78,8 @@
 
     <string name="set_key_rating_source" translatable="false">auxio_rating_source</string>
     <string name="set_key_rating_lists" translatable="false">auxio_rating_lists</string>
+    <string name="set_key_search_min_rating" translatable="false">auxio_search_min_rating</string>
+    <string name="set_key_detail_min_rating" translatable="false">auxio_detail_min_rating</string>
 
     <string name="set_key_auto_playlists" translatable="false">auxio_auto_playlists</string>
     <string name="set_key_auto_recent_days" translatable="false">auxio_auto_recent_days</string>

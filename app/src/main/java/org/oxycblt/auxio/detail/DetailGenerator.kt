@@ -127,6 +127,8 @@ private class DetailGeneratorImpl(
         invalidator.invalidate(MusicType.ARTISTS, -1)
         invalidator.invalidate(MusicType.GENRES, -1)
         invalidator.invalidate(MusicType.PLAYLISTS, 0)
+        invalidator.invalidate(MusicType.COMPOSERS, -1)
+        invalidator.invalidate(MusicType.MOODS, -1)
     }
 
     override fun onAlbumSongSortChanged() {
@@ -205,7 +207,7 @@ private class DetailGeneratorImpl(
 
     override fun album(uid: Music.UID): Detail<Album>? {
         val album = musicRepository.library?.findAlbum(uid) ?: return null
-        val songs = listSettings.albumSongSort.songs(album.songs)
+        val songs = listSettings.albumSongSort.songs(album.songs).filterByRating()
         val discs = songs.groupBy { it.disc }
         val section =
             if (discs.size > 1) {
@@ -249,7 +251,10 @@ private class DetailGeneratorImpl(
                 DetailSection.Albums(category, ARTIST_ALBUM_SORT.albums(albums))
             }
         if (artist.songs.isNotEmpty()) {
-            val songs = DetailSection.Songs(listSettings.artistSongSort.songs(artist.songs))
+            val songs =
+                DetailSection.Songs(
+                    listSettings.artistSongSort.songs(artist.songs).filterByRating()
+                )
             sections.add(songs)
         }
         return Detail(artist, sections)
@@ -258,21 +263,26 @@ private class DetailGeneratorImpl(
     override fun composer(uid: Music.UID): Detail<Composer>? {
         val composer = musicRepository.library?.findComposer(uid) ?: return null
         val artists = DetailSection.Artists(GENRE_ARTIST_SORT.artists(composer.artists))
-        val songs = DetailSection.Songs(listSettings.composerSongSort.songs(composer.songs))
+        val songs =
+            DetailSection.Songs(
+                listSettings.composerSongSort.songs(composer.songs).filterByRating()
+            )
         return Detail(composer, listOf(artists, songs))
     }
 
     override fun mood(uid: Music.UID): Detail<Mood>? {
         val mood = musicRepository.library?.findMood(uid) ?: return null
         val artists = DetailSection.Artists(GENRE_ARTIST_SORT.artists(mood.artists))
-        val songs = DetailSection.Songs(listSettings.moodSongSort.songs(mood.songs))
+        val songs =
+            DetailSection.Songs(listSettings.moodSongSort.songs(mood.songs).filterByRating())
         return Detail(mood, listOf(artists, songs))
     }
 
     override fun genre(uid: Music.UID): Detail<Genre>? {
         val genre = musicRepository.library?.findGenre(uid) ?: return null
         val artists = DetailSection.Artists(GENRE_ARTIST_SORT.artists(genre.artists))
-        val songs = DetailSection.Songs(listSettings.genreSongSort.songs(genre.songs))
+        val songs =
+            DetailSection.Songs(listSettings.genreSongSort.songs(genre.songs).filterByRating())
         return Detail(genre, listOf(artists, songs))
     }
 
@@ -290,10 +300,15 @@ private class DetailGeneratorImpl(
             )
         }
         if (playlist.songs.isNotEmpty()) {
-            sections.add(DetailSection.Songs(playlistSortRepository.songs(playlist)))
+            sections.add(
+                DetailSection.Songs(playlistSortRepository.songs(playlist).filterByRating())
+            )
         }
         return Detail(playlist, sections)
     }
+
+    private fun List<Song>.filterByRating() =
+        ratingRepository.filterSongs(this, ratingRepository.detailMinRating)
 
     private companion object {
         val ARTIST_ALBUM_SORT = Sort(Sort.Mode.ByDate, Sort.Direction.DESCENDING)

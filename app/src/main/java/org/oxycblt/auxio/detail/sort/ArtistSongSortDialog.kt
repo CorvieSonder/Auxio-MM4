@@ -52,6 +52,8 @@ class ArtistSongSortDialog : SortDialog() {
         detailModel.applyArtistSongSort(sort)
     }
 
+    override val showsRatingFilter = true
+
     override fun getModeChoices() =
         listOf(
             Sort.Mode.ByName,

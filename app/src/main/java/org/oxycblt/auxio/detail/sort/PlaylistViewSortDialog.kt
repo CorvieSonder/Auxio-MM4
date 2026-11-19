@@ -61,6 +61,8 @@ class PlaylistViewSortDialog : SortDialog() {
         detailModel.applyPlaylistViewSort(sort)
     }
 
+    override val showsRatingFilter = true
+
     override fun getModeChoices() =
         listOf(
             Sort.Mode.ByCustom,

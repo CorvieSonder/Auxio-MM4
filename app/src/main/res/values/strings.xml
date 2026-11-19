@@ -551,6 +551,10 @@
     <!-- Use your native country's abbreviation for hertz units. -->
     <string name="fmt_sample_rate">%d Hz</string>
     <string name="fmt_rating" translatable="false">%s★</string>
+    <string name="fmt_min_rating" translatable="false">≥%s★</string>
+    <string name="fmt_header_min_rating">%1$s · %2$s</string>
+    <string name="lbl_min_rating">Minimum rating</string>
+    <string name="lbl_any_rating">Any rating</string>
     <string name="fmt_rating_file">In the file: %s</string>
 
     <string name="fmt_indexing">Loading your music library… (%1$d/%2$d)</string>

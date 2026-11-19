@@ -41,7 +41,9 @@ import org.oxycblt.auxio.list.adapter.SimpleDiffCallback
 import org.oxycblt.auxio.list.recycler.MaterialDragCallback
 import org.oxycblt.auxio.list.recycler.PlaylistViewHolder
 import org.oxycblt.auxio.list.recycler.SongViewHolder
+import org.oxycblt.auxio.music.rating.Rating
 import org.oxycblt.auxio.music.rating.bindRating
+import org.oxycblt.auxio.music.rating.ratingFilteredTitle
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
 import org.oxycblt.auxio.util.context
@@ -171,7 +173,8 @@ class PlaylistDetailListAdapter(
  * @param titleRes The string resource to use as the header title
  * @author Alexander Capehart (OxygenCobalt)
  */
-data class EditHeader(@StringRes override val titleRes: Int) : PlainHeader
+data class EditHeader(@StringRes override val titleRes: Int, val minRating: Rating? = null) :
+    PlainHeader
 
 /**
  * Displays an [EditHeader] and it's actions. Use [from] to create an instance.
@@ -187,7 +190,8 @@ private class EditHeaderViewHolder private constructor(private val binding: Item
      * @param listener An [PlaylistDetailListAdapter.Listener] to bind interactions to.
      */
     fun bind(editHeader: EditHeader, listener: PlaylistDetailListAdapter.Listener) {
-        binding.headerTitle.text = binding.context.getString(editHeader.titleRes)
+        binding.headerTitle.text =
+            ratingFilteredTitle(binding.context, editHeader.titleRes, editHeader.minRating)
         // Add a Tooltip based on the content description so that the purpose of this
         // button can be clear.
         binding.headerEdit.apply {
@@ -231,7 +235,7 @@ private class EditHeaderViewHolder private constructor(private val binding: Item
         val DIFF_CALLBACK =
             object : SimpleDiffCallback<EditHeader>() {
                 override fun areContentsTheSame(oldItem: EditHeader, newItem: EditHeader) =
-                    oldItem.titleRes == newItem.titleRes
+                    oldItem == newItem
             }
     }
 }
