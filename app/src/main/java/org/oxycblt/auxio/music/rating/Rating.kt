@@ -95,6 +95,35 @@ fun Rating.format(context: android.content.Context) =
     context.getString(R.string.fmt_rating, DecimalFormat("0.#").format(stars.toDouble()))
 
 /**
+ * Format this [Rating] as a minimum, such as "≥4.5★".
+ *
+ * @param context [android.content.Context] required to obtain the format string.
+ */
+fun Rating.formatMinimum(context: android.content.Context) =
+    context.getString(R.string.fmt_min_rating, DecimalFormat("0.#").format(stars.toDouble()))
+
+/**
+ * Get a list header title, followed by the minimum rating its songs are filtered by, if any.
+ *
+ * @param context [android.content.Context] required to obtain the strings.
+ * @param titleRes The header title.
+ * @param minRating The minimum [Rating] of the songs under the header, or null if they are not
+ *   filtered.
+ */
+fun ratingFilteredTitle(
+    context: android.content.Context,
+    @androidx.annotation.StringRes titleRes: Int,
+    minRating: Rating?,
+): String {
+    val title = context.getString(titleRes)
+    return if (minRating != null) {
+        context.getString(R.string.fmt_header_min_rating, title, minRating.formatMinimum(context))
+    } else {
+        title
+    }
+}
+
+/**
  * Makes the current [RatingRepository] available to code that has no way to have it injected, such
  * as sort modes and list items.
  */

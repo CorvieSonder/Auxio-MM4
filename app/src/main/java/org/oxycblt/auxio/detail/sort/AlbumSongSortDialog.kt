@@ -52,6 +52,8 @@ class AlbumSongSortDialog : SortDialog() {
         detailModel.applyAlbumSongSort(sort)
     }
 
+    override val showsRatingFilter = true
+
     override fun getModeChoices() = listOf(Sort.Mode.ByDisc, Sort.Mode.ByTrack)
 
     private fun updateAlbum(album: Album?) {

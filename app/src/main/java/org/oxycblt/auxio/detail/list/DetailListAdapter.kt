@@ -34,6 +34,8 @@ import org.oxycblt.auxio.list.adapter.SelectionIndicatorAdapter
 import org.oxycblt.auxio.list.adapter.SimpleDiffCallback
 import org.oxycblt.auxio.list.recycler.BasicHeaderViewHolder
 import org.oxycblt.auxio.list.recycler.DividerViewHolder
+import org.oxycblt.auxio.music.rating.Rating
+import org.oxycblt.auxio.music.rating.ratingFilteredTitle
 import org.oxycblt.auxio.util.context
 import org.oxycblt.auxio.util.inflater
 import org.oxycblt.musikr.Music
@@ -112,7 +114,8 @@ abstract class DetailListAdapter(
  * @param titleRes The string resource to use as the header title
  * @author Alexander Capehart (OxygenCobalt)
  */
-data class SortHeader(@StringRes override val titleRes: Int) : PlainHeader
+data class SortHeader(@StringRes override val titleRes: Int, val minRating: Rating? = null) :
+    PlainHeader
 
 /**
  * A [RecyclerView.ViewHolder] that displays a [SortHeader] and it's actions. Use [from] to create
@@ -129,7 +132,8 @@ private class SortHeaderViewHolder(private val binding: ItemSortHeaderBinding) :
      * @param listener An [DetailListAdapter.Listener] to bind interactions to.
      */
     fun bind(sortHeader: SortHeader, listener: DetailListAdapter.Listener<*>) {
-        binding.headerTitle.text = binding.context.getString(sortHeader.titleRes)
+        binding.headerTitle.text =
+            ratingFilteredTitle(binding.context, sortHeader.titleRes, sortHeader.minRating)
         binding.headerSort.apply {
             // Add a Tooltip based on the content description so that the purpose of this
             // button can be clear.
@@ -157,7 +161,7 @@ private class SortHeaderViewHolder(private val binding: ItemSortHeaderBinding) :
         val DIFF_CALLBACK =
             object : SimpleDiffCallback<SortHeader>() {
                 override fun areContentsTheSame(oldItem: SortHeader, newItem: SortHeader) =
-                    oldItem.titleRes == newItem.titleRes
+                    oldItem == newItem
             }
     }
 }

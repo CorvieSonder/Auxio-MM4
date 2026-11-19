@@ -82,6 +82,27 @@
 
         </com.google.android.material.button.MaterialButtonGroup>
 
+        <TextView
+            android:id="@+id/sort_rating_header"
+            style="@style/Widget.Auxio.TextView.Header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/lbl_min_rating"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@+id/sort_direction_group" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sort_rating_slider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/spacing_medium"
+            android:stepSize="0.5"
+            android:valueFrom="0"
+            android:valueTo="5"
+            android:visibility="gone"
+            app:labelBehavior="visible"
+            app:layout_constraintTop_toBottomOf="@+id/sort_rating_header" />
+
         <org.oxycblt.auxio.ui.RippleFixMaterialButton
             android:id="@+id/sort_cancel"
             style="@style/Widget.Auxio.Button.TextButton.Dialog"
@@ -105,7 +126,7 @@
             android:text="@string/lbl_ok"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/sort_direction_group" />
+            app:layout_constraintTop_toBottomOf="@+id/sort_rating_slider" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

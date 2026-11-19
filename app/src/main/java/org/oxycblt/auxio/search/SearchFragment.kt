@@ -24,6 +24,7 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.isInvisible
 import androidx.core.view.postDelayed
 import androidx.core.widget.addTextChangedListener
@@ -31,6 +32,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
+import com.google.android.material.chip.Chip
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
 import org.oxycblt.auxio.R
@@ -47,6 +49,8 @@ import org.oxycblt.auxio.music.MusicType
 import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.music.PlaylistDecision
 import org.oxycblt.auxio.music.PlaylistMessage
+import org.oxycblt.auxio.music.rating.Rating
+import org.oxycblt.auxio.music.rating.formatMinimum
 import org.oxycblt.auxio.playback.PlaybackDecision
 import org.oxycblt.auxio.playback.PlaybackViewModel
 import org.oxycblt.auxio.ui.FadingToolbarOffsetListener
@@ -174,6 +178,11 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
                     }
                 searchModel.updateFilters(filters)
             }
+        }
+
+        binding.searchFilterRating.apply {
+            updateRatingChip(this)
+            setOnClickListener { showRatingMenu(this) }
         }
 
         binding.searchRecycler.apply {
@@ -435,5 +444,31 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
         L.d("Hiding keyboard")
         requireNotNull(imm) { "InputMethodManager was not available" }
             .hideSoftInputFromWindow(requireView().windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
+    }
+
+    private fun updateRatingChip(chip: Chip) {
+        val minRating = searchModel.minRating
+        chip.text = minRating?.formatMinimum(chip.context) ?: getString(R.string.lbl_rating)
+    }
+
+    private fun showRatingMenu(chip: Chip) {
+        PopupMenu(chip.context, chip).apply {
+            menu.add(android.view.Menu.NONE, 0, 0, R.string.lbl_any_rating)
+            for (halfStars in 1..Rating.MAX_HALF_STARS) {
+                val rating = requireNotNull(Rating.fromHalfStars(halfStars))
+                menu.add(
+                    android.view.Menu.NONE,
+                    halfStars,
+                    halfStars,
+                    rating.formatMinimum(chip.context),
+                )
+            }
+            setOnMenuItemClickListener { item ->
+                searchModel.updateMinRating(Rating.fromHalfStars(item.itemId))
+                updateRatingChip(chip)
+                true
+            }
+            show()
+        }
     }
 }

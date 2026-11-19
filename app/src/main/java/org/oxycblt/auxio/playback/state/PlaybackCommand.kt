@@ -22,6 +22,7 @@ import javax.inject.Inject
 import org.oxycblt.auxio.list.ListSettings
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.MusicRepository
+import org.oxycblt.auxio.music.rating.Ratings
 import org.oxycblt.auxio.playback.PlaybackSettings
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
@@ -125,7 +126,7 @@ constructor(
         newCommand(song, genre, song.genres, listSettings.genreSongSort, shuffle)
 
     override fun songFromPlaylist(song: Song, playlist: Playlist, shuffle: ShuffleMode) =
-        newCommand(song, playlist, playlist.songs, shuffle)
+        newCommand(song, playlist, filterByRating(song, playlist.songs), shuffle)
 
     override fun all(shuffle: ShuffleMode) = newCommand(null, shuffle)
 
@@ -154,7 +155,7 @@ constructor(
         newCommand(null, mood, listSettings.moodSongSort, shuffle)
 
     override fun playlist(playlist: Playlist, shuffle: ShuffleMode) =
-        newCommand(null, playlist, playlist.songs, shuffle)
+        newCommand(null, playlist, filterByRating(null, playlist.songs), shuffle)
 
     private fun <T : MusicParent> newCommand(
         song: Song,
@@ -183,8 +184,19 @@ constructor(
         sort: Sort,
         shuffle: ShuffleMode,
     ): PlaybackCommand? {
-        val songs = sort.songs(parent.songs)
+        val songs = filterByRating(song, sort.songs(parent.songs))
         return newCommand(song, parent, songs, sort, shuffle)
+    }
+
+    /**
+     * Keep only the songs that the minimum rating of detail pages shows, so that playing a parent
+     * plays what its page shows. Falls back to every song if that would leave out the song to play
+     * or leave nothing.
+     */
+    private fun filterByRating(song: Song?, songs: List<Song>): List<Song> {
+        val repository = Ratings.repository ?: return songs
+        val filtered = repository.filterSongs(songs, repository.detailMinRating)
+        return if (filtered.isEmpty() || (song != null && song !in filtered)) songs else filtered
     }
 
     private fun newCommand(

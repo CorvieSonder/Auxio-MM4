@@ -30,6 +30,10 @@ interface RatingSettings : Settings<RatingSettings.Listener> {
     val preferredSource: RatingSource
     /** Whether to show ratings in song lists. */
     val showInLists: Boolean
+    /** The lowest rating of songs shown in search results, in half stars. 0 shows all songs. */
+    var searchMinRating: Int
+    /** The lowest rating of songs shown on detail pages, in half stars. 0 shows all songs. */
+    var detailMinRating: Int
 
     interface Listener {
         /** Called when a setting that changes what ratings are shown has changed. */
@@ -61,10 +65,30 @@ class RatingSettingsImpl @Inject constructor(@ApplicationContext context: Contex
     override val showInLists: Boolean
         get() = sharedPreferences.getBoolean(getString(R.string.set_key_rating_lists), true)
 
+    override var searchMinRating: Int
+        get() = sharedPreferences.getInt(getString(R.string.set_key_search_min_rating), 0)
+        set(value) {
+            sharedPreferences
+                .edit()
+                .putInt(getString(R.string.set_key_search_min_rating), value)
+                .apply()
+        }
+
+    override var detailMinRating: Int
+        get() = sharedPreferences.getInt(getString(R.string.set_key_detail_min_rating), 0)
+        set(value) {
+            sharedPreferences
+                .edit()
+                .putInt(getString(R.string.set_key_detail_min_rating), value)
+                .apply()
+        }
+
     override fun onSettingChanged(key: String, listener: RatingSettings.Listener) {
         when (key) {
             getString(R.string.set_key_rating_source),
-            getString(R.string.set_key_rating_lists) -> listener.onRatingSettingsChanged()
+            getString(R.string.set_key_rating_lists),
+            getString(R.string.set_key_search_min_rating),
+            getString(R.string.set_key_detail_min_rating) -> listener.onRatingSettingsChanged()
         }
     }
 }
