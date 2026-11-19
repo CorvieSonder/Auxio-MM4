@@ -45,6 +45,15 @@ interface MoodDao {
 
     @Query("DELETE FROM EditedMoods WHERE songUid IN (:songUids)")
     suspend fun delete(songUids: List<Music.UID>)
+
+    @Query("SELECT * FROM EditedMoods WHERE fileWritten = 0")
+    suspend fun getUnwritten(): List<EditedMoods>
+
+    /** Mark an edit as written, unless it changed after [changedMs]. */
+    @Query(
+        "UPDATE EditedMoods SET fileWritten = 1 WHERE songUid = :songUid AND changedMs = :changedMs"
+    )
+    suspend fun markWritten(songUid: Music.UID, changedMs: Long)
 }
 
 /**

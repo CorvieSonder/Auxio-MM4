@@ -26,12 +26,16 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import javax.inject.Singleton
+import org.oxycblt.auxio.music.write.PendingTagSource
 
 @Module
 @InstallIn(SingletonComponent::class)
 interface MoodModule {
     @Binds fun repository(moodRepository: MoodRepositoryImpl): MoodRepository
+
+    @Binds @IntoSet fun pendingTags(source: MoodPendingSource): PendingTagSource
 }
 
 @Module
