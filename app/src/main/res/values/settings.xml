@@ -71,6 +71,8 @@
     <string name="set_key_composer_songs_sort" translatable="false">auxio_composer_songs_sort</string>
     <string name="set_key_moods_sort" translatable="false">auxio_moods_sort</string>
     <string name="set_key_mood_songs_sort" translatable="false">auxio_mood_songs_sort</string>
+    <string name="set_key_groupings_sort" translatable="false">auxio_groupings_sort</string>
+    <string name="set_key_grouping_songs_sort" translatable="false">auxio_grouping_songs_sort</string>
 
     <string name="set_key_library_revision" translatable="false">auxio_library_revision</string>
 

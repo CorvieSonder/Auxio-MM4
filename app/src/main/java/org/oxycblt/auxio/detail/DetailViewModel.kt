@@ -47,6 +47,7 @@ import org.oxycblt.auxio.music.auto.AutoPlaylist
 import org.oxycblt.auxio.music.rating.Ratings
 import org.oxycblt.auxio.music.rating.rating
 import org.oxycblt.auxio.music.tags.composers
+import org.oxycblt.auxio.music.tags.grouping
 import org.oxycblt.auxio.music.tags.moods
 import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.auxio.playback.PlaySong
@@ -58,6 +59,7 @@ import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.MusicParent
@@ -218,6 +220,31 @@ constructor(
             playbackSettings.inParentPlaybackMode
                 ?: PlaySong.FromMood(unlikelyToBeNull(currentMood.value))
 
+    // --- GROUPING ---
+
+    /** The current [Grouping] to display. Null if there is nothing to show. */
+    val currentGrouping: StateFlow<Grouping?>
+        field = MutableStateFlow<Grouping?>(null)
+
+    private val _groupingSongList = MutableStateFlow(listOf<Item>())
+
+    /** The current list data derived from [currentGrouping]. */
+    val groupingSongList: StateFlow<List<Item>> = _groupingSongList
+
+    /** Instructions for updating [groupingSongList] in the UI. */
+    val groupingSongInstructions: Event<UpdateInstructions>
+        field = MutableEvent<UpdateInstructions>()
+
+    /** The current [Sort] used for [Song]s in [groupingSongList]. */
+    val groupingSongSort: Sort
+        get() = listSettings.groupingSongSort
+
+    /** The [PlaySong] instructions to use when playing a [Song] from [Grouping] details. */
+    val playInGroupingWith
+        get() =
+            playbackSettings.inParentPlaybackMode
+                ?: PlaySong.FromGrouping(unlikelyToBeNull(currentGrouping.value))
+
     // --- PLAYLIST ---
 
     /** The current [Playlist] to display. Null if there is nothing to do. */
@@ -318,6 +345,16 @@ constructor(
                     replace,
                 )
             }
+            MusicType.GROUPINGS -> {
+                val grouping = detailGenerator.grouping(currentGrouping.value?.uid ?: return)
+                refreshDetail(
+                    grouping,
+                    currentGrouping,
+                    _groupingSongList,
+                    groupingSongInstructions,
+                    replace,
+                )
+            }
             else -> error("Unexpected music type $type")
         }
     }
@@ -400,6 +437,13 @@ constructor(
      * @param mood The [Mood] to navigate with.
      */
     fun showMood(mood: Mood) = showImpl(Show.MoodDetails(mood))
+
+    /**
+     * Navigate to the details of a [Grouping].
+     *
+     * @param grouping The [Grouping] to navigate with.
+     */
+    fun showGrouping(grouping: Grouping) = showImpl(Show.GroupingDetails(grouping))
 
     /**
      * Navigate to the details of a [Playlist].
@@ -553,6 +597,29 @@ constructor(
     }
 
     /**
+     * Set a new [currentGrouping] from it's [Music.UID].
+     *
+     * @param uid The [Music.UID] of the [Grouping] to update [currentGrouping] to. Must be valid.
+     */
+    fun setGrouping(uid: Music.UID) {
+        L.d("Opening grouping $uid")
+        if (uid === currentGrouping.value?.uid) {
+            return
+        }
+        val grouping = detailGenerator.grouping(uid)
+        refreshDetail(grouping, currentGrouping, _groupingSongList, groupingSongInstructions, null)
+    }
+
+    /**
+     * Apply a new [Sort] to [groupingSongList].
+     *
+     * @param sort The [Sort] to apply.
+     */
+    fun applyGroupingSongSort(sort: Sort) {
+        listSettings.groupingSongSort = sort
+    }
+
+    /**
      * Set a new [currentPlaylist] from it's [Music.UID]. If the [Music.UID] differs,
      * [currentPlaylist] and [currentPlaylist] will be updated to align with the new album.
      *
@@ -696,6 +763,9 @@ constructor(
                 .moods(separators)
                 .takeIf { it.isNotEmpty() }
                 ?.let { add(SongProperty(R.string.lbl_mood, SongProperty.Value.Text(it))) }
+            song.grouping?.let {
+                add(SongProperty(R.string.lbl_grouping, SongProperty.Value.Text(listOf(it))))
+            }
             song.date?.let { add(SongProperty(R.string.lbl_date, SongProperty.Value.ItemDate(it))) }
             song.rating?.let {
                 add(SongProperty(R.string.lbl_rating, SongProperty.Value.ItemRating(it)))
@@ -891,6 +961,13 @@ sealed interface Show {
      * @param mood The [Mood] to navigate with.
      */
     data class MoodDetails(val mood: Mood) : Show
+
+    /**
+     * Navigate to the details of a [Grouping].
+     *
+     * @param grouping The [Grouping] to navigate with.
+     */
+    data class GroupingDetails(val grouping: Grouping) : Show
 
     /**
      * Navigate to the details of a [Playlist].

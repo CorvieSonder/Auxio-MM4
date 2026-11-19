@@ -34,6 +34,7 @@ import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.MusicParent
@@ -81,6 +82,7 @@ constructor(
                     is Genre -> library.findGenre(it.uid)
                     is Composer -> library.findComposer(it.uid)
                     is Mood -> library.findMood(it.uid)
+                    is Grouping -> library.findGrouping(it.uid)
                     is Playlist -> library.findPlaylist(it.uid)
                 }
             }
@@ -167,6 +169,8 @@ constructor(
                 is Composer ->
                     listSettings.composerSongSort.songs(music.songs).filterTo(songs, seen::add)
                 is Mood -> listSettings.moodSongSort.songs(music.songs).filterTo(songs, seen::add)
+                is Grouping ->
+                    listSettings.groupingSongSort.songs(music.songs).filterTo(songs, seen::add)
                 is Playlist -> {
                     // A selected playlist adds only its own songs, in the order shown on its page.
                     val own = playlistSortRepository.songs(music)
@@ -270,6 +274,18 @@ constructor(
     fun openMenu(@MenuRes menuRes: Int, mood: Mood) {
         L.d("Opening menu for $mood")
         openImpl(Menu.ForMood(menuRes, mood))
+    }
+
+    /**
+     * Open a menu for a [Grouping]. This is not a popup menu, instead actually a dialog of menu
+     * options with additional information.
+     *
+     * @param menuRes The resource of the menu to use.
+     * @param grouping The [Grouping] to show.
+     */
+    fun openMenu(@MenuRes menuRes: Int, grouping: Grouping) {
+        L.d("Opening menu for $grouping")
+        openImpl(Menu.ForGrouping(menuRes, grouping))
     }
 
     /**

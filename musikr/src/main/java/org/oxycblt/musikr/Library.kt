@@ -32,6 +32,7 @@ interface Library {
     val genres: Collection<Genre>
     val composers: Collection<Composer>
     val moods: Collection<Mood>
+    val groupings: Collection<Grouping>
     val playlists: Collection<Playlist>
 
     /**
@@ -96,6 +97,14 @@ interface Library {
      * @return the mood if found, null otherwise
      */
     fun findMood(uid: Music.UID): Mood?
+
+    /**
+     * Find a [Grouping] by it's [Music.UID]
+     *
+     * @param uid the [Music.UID] of the grouping
+     * @return the grouping if found, null otherwise
+     */
+    fun findGrouping(uid: Music.UID): Grouping?
 
     /**
      * Find a [Playlist] by it's [Music.UID]

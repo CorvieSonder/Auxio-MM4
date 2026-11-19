@@ -67,6 +67,7 @@ class MenuViewModel @Inject constructor(private val musicRepository: MusicReposi
             is Menu.ForGenre.Parcel -> unpackGenreParcel(parcel)
             is Menu.ForComposer.Parcel -> unpackComposerParcel(parcel)
             is Menu.ForMood.Parcel -> unpackMoodParcel(parcel)
+            is Menu.ForGrouping.Parcel -> unpackGroupingParcel(parcel)
             is Menu.ForPlaylist.Parcel -> unpackPlaylistParcel(parcel)
             is Menu.ForSelection.Parcel -> unpackSelectionParcel(parcel)
         }
@@ -101,6 +102,11 @@ class MenuViewModel @Inject constructor(private val musicRepository: MusicReposi
     private fun unpackMoodParcel(parcel: Menu.ForMood.Parcel): Menu.ForMood? {
         val mood = musicRepository.library?.findMood(parcel.moodUid) ?: return null
         return Menu.ForMood(parcel.res, mood)
+    }
+
+    private fun unpackGroupingParcel(parcel: Menu.ForGrouping.Parcel): Menu.ForGrouping? {
+        val grouping = musicRepository.library?.findGrouping(parcel.groupingUid) ?: return null
+        return Menu.ForGrouping(parcel.res, grouping)
     }
 
     private fun unpackPlaylistParcel(parcel: Menu.ForPlaylist.Parcel): Menu.ForPlaylist? {

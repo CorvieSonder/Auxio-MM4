@@ -70,6 +70,12 @@ sealed class Tab(open val type: MusicType) {
         private const val SEQUENCE_EXTENDED = 1 shl 28
 
         /**
+         * Only [MAX_SEQUENCE_IDX] + 1 tabs fit in the sequence. Any tab after that is the one type
+         * missing from the sequence, so only its visibility is stored, in this bit.
+         */
+        private const val LAST_TAB_VISIBLE = 1 shl 29
+
+        /**
          * The default tab sequence, in integer form. This represents a set of four visible tabs
          * ordered as "Song", "Album", "Artist", "Genre", and "Playlists
          */
@@ -85,6 +91,7 @@ sealed class Tab(open val type: MusicType) {
                 MusicType.PLAYLISTS,
                 MusicType.COMPOSERS,
                 MusicType.MOODS,
+                MusicType.GROUPINGS,
             )
 
         /**
@@ -104,7 +111,7 @@ sealed class Tab(open val type: MusicType) {
 
             var sequence = SEQUENCE_EXTENDED
             var shift = MAX_SEQUENCE_IDX * 4
-            for (tab in distinct) {
+            for (tab in distinct.take(MAX_SEQUENCE_IDX + 1)) {
                 val bin =
                     when (tab) {
                         is Visible -> 1.shl(3) or MODE_TABLE.indexOf(tab.type)
@@ -113,6 +120,10 @@ sealed class Tab(open val type: MusicType) {
 
                 sequence = sequence or bin.shl(shift)
                 shift -= 4
+            }
+
+            if (distinct.getOrNull(MAX_SEQUENCE_IDX + 1) is Visible) {
+                sequence = sequence or LAST_TAB_VISIBLE
             }
 
             return sequence
@@ -159,10 +170,11 @@ sealed class Tab(open val type: MusicType) {
                 return null
             }
 
-            // Tabs added after the sequence was saved are appended, hidden.
-            val missing =
-                MODE_TABLE.filter { mode -> distinct.none { it.type == mode } }
-                    .map { Invisible(it) }
+            // Tabs added after the sequence was saved are appended, hidden. A single missing tab
+            // can be the last tab of a full sequence, which stores its visibility separately.
+            val missingTypes = MODE_TABLE.filter { mode -> distinct.none { it.type == mode } }
+            val lastVisible = intCode and LAST_TAB_VISIBLE != 0 && missingTypes.size == 1
+            val missing = missingTypes.map { if (lastVisible) Visible(it) else Invisible(it) }
 
             return (distinct + missing).toTypedArray()
         }

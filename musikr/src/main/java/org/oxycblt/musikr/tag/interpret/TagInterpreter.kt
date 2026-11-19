@@ -155,6 +155,7 @@ private class TagInterpreterImpl(private val interpretation: Interpretation) : T
             preGenres = rawGenres,
             preComposers = makePreComposers(song.tags, interpretation),
             preMoods = makePreMoods(song.tags, interpretation),
+            preGroupings = makePreGroupings(song.tags, interpretation),
             cover = song.cover,
             extras = song.tags.extras,
         )
@@ -257,8 +258,21 @@ private class TagInterpreterImpl(private val interpretation: Interpretation) : T
             .map { PreMood(interpretation.naming.name(it, null), it) }
     }
 
+    private fun makePreGroupings(
+        parsedTags: ParsedTags,
+        interpretation: Interpretation,
+    ): List<PreGrouping> {
+        // A song has at most one grouping, and it is never split on separators.
+        val rawName =
+            GROUPING_KEYS.firstNotNullOfOrNull { key ->
+                parsedTags.extras[key]?.firstNotNullOfOrNull { it.trim().ifEmpty { null } }
+            } ?: return emptyList()
+        return listOf(rawName).map { PreGrouping(interpretation.naming.name(it, null), it) }
+    }
+
     private companion object {
         val COMPOSER_KEYS = listOf("TCOM", "COMPOSER", "©wrt")
         val MOOD_KEYS = listOf("TMOO", "TXXX:MOOD", "MOOD", "----:COM.APPLE.ITUNES:MOOD")
+        val GROUPING_KEYS = listOf("TIT1", "GROUPING", "©grp")
     }
 }

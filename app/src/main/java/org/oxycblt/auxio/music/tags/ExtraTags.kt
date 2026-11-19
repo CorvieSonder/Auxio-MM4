@@ -51,6 +51,16 @@ val Song.rawMoods: List<String>
  */
 fun Song.moods(separators: Separators) = separators.splitExtras(rawMoods)
 
+/** The grouping values of this [Song] exactly as they were tagged. */
+val Song.rawGroupings: List<String>
+    get() = rawExtras(GROUPING_KEYS)
+
+/**
+ * The grouping of this [Song]. A song has at most one grouping, which is never split on separators.
+ */
+val Song.grouping: String?
+    get() = rawGroupings.firstNotNullOfOrNull { it.trim().ifEmpty { null } }
+
 private fun Song.rawExtras(keys: List<String>): List<String> {
     if (extras.isEmpty()) {
         return emptyList()
@@ -67,3 +77,4 @@ private fun Separators.splitExtras(values: List<String>): List<String> {
 
 private val COMPOSER_KEYS = listOf("TCOM", "COMPOSER", "©wrt")
 private val MOOD_KEYS = listOf("TMOO", "TXXX:MOOD", "MOOD", "----:COM.APPLE.ITUNES:MOOD")
+private val GROUPING_KEYS = listOf("TIT1", "GROUPING", "©grp")

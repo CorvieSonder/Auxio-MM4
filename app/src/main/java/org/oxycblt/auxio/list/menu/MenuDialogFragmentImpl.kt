@@ -43,6 +43,7 @@ import org.oxycblt.auxio.util.showToast
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
@@ -372,6 +373,54 @@ class MoodMenuDialogFragment : MenuDialogFragment<Menu.ForMood>() {
             }
             R.id.action_playlist_add -> musicModel.addToPlaylist(menu.mood)
             R.id.action_share -> requireContext().share(menu.mood)
+            else -> error("Unexpected menu item $item")
+        }
+    }
+}
+
+/** [MenuDialogFragment] implementation for a [Grouping]. */
+@AndroidEntryPoint
+class GroupingMenuDialogFragment : MenuDialogFragment<Menu.ForGrouping>() {
+    override val menuModel: MenuViewModel by viewModels()
+    override val listModel: ListViewModel by activityViewModels()
+    private val detailModel: DetailViewModel by activityViewModels()
+    private val musicModel: MusicViewModel by activityViewModels()
+    private val playbackModel: PlaybackViewModel by activityViewModels()
+    private val args: GroupingMenuDialogFragmentArgs by navArgs()
+
+    override val parcel
+        get() = args.parcel
+
+    override fun getDisabledItemIds(menu: Menu.ForGrouping) = setOf<Int>()
+
+    override fun updateMenu(binding: DialogMenuBinding, menu: Menu.ForGrouping) {
+        val context = requireContext()
+        binding.menuCover.bind(menu.grouping)
+        binding.menuType.text = getString(R.string.lbl_grouping)
+        binding.menuName.text = menu.grouping.name.resolve(context)
+        binding.menuInfo.text =
+            getString(
+                R.string.fmt_two,
+                context.getPlural(R.plurals.fmt_artist_count, menu.grouping.artists.size),
+                context.getPlural(R.plurals.fmt_song_count, menu.grouping.songs.size),
+            )
+    }
+
+    override fun onClick(item: MenuItem, menu: Menu.ForGrouping) {
+        when (item.itemId) {
+            R.id.action_play -> playbackModel.play(menu.grouping)
+            R.id.action_shuffle -> playbackModel.shuffle(menu.grouping)
+            R.id.action_detail -> detailModel.showGrouping(menu.grouping)
+            R.id.action_play_next -> {
+                playbackModel.playNext(menu.grouping)
+                requireContext().showToast(R.string.lng_play_next)
+            }
+            R.id.action_queue_add -> {
+                playbackModel.addToQueue(menu.grouping)
+                requireContext().showToast(R.string.lng_queue_added)
+            }
+            R.id.action_playlist_add -> musicModel.addToPlaylist(menu.grouping)
+            R.id.action_share -> requireContext().share(menu.grouping)
             else -> error("Unexpected menu item $item")
         }
     }

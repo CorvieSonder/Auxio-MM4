@@ -45,6 +45,7 @@ import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.MusicParent
 import org.oxycblt.musikr.Playlist
@@ -270,6 +271,7 @@ constructor(
             is PlaySong.FromPlaylist -> playFromPlaylistImpl(song, with.which, shuffle)
             is PlaySong.FromComposer -> playFromComposerImpl(song, with.which, shuffle)
             is PlaySong.FromMood -> playFromMoodImpl(song, with.which, shuffle)
+            is PlaySong.FromGrouping -> playFromGroupingImpl(song, with.which, shuffle)
             is PlaySong.ByItself -> playItselfImpl(song, shuffle)
         }
     }
@@ -335,6 +337,11 @@ constructor(
     private fun playFromMoodImpl(song: Song, mood: Mood, shuffle: ShuffleMode) {
         L.d("Playing $song from $mood")
         playImpl(commandFactory.songFromMood(song, mood, shuffle))
+    }
+
+    private fun playFromGroupingImpl(song: Song, grouping: Grouping, shuffle: ShuffleMode) {
+        L.d("Playing $song from $grouping")
+        playImpl(commandFactory.songFromGrouping(song, grouping, shuffle))
     }
 
     private fun startPlaybackDecision(decision: PlaybackDecision) {
@@ -464,6 +471,46 @@ constructor(
     fun addToQueue(mood: Mood) {
         L.d("Adding $mood to queue")
         playbackManager.addToQueue(listSettings.moodSongSort.songs(mood.songs))
+    }
+
+    /**
+     * Play a [Grouping].
+     *
+     * @param grouping The [Grouping] to play.
+     */
+    fun play(grouping: Grouping) {
+        L.d("Playing $grouping")
+        playImpl(commandFactory.grouping(grouping, ShuffleMode.OFF))
+    }
+
+    /**
+     * Shuffle a [Grouping].
+     *
+     * @param grouping The [Grouping] to shuffle.
+     */
+    fun shuffle(grouping: Grouping) {
+        L.d("Shuffling $grouping")
+        playImpl(commandFactory.grouping(grouping, ShuffleMode.ON))
+    }
+
+    /**
+     * Add a [Grouping] to the top of the queue.
+     *
+     * @param grouping The [Grouping] to add.
+     */
+    fun playNext(grouping: Grouping) {
+        L.d("Playing $grouping next")
+        playbackManager.playNext(listSettings.groupingSongSort.songs(grouping.songs))
+    }
+
+    /**
+     * Add a [Grouping] to the end of the queue.
+     *
+     * @param grouping The [Grouping] to add.
+     */
+    fun addToQueue(grouping: Grouping) {
+        L.d("Adding $grouping to queue")
+        playbackManager.addToQueue(listSettings.groupingSongSort.songs(grouping.songs))
     }
 
     /**

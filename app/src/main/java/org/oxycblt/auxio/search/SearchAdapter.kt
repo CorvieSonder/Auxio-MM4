@@ -32,6 +32,7 @@ import org.oxycblt.auxio.list.recycler.BasicHeaderViewHolder
 import org.oxycblt.auxio.list.recycler.ComposerViewHolder
 import org.oxycblt.auxio.list.recycler.DividerViewHolder
 import org.oxycblt.auxio.list.recycler.GenreViewHolder
+import org.oxycblt.auxio.list.recycler.GroupingViewHolder
 import org.oxycblt.auxio.list.recycler.MoodViewHolder
 import org.oxycblt.auxio.list.recycler.PlaylistViewHolder
 import org.oxycblt.auxio.list.recycler.SongViewHolder
@@ -39,6 +40,7 @@ import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Playlist
@@ -63,6 +65,7 @@ class SearchAdapter(
             is Genre -> GenreViewHolder.VIEW_TYPE
             is Composer -> ComposerViewHolder.VIEW_TYPE
             is Mood -> MoodViewHolder.VIEW_TYPE
+            is Grouping -> GroupingViewHolder.VIEW_TYPE
             is Playlist -> PlaylistViewHolder.VIEW_TYPE
             is PlainDivider -> DividerViewHolder.VIEW_TYPE
             is BasicHeader -> BasicHeaderViewHolder.VIEW_TYPE
@@ -77,6 +80,7 @@ class SearchAdapter(
             GenreViewHolder.VIEW_TYPE -> GenreViewHolder.from(parent)
             ComposerViewHolder.VIEW_TYPE -> ComposerViewHolder.from(parent)
             MoodViewHolder.VIEW_TYPE -> MoodViewHolder.from(parent)
+            GroupingViewHolder.VIEW_TYPE -> GroupingViewHolder.from(parent)
             PlaylistViewHolder.VIEW_TYPE -> PlaylistViewHolder.from(parent)
             DividerViewHolder.VIEW_TYPE -> DividerViewHolder.from(parent)
             BasicHeaderViewHolder.VIEW_TYPE -> BasicHeaderViewHolder.from(parent)
@@ -91,6 +95,7 @@ class SearchAdapter(
             is Genre -> (holder as GenreViewHolder).bind(item, listener)
             is Composer -> (holder as ComposerViewHolder).bind(item, listener)
             is Mood -> (holder as MoodViewHolder).bind(item, listener)
+            is Grouping -> (holder as GroupingViewHolder).bind(item, listener)
             // Nested playlists show where they are, so ones with the same name can be told apart.
             is Playlist ->
                 (holder as PlaylistViewHolder).bind(item, listener, 0, describeLocation(item))
@@ -119,6 +124,8 @@ class SearchAdapter(
                             ComposerViewHolder.DIFF_CALLBACK.areContentsTheSame(oldItem, newItem)
                         is Mood if newItem is Mood ->
                             MoodViewHolder.DIFF_CALLBACK.areContentsTheSame(oldItem, newItem)
+                        is Grouping if newItem is Grouping ->
+                            GroupingViewHolder.DIFF_CALLBACK.areContentsTheSame(oldItem, newItem)
 
                         is Playlist if newItem is Playlist ->
                             PlaylistViewHolder.DIFF_CALLBACK.areContentsTheSame(oldItem, newItem)

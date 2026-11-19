@@ -58,6 +58,7 @@ internal data class PreSong(
     val preGenres: List<PreGenre>,
     val preComposers: List<PreComposer>,
     val preMoods: List<PreMood>,
+    val preGroupings: List<PreGrouping>,
 )
 
 internal data class PreAlbum(
@@ -99,3 +100,5 @@ internal data class PreGenre(val name: Name, val rawName: String?)
 internal data class PreComposer(val name: Name.Known, val rawName: String)
 
 internal data class PreMood(val name: Name.Known, val rawName: String)
+
+internal data class PreGrouping(val name: Name.Known, val rawName: String)

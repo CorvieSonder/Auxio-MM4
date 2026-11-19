@@ -39,6 +39,7 @@ import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Playlist
@@ -453,6 +454,17 @@ constructor(
     fun addToPlaylist(mood: Mood, playlist: Playlist? = null) {
         L.d("Adding $mood to playlist")
         addToPlaylist(listSettings.moodSongSort.songs(mood.songs), playlist)
+    }
+
+    /**
+     * Add a [Grouping] to a [Playlist].
+     *
+     * @param grouping The [Grouping] to add to the [Playlist].
+     * @param playlist The [Playlist] to add to. If null, the user will be prompted for one.
+     */
+    fun addToPlaylist(grouping: Grouping, playlist: Playlist? = null) {
+        L.d("Adding $grouping to playlist")
+        addToPlaylist(listSettings.groupingSongSort.songs(grouping.songs), playlist)
     }
 
     /**

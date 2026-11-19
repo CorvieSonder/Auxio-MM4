@@ -24,11 +24,13 @@ import java.text.Normalizer
 import javax.inject.Inject
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.tags.rawComposers
+import org.oxycblt.auxio.music.tags.rawGroupings
 import org.oxycblt.auxio.music.tags.rawMoods
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Playlist
@@ -61,6 +63,7 @@ interface SearchEngine {
      * @param playlists A list of [Playlist], null if empty.
      * @param composers A list of [Composer]s, null if empty.
      * @param moods A list of [Mood]s, null if empty.
+     * @param groupings A list of [Grouping]s, null if empty.
      */
     data class Items(
         val songs: Collection<Song>? = null,
@@ -70,6 +73,7 @@ interface SearchEngine {
         val playlists: Collection<Playlist>? = null,
         val composers: Collection<Composer>? = null,
         val moods: Collection<Mood>? = null,
+        val groupings: Collection<Grouping>? = null,
     )
 }
 
@@ -82,7 +86,8 @@ class SearchEngineImpl @Inject constructor(@ApplicationContext private val conte
                 items.songs?.searchListImpl(query) { q, song ->
                     song.path.name?.contains(q, ignoreCase = true) == true ||
                         song.rawComposers.any { it.contains(q, ignoreCase = true) } ||
-                        song.rawMoods.any { it.contains(q, ignoreCase = true) }
+                        song.rawMoods.any { it.contains(q, ignoreCase = true) } ||
+                        song.rawGroupings.any { it.contains(q, ignoreCase = true) }
                 },
             albums = items.albums?.searchListImpl(query),
             artists = items.artists?.searchListImpl(query),
@@ -90,6 +95,7 @@ class SearchEngineImpl @Inject constructor(@ApplicationContext private val conte
             playlists = items.playlists?.searchListImpl(query),
             composers = items.composers?.searchListImpl(query),
             moods = items.moods?.searchListImpl(query),
+            groupings = items.groupings?.searchListImpl(query),
         )
     }
 

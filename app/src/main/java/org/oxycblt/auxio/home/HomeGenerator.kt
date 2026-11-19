@@ -31,6 +31,7 @@ import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
@@ -54,6 +55,8 @@ interface HomeGenerator {
     fun composers(): List<Composer>
 
     fun moods(): List<Mood>
+
+    fun groupings(): List<Grouping>
 
     fun playlists(): List<Playlist>
 
@@ -174,6 +177,11 @@ private class HomeGeneratorImpl(
         invalidator.invalidateMusic(MusicType.MOODS, UpdateInstructions.Replace(0))
     }
 
+    override fun onGroupingSortChanged() {
+        super.onGroupingSortChanged()
+        invalidator.invalidateMusic(MusicType.GROUPINGS, UpdateInstructions.Replace(0))
+    }
+
     override fun onPlaylistSortChanged() {
         super.onPlaylistSortChanged()
         invalidator.invalidateMusic(MusicType.PLAYLISTS, UpdateInstructions.Replace(0))
@@ -193,6 +201,7 @@ private class HomeGeneratorImpl(
             invalidator.invalidateMusic(MusicType.GENRES, UpdateInstructions.Diff)
             invalidator.invalidateMusic(MusicType.COMPOSERS, UpdateInstructions.Diff)
             invalidator.invalidateMusic(MusicType.MOODS, UpdateInstructions.Diff)
+            invalidator.invalidateMusic(MusicType.GROUPINGS, UpdateInstructions.Diff)
         }
 
         if (changes.userLibrary && library != null) {
@@ -234,6 +243,10 @@ private class HomeGeneratorImpl(
 
     override fun moods() =
         musicRepository.library?.let { listSettings.moodSort.moods(it.moods) } ?: emptyList()
+
+    override fun groupings() =
+        musicRepository.library?.let { listSettings.groupingSort.groupings(it.groupings) }
+            ?: emptyList()
 
     override fun genres() =
         musicRepository.library?.let { listSettings.genreSort.genres(it.genres) } ?: emptyList()

@@ -29,6 +29,7 @@ import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.MusicParent
 import org.oxycblt.musikr.Playlist
@@ -82,6 +83,10 @@ interface PlaybackCommand {
         fun songFromMood(song: Song, mood: Mood, shuffle: ShuffleMode): PlaybackCommand?
 
         fun mood(mood: Mood, shuffle: ShuffleMode): PlaybackCommand?
+
+        fun songFromGrouping(song: Song, grouping: Grouping, shuffle: ShuffleMode): PlaybackCommand?
+
+        fun grouping(grouping: Grouping, shuffle: ShuffleMode): PlaybackCommand?
 
         fun playlist(playlist: Playlist, shuffle: ShuffleMode): PlaybackCommand?
     }
@@ -160,6 +165,12 @@ constructor(
 
     override fun mood(mood: Mood, shuffle: ShuffleMode) =
         newCommand(null, mood, listSettings.moodSongSort, shuffle)
+
+    override fun songFromGrouping(song: Song, grouping: Grouping, shuffle: ShuffleMode) =
+        newCommand(song, grouping, listSettings.groupingSongSort, shuffle)
+
+    override fun grouping(grouping: Grouping, shuffle: ShuffleMode) =
+        newCommand(null, grouping, listSettings.groupingSongSort, shuffle)
 
     override fun playlist(playlist: Playlist, shuffle: ShuffleMode) =
         newCommand(

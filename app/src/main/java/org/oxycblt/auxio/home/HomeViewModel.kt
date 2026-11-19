@@ -36,6 +36,7 @@ import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
@@ -134,6 +135,18 @@ constructor(
     val moodSort: Sort
         get() = listSettings.moodSort
 
+    /** A list of [Grouping]s, sorted by the preferred [Sort], to be shown in the home view. */
+    val groupingList: StateFlow<List<Grouping>>
+        field = MutableStateFlow(listOf<Grouping>())
+
+    /** Instructions for how to update [groupingList] in the UI. */
+    val groupingInstructions: Event<UpdateInstructions>
+        field = MutableEvent<UpdateInstructions>()
+
+    /** The current [Sort] used for [groupingList]. */
+    val groupingSort: Sort
+        get() = listSettings.groupingSort
+
     /** A list of [Playlist]s, sorted by the preferred [Sort], to be shown in the home view. */
     val playlistList: StateFlow<List<Playlist>>
         field = MutableStateFlow(listOf<Playlist>())
@@ -222,6 +235,10 @@ constructor(
                 moodInstructions.put(instructions)
                 moodList.value = homeGenerator.moods()
             }
+            MusicType.GROUPINGS -> {
+                groupingInstructions.put(instructions)
+                groupingList.value = homeGenerator.groupings()
+            }
         }
     }
 
@@ -282,6 +299,15 @@ constructor(
      */
     fun applyMoodSort(sort: Sort) {
         listSettings.moodSort = sort
+    }
+
+    /**
+     * Apply a new [Sort] to [groupingList].
+     *
+     * @param sort The [Sort] to apply.
+     */
+    fun applyGroupingSort(sort: Sort) {
+        listSettings.groupingSort = sort
     }
 
     /**
