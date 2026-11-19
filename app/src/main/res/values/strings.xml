@@ -302,6 +302,8 @@
     <string name="set_rating_lists">Show ratings in lists</string>
     <string name="set_rating_lists_desc">Show the rating of rated songs next to their menu button</string>
     <string name="set_hide_collaborators_desc">Only show artists that are directly credited on an album (works best on well-tagged libraries)</string>
+    <string name="set_write_tags">Write edits to files</string>
+    <string name="set_write_tags_desc">Also save ratings and moods set in the app into MP3 files (ID3v2)</string>
     <string name="set_images">Images</string>
     <string name="set_cover_mode">Album covers</string>
     <string name="set_cover_mode_off">Off</string>
@@ -369,6 +371,7 @@
     <string name="err_no_app">No app found that can handle this task</string>
     <!-- No folders in the "Music Folders" setting -->
     <string name="err_bad_location">This folder is not supported</string>
+    <string name="err_write_tags">Unable to write edits into some files</string>
     <string name="lbl_no_folders">No folders</string>
 
     <!-- Description Namespace | Accessibility Strings -->
