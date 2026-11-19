@@ -32,6 +32,7 @@ import androidx.preference.children
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.transition.MaterialSharedAxis
 import org.oxycblt.auxio.R
+import org.oxycblt.auxio.settings.search.PreferenceHighlighter
 import org.oxycblt.auxio.settings.ui.IntListPreference
 import org.oxycblt.auxio.settings.ui.IntListPreferenceDialog
 import org.oxycblt.auxio.settings.ui.PreferenceHeaderItemDecoration
@@ -81,6 +82,12 @@ abstract class BasePreferenceFragment(@XmlRes private val screen: Int) :
 
         preferenceManager.onDisplayPreferenceDialogListener = this
         preferenceScreen.children.forEach(::setupPreference)
+
+        arguments?.getString(ARG_HIGHLIGHT_KEY)?.let { key ->
+            // Only highlight once, not again when returning to this screen.
+            requireArguments().remove(ARG_HIGHLIGHT_KEY)
+            PreferenceHighlighter.highlight(listView, key)
+        }
 
         L.d("Fragment created")
     }
@@ -135,5 +142,10 @@ abstract class BasePreferenceFragment(@XmlRes private val screen: Int) :
         }
 
         onSetupPreference(preference)
+    }
+
+    companion object {
+        /** Argument holding the key of a preference to scroll to and highlight. */
+        const val ARG_HIGHLIGHT_KEY = "org.oxycblt.auxio.settings.HIGHLIGHT_KEY"
     }
 }

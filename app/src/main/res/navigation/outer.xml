@@ -36,7 +36,16 @@
         <action
             android:id="@+id/music_locations_settings"
             app:destination="@id/music_locations_dialog" />
+        <action
+            android:id="@+id/settings_search"
+            app:destination="@id/settings_search_fragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/settings_search_fragment"
+        android:name="org.oxycblt.auxio.settings.search.SettingsSearchFragment"
+        android:label="settings_search_fragment"
+        tools:layout="@layout/fragment_settings_search" />
 
     <fragment
         android:id="@+id/ui_preferences_fragment"
