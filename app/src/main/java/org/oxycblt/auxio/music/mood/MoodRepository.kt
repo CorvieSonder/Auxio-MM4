@@ -18,10 +18,12 @@
  
 package org.oxycblt.auxio.music.mood
 
+import dagger.Lazy
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.oxycblt.auxio.music.write.TagFileWriter
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Song
 
@@ -51,7 +53,10 @@ interface MoodRepository {
 }
 
 @Singleton
-class MoodRepositoryImpl @Inject constructor(private val moodDao: MoodDao) : MoodRepository {
+class MoodRepositoryImpl
+@Inject
+constructor(private val moodDao: MoodDao, private val tagFileWriter: Lazy<TagFileWriter>) :
+    MoodRepository {
     private val mutex = Mutex()
     @Volatile private var cached: Map<Music.UID, List<String>>? = null
 
@@ -75,6 +80,7 @@ class MoodRepositoryImpl @Inject constructor(private val moodDao: MoodDao) : Moo
                 }
             )
             current.putAll(edited)
+            tagFileWriter.get().flush()
         }
         current.also { cached = it }
     }
