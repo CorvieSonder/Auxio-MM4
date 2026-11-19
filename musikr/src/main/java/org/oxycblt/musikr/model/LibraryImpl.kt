@@ -23,6 +23,7 @@ import org.oxycblt.musikr.MutableLibrary
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
 import org.oxycblt.musikr.fs.Path
+import org.oxycblt.musikr.graph.MusicGraph
 import org.oxycblt.musikr.playlist.db.StoredPlaylists
 import org.oxycblt.musikr.playlist.interpret.PlaylistInterpreter
 import org.oxycblt.musikr.playlist.interpret.PrePlaylistInfo
@@ -37,6 +38,7 @@ internal data class LibraryImpl(
     override val playlists: Set<PlaylistImpl>,
     private val storedPlaylists: StoredPlaylists,
     private val playlistInterpreter: PlaylistInterpreter,
+    private val moodContext: MoodOverrideContext,
 ) : MutableLibrary {
     private val songUidMap = songs.associateBy { it.uid }
     private val v400SongUidMap = songs.associateBy { it.v400Uid }
@@ -69,6 +71,34 @@ internal data class LibraryImpl(
     override fun findPlaylist(uid: Music.UID) = playlistUidMap[uid]
 
     override fun findPlaylistByName(name: String) = playlists.find { it.name.raw == name }
+
+    private val fileSongMap by lazy { moodContext.preSongs.associateBy { it.v363Uid } }
+
+    override fun fileExtrasOf(song: Song) = fileSongMap[song.uid]?.extras ?: song.extras
+
+    override suspend fun withMoodOverrides(
+        overrides: Map<Music.UID, List<String>>
+    ): MutableLibrary {
+        val builder = MusicGraph.builder()
+        for (preSong in moodContext.preSongs) {
+            builder.add(preSong.withMoodOverride(overrides, moodContext.interpretation))
+        }
+        val rebuilt =
+            moodContext.libraryFactory.create(
+                builder.build(),
+                storedPlaylists,
+                playlistInterpreter,
+                moodContext,
+            )
+        // Playlists may have changed since loading, so carry the current ones over to the new
+        // songs instead of reading them again.
+        val newPlaylists =
+            playlists.mapTo(mutableSetOf()) { playlist ->
+                val songs = playlist.songs.mapNotNull { rebuilt.songUidMap[it.uid] }
+                PlaylistImpl(NewPlaylistCore(playlist.core.prePlaylist, songs))
+            }
+        return rebuilt.copy(playlists = newPlaylists)
+    }
 
     override suspend fun createPlaylist(name: String, songs: List<Song>): MutableLibrary {
         val handle = storedPlaylists.new(name, songs)

@@ -30,7 +30,9 @@ import kotlinx.coroutines.yield
 import org.oxycblt.auxio.image.covers.SettingCovers
 import org.oxycblt.auxio.music.MusicRepository.IndexingWorker
 import org.oxycblt.auxio.music.locations.LocationMode
+import org.oxycblt.auxio.music.mood.MoodRepository
 import org.oxycblt.auxio.music.shim.WriteOnlyMutableCache
+import org.oxycblt.auxio.music.tags.moodsOf
 import org.oxycblt.musikr.Config
 import org.oxycblt.musikr.IndexingProgress
 import org.oxycblt.musikr.Interpretation
@@ -140,6 +142,22 @@ interface MusicRepository {
     suspend fun renamePlaylist(playlist: Playlist, name: String)
 
     /**
+     * Change the moods of [Song]s. The library is rebuilt with the new moods, without reading any
+     * files.
+     *
+     * @param changes The new moods of each [Song]. Null resets a song to the moods in its file.
+     */
+    suspend fun editMoods(changes: Map<Song, List<String>?>)
+
+    /**
+     * The moods in the file of a [Song], ignoring any edits.
+     *
+     * @param song The [Song] to read.
+     * @return The moods in its file.
+     */
+    fun fileMoodsOf(song: Song): List<String>
+
+    /**
      * Delete a [Playlist].
      *
      * @param playlist The playlist to delete.
@@ -245,6 +263,7 @@ constructor(
     private val storedPlaylists: StoredPlaylists,
     private val settingCovers: SettingCovers,
     private val musicSettings: MusicSettings,
+    private val moodRepository: MoodRepository,
 ) : MusicRepository {
     private val updateListeners = mutableListOf<MusicRepository.UpdateListener>()
     private val indexingListeners = mutableListOf<MusicRepository.IndexingListener>()
@@ -335,6 +354,25 @@ constructor(
         withContext(Dispatchers.Main) { dispatchLibraryChange(device = false, user = true) }
     }
 
+    override suspend fun editMoods(changes: Map<Song, List<String>?>) {
+        val library = synchronized(this) { library ?: return }
+        val separators = Separators.from(musicSettings.separators)
+        val rows =
+            changes.entries.associate { (song, moods) ->
+                // Moods that match the file again need no edit.
+                val fileMoods = moodsOf(library.fileExtrasOf(song), separators)
+                song.uid to moods?.takeUnless { it == fileMoods }
+            }
+        L.d("Editing moods of ${rows.size} songs")
+        val overrides = moodRepository.save(rows)
+        emitLibrary(library.withMoodOverrides(overrides))
+    }
+
+    override fun fileMoodsOf(song: Song): List<String> {
+        val library = synchronized(this) { library ?: return emptyList() }
+        return moodsOf(library.fileExtrasOf(song), Separators.from(musicSettings.separators))
+    }
+
     override suspend fun deletePlaylist(playlist: Playlist) {
         val library = synchronized(this) { library ?: return }
         L.d("Deleting $playlist")
@@ -407,7 +445,7 @@ constructor(
             }
         L.d("FS: $fs")
         val storage = Storage(cache, covers, storedPlaylists)
-        val interpretation = Interpretation(nameFactory, separators)
+        val interpretation = Interpretation(nameFactory, separators, moodRepository.overrides())
         val config = Config(fs, storage, interpretation)
         L.d("Running index...")
         val start = System.currentTimeMillis()

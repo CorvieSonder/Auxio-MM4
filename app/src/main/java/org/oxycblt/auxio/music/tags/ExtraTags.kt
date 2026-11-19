@@ -58,6 +58,15 @@ private fun Song.rawExtras(keys: List<String>): List<String> {
     return keys.flatMap { extras[it].orEmpty() }
 }
 
+/**
+ * The moods in the given tags, split like [moods].
+ *
+ * @param extras The tags to read, ex. the tags of a file before any edits.
+ * @param separators The [Separators] to split multi-value tags with.
+ */
+fun moodsOf(extras: Map<String, List<String>>, separators: Separators) =
+    separators.splitExtras(MOOD_KEYS.flatMap { extras[it].orEmpty() })
+
 private fun Separators.splitExtras(values: List<String>): List<String> {
     if (values.isEmpty()) {
         return emptyList()

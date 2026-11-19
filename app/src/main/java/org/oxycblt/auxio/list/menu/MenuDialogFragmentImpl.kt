@@ -28,6 +28,7 @@ import org.oxycblt.auxio.databinding.DialogMenuBinding
 import org.oxycblt.auxio.detail.DetailViewModel
 import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.music.MusicViewModel
+import org.oxycblt.auxio.music.mood.MoodEditDialog
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
 import org.oxycblt.auxio.playback.PlaybackViewModel
@@ -83,6 +84,9 @@ class SongMenuDialogFragment : MenuDialogFragment<Menu.ForSong>() {
                 requireContext().showToast(R.string.lng_queue_added)
             }
             R.id.action_playlist_add -> musicModel.addToPlaylist(menu.song)
+            R.id.action_edit_moods ->
+                MoodEditDialog.from(listOf(menu.song))
+                    .show(parentFragmentManager, MoodEditDialog.TAG)
             R.id.action_artist_details -> detailModel.showArtist(menu.song)
             R.id.action_album_details -> detailModel.showAlbum(menu.song.album)
             R.id.action_share -> requireContext().share(menu.song)
@@ -478,6 +482,8 @@ class SelectionMenuDialogFragment : MenuDialogFragment<Menu.ForSelection>() {
                 requireContext().showToast(R.string.lng_queue_added)
             }
             R.id.action_playlist_add -> musicModel.addToPlaylist(menu.songs)
+            R.id.action_edit_moods ->
+                MoodEditDialog.from(menu.songs).show(parentFragmentManager, MoodEditDialog.TAG)
             R.id.action_share -> requireContext().share(menu.songs)
             else -> error("Unexpected menu item selected $item")
         }
