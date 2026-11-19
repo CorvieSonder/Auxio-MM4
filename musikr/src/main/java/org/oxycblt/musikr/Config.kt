@@ -57,4 +57,7 @@ data class Interpretation(
 
     /** What separators delimit multi-value audio tags. */
     val separators: Separators,
+
+    /** Moods that replace the tagged moods of songs, by song [Music.UID]. */
+    val moodOverrides: Map<Music.UID, List<String>> = emptyMap(),
 )

@@ -25,7 +25,6 @@ import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Music
-import org.oxycblt.musikr.MutableLibrary
 import org.oxycblt.musikr.Song
 import org.oxycblt.musikr.graph.AlbumVertex
 import org.oxycblt.musikr.graph.ArtistVertex
@@ -45,7 +44,8 @@ internal interface LibraryFactory {
         graph: MusicGraph,
         storedPlaylists: StoredPlaylists,
         playlistInterpreter: PlaylistInterpreter,
-    ): MutableLibrary
+        moodContext: MoodOverrideContext,
+    ): LibraryImpl
 
     companion object {
         fun new(): LibraryFactory = LibraryFactoryImpl()
@@ -57,7 +57,8 @@ private class LibraryFactoryImpl : LibraryFactory {
         graph: MusicGraph,
         storedPlaylists: StoredPlaylists,
         playlistInterpreter: PlaylistInterpreter,
-    ): MutableLibrary {
+        moodContext: MoodOverrideContext,
+    ): LibraryImpl {
         val songs =
             graph.songVertex.mapTo(mutableSetOf()) { vertex ->
                 SongImpl(SongVertexCore(vertex)).also { vertex.tag = it }
@@ -101,6 +102,7 @@ private class LibraryFactoryImpl : LibraryFactory {
             playlists,
             storedPlaylists,
             playlistInterpreter,
+            moodContext,
         )
     }
 

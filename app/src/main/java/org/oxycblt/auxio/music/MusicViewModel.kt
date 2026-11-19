@@ -133,6 +133,17 @@ constructor(
      *   do not need to specify this.
      * @param parent The [Playlist] to create the new playlist in, or null for the top level.
      */
+    /**
+     * Change the moods of [Song]s.
+     *
+     * @param changes The new moods of each [Song]. Null resets a song to the moods in its file.
+     */
+    fun editMoods(changes: Map<Song, List<String>?>) {
+        if (changes.isEmpty()) return
+        L.d("Editing moods of ${changes.size} songs")
+        viewModelScope.launch(Dispatchers.IO) { musicRepository.editMoods(changes) }
+    }
+
     fun createPlaylist(
         name: String? = null,
         songs: List<Song> = listOf(),

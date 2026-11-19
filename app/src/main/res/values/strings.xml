@@ -83,6 +83,13 @@
     <string name="lbl_composer">Composer</string>
     <string name="lbl_composers">Composers</string>
     <string name="lbl_moods">Moods</string>
+    <string name="lbl_edit_moods">Edit moods</string>
+    <string name="lbl_mood_new">New mood</string>
+    <string name="lbl_mood_add">Add</string>
+    <string name="lbl_moods_reset">Reset to file</string>
+    <string name="fmt_mood_chip">%1$s (%2$d)</string>
+    <string name="fmt_mood_chip_new">%s (new)</string>
+    <string name="fmt_edit_moods_songs">Edit moods of %d songs</string>
     <string name="lbl_mood">Mood</string>
     <string name="lbl_groupings">Groupings</string>
     <string name="lbl_grouping">Grouping</string>

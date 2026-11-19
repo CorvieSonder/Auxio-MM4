@@ -133,6 +133,23 @@ interface Library {
  */
 interface MutableLibrary : Library {
     /**
+     * The tags of a [Song] exactly as they were read from its file, before any mood overrides.
+     *
+     * @param song the song to get the tags of
+     * @return the tags as read from the file
+     */
+    fun fileExtrasOf(song: Song): Map<String, List<String>>
+
+    /**
+     * Rebuild this library with the given moods in place of the tagged ones. No files are read.
+     *
+     * @param overrides the moods of each overridden song, by song [Music.UID]. An empty list
+     *   removes all moods from that song. Songs not in the map keep their tagged moods.
+     * @return a new [MutableLibrary] with the overrides applied
+     */
+    suspend fun withMoodOverrides(overrides: Map<Music.UID, List<String>>): MutableLibrary
+
+    /**
      * Create a new [Playlist] with the given name and songs.
      *
      * This will commit the new playlist to the stored playlists in the [Config] used to load the

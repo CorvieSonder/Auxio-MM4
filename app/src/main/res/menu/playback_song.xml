@@ -8,6 +8,10 @@
         android:title="@string/lbl_song_detail"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_edit_moods"
+        android:icon="@drawable/ic_mood_24"
+        android:title="@string/lbl_edit_moods" />
+    <item
         android:id="@+id/action_open_equalizer"
         android:icon="@drawable/ic_equalizer_24"
         android:title="@string/lbl_equalizer" />

@@ -26,8 +26,11 @@ import org.oxycblt.musikr.Interpretation
 import org.oxycblt.musikr.MutableLibrary
 import org.oxycblt.musikr.graph.MusicGraph
 import org.oxycblt.musikr.model.LibraryFactory
+import org.oxycblt.musikr.model.MoodOverrideContext
+import org.oxycblt.musikr.model.withMoodOverride
 import org.oxycblt.musikr.playlist.db.StoredPlaylists
 import org.oxycblt.musikr.playlist.interpret.PlaylistInterpreter
+import org.oxycblt.musikr.tag.interpret.PreSong
 import org.oxycblt.musikr.tag.interpret.TagInterpreter
 
 internal interface EvaluateStep {
@@ -37,6 +40,7 @@ internal interface EvaluateStep {
         fun new(context: Context, config: Config, interpretation: Interpretation): EvaluateStep =
             EvaluateStepImpl(
                 context,
+                interpretation,
                 TagInterpreter.new(interpretation),
                 PlaylistInterpreter.new(interpretation),
                 config.storage.storedPlaylists,
@@ -47,6 +51,7 @@ internal interface EvaluateStep {
 
 private class EvaluateStepImpl(
     private val context: Context,
+    private val interpretation: Interpretation,
     private val tagInterpreter: TagInterpreter,
     private val playlistInterpreter: PlaylistInterpreter,
     private val storedPlaylists: StoredPlaylists,
@@ -54,9 +59,16 @@ private class EvaluateStepImpl(
 ) : EvaluateStep {
     override suspend fun evaluate(extractedMusic: Channel<Extracted>): MutableLibrary {
         val builder = MusicGraph.builder()
+        val preSongs = mutableListOf<PreSong>()
         for (extracted in extractedMusic) {
             when (extracted) {
-                is RawSong -> builder.add(tagInterpreter.interpret(extracted))
+                is RawSong -> {
+                    val preSong = tagInterpreter.interpret(extracted)
+                    preSongs.add(preSong)
+                    builder.add(
+                        preSong.withMoodOverride(interpretation.moodOverrides, interpretation)
+                    )
+                }
                 is RawPlaylist -> builder.add(playlistInterpreter.interpret(extracted.file))
                 is NotAudio -> {}
                 is InvalidSong -> {}
@@ -70,6 +82,7 @@ private class EvaluateStepImpl(
             graph.renderToGraphviz(context, fileName)
         }
 
-        return libraryFactory.create(graph, storedPlaylists, playlistInterpreter)
+        val moodContext = MoodOverrideContext(preSongs, interpretation, libraryFactory)
+        return libraryFactory.create(graph, storedPlaylists, playlistInterpreter, moodContext)
     }
 }
