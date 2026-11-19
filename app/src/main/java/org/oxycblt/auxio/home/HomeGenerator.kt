@@ -24,6 +24,7 @@ import org.oxycblt.auxio.list.ListSettings
 import org.oxycblt.auxio.list.adapter.UpdateInstructions
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.MusicType
+import org.oxycblt.auxio.music.rating.RatingRepository
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
@@ -75,9 +76,16 @@ constructor(
     private val homeSettings: HomeSettings,
     private val listSettings: ListSettings,
     private val musicRepository: MusicRepository,
+    private val ratingRepository: RatingRepository,
 ) : HomeGenerator.Factory {
     override fun create(invalidator: HomeGenerator.Invalidator): HomeGenerator =
-        HomeGeneratorImpl(invalidator, homeSettings, listSettings, musicRepository)
+        HomeGeneratorImpl(
+            invalidator,
+            homeSettings,
+            listSettings,
+            musicRepository,
+            ratingRepository,
+        )
 }
 
 private class HomeGeneratorImpl(
@@ -85,11 +93,23 @@ private class HomeGeneratorImpl(
     private val homeSettings: HomeSettings,
     private val listSettings: ListSettings,
     private val musicRepository: MusicRepository,
-) : HomeGenerator, HomeSettings.Listener, ListSettings.Listener, MusicRepository.UpdateListener {
+    private val ratingRepository: RatingRepository,
+) :
+    HomeGenerator,
+    HomeSettings.Listener,
+    ListSettings.Listener,
+    MusicRepository.UpdateListener,
+    RatingRepository.Listener {
     override fun attach() {
         homeSettings.registerListener(this)
         listSettings.registerListener(this)
         musicRepository.addUpdateListener(this)
+        ratingRepository.addListener(this)
+    }
+
+    override fun onRatingsChanged() {
+        // Replace rather than diff, so that the ratings of the songs are rebound.
+        invalidator.invalidateMusic(MusicType.SONGS, UpdateInstructions.Replace(0))
     }
 
     override fun onTabsChanged() {
@@ -161,6 +181,7 @@ private class HomeGeneratorImpl(
     }
 
     override fun release() {
+        ratingRepository.removeListener(this)
         musicRepository.removeUpdateListener(this)
         listSettings.unregisterListener(this)
         homeSettings.unregisterListener(this)

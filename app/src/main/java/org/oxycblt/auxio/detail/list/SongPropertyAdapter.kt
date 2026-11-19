@@ -26,6 +26,8 @@ import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.ItemSongPropertyBinding
 import org.oxycblt.auxio.list.adapter.FlexibleListAdapter
 import org.oxycblt.auxio.list.adapter.SimpleDiffCallback
+import org.oxycblt.auxio.music.rating.Rating
+import org.oxycblt.auxio.music.rating.format
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
 import org.oxycblt.auxio.playback.formatDurationMs
@@ -87,6 +89,8 @@ data class SongProperty(@StringRes val name: Int, val value: Value) {
         data class SampleRate(val hz: Int) : Value
 
         data class Decibels(val value: Float) : Value
+
+        data class ItemRating(val rating: Rating) : Value
     }
 }
 
@@ -155,6 +159,9 @@ class SongPropertyViewHolder private constructor(private val binding: ItemSongPr
             is SongProperty.Value.Decibels -> {
                 val value = property.value.value
                 binding.propertyValue.setText(value.formatDb(context))
+            }
+            is SongProperty.Value.ItemRating -> {
+                binding.propertyValue.setText(property.value.rating.format(context))
             }
         }
     }
