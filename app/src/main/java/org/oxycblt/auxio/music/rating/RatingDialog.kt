@@ -61,7 +61,6 @@ class RatingDialog : ViewBindingMaterialDialogFragment<DialogRatingBinding>() {
                 val halfStars = (requireBinding().ratingBar.rating * 2).roundToInt()
                 ratingRepository.rate(song, Rating.fromHalfStars(halfStars))
             }
-            .setNegativeButton(R.string.lbl_cancel, null)
         val song = song
         if (song != null && ratingRepository.isRatedInApp(song)) {
             builder.setNeutralButton(R.string.lbl_rating_reset) { _, _ ->
