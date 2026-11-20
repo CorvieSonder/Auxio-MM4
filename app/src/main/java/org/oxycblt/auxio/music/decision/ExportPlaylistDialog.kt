@@ -18,11 +18,13 @@
  
 package org.oxycblt.auxio.music.decision
 
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -32,6 +34,7 @@ import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.DialogPlaylistExportBinding
 import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.music.resolve
+import org.oxycblt.auxio.music.tree.PlaylistFolderViewModel
 import org.oxycblt.auxio.ui.ViewBindingMaterialDialogFragment
 import org.oxycblt.auxio.util.collectImmediately
 import org.oxycblt.auxio.util.unlikelyToBeNull
@@ -49,7 +52,9 @@ import timber.log.Timber as L
 class ExportPlaylistDialog : ViewBindingMaterialDialogFragment<DialogPlaylistExportBinding>() {
     private val musicModel: MusicViewModel by activityViewModels()
     private val pickerModel: PlaylistPickerViewModel by viewModels()
+    private val folderModel: PlaylistFolderViewModel by activityViewModels()
     private var createDocumentLauncher: ActivityResultLauncher<String>? = null
+    private var openTreeLauncher: ActivityResultLauncher<Uri?>? = null
     // Information about what playlist to name for is initially within the navigation arguments
     // as UIDs, as that is the only safe way to parcel playlist information.
     private val args: ExportPlaylistDialogArgs by navArgs()
@@ -89,6 +94,20 @@ class ExportPlaylistDialog : ViewBindingMaterialDialogFragment<DialogPlaylistExp
                 findNavController().navigateUp()
             }
 
+        openTreeLauncher =
+            registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+                val playlist = pickerModel.currentPlaylistToExport.value
+                if (uri != null && playlist != null) {
+                    L.d("Received folder URI $uri")
+                    folderModel.exportFolder(playlist, uri, pickerModel.currentExportConfig.value)
+                }
+                findNavController().navigateUp()
+            }
+
+        binding.exportWithChildrenRow.setOnClickListener {
+            binding.exportWithChildren.isChecked = !binding.exportWithChildren.isChecked
+        }
+
         binding.exportRelativePaths.setOnClickListener { updatePathStyle(absolute = false) }
         binding.exportAbsolutePaths.setOnClickListener { updatePathStyle(absolute = true) }
 
@@ -110,6 +129,14 @@ class ExportPlaylistDialog : ViewBindingMaterialDialogFragment<DialogPlaylistExp
             .getButton(AlertDialog.BUTTON_POSITIVE)
             .setOnClickListener { _ ->
                 val pendingPlaylist = unlikelyToBeNull(pickerModel.currentPlaylistToExport.value)
+                val binding = requireBinding()
+                if (
+                    binding.exportWithChildrenRow.isVisible && binding.exportWithChildren.isChecked
+                ) {
+                    requireNotNull(openTreeLauncher) { "Open tree launcher was not available" }
+                        .launch(null)
+                    return@setOnClickListener
+                }
 
                 val fileName =
                     pendingPlaylist.name
@@ -129,6 +156,12 @@ class ExportPlaylistDialog : ViewBindingMaterialDialogFragment<DialogPlaylistExp
             findNavController().navigateUp()
             return
         }
+        val binding = requireBinding()
+        val hasChildren = folderModel.hasChildren(playlist)
+        if (hasChildren && !binding.exportWithChildrenRow.isVisible) {
+            binding.exportWithChildren.isChecked = true
+        }
+        binding.exportWithChildrenRow.isVisible = hasChildren
     }
 
     private fun updatePathStyle(absolute: Boolean) {

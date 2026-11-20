@@ -53,6 +53,8 @@ import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.music.IndexingState
 import org.oxycblt.auxio.music.MusicType
 import org.oxycblt.auxio.music.MusicViewModel
+import org.oxycblt.auxio.music.tree.PlaylistFolderViewModel
+import org.oxycblt.auxio.music.tree.setupPlaylistFolders
 import org.oxycblt.auxio.playback.OpenPanel
 import org.oxycblt.auxio.playback.PlaybackBottomSheetBehavior
 import org.oxycblt.auxio.playback.PlaybackViewModel
@@ -88,6 +90,7 @@ class MainFragment :
     private val homeModel: HomeViewModel by activityViewModels()
     private val listModel: ListViewModel by activityViewModels()
     private val playbackModel: PlaybackViewModel by activityViewModels()
+    private val folderModel: PlaylistFolderViewModel by activityViewModels()
     private var sheetBackCallback: SheetBackPressedCallback? = null
     private var detailBackCallback: DetailBackPressedCallback? = null
     private var selectionBackCallback: SelectionBackPressedCallback? = null
@@ -222,6 +225,7 @@ class MainFragment :
         collectImmediately(listModel.selected, selectionBackCallback::invalidateEnabled)
         collectImmediately(playbackModel.song, ::updateSong)
         collectImmediately(playbackModel.openPanel.flow, ::handlePanel)
+        setupPlaylistFolders(folderModel)
     }
 
     override fun onStart() {
@@ -403,6 +407,10 @@ class MainFragment :
             R.id.action_import_playlist -> {
                 L.d("Importing playlist")
                 musicModel.importPlaylist()
+            }
+            R.id.action_import_playlist_folder -> {
+                L.d("Importing playlist folder")
+                folderModel.requestImport(null)
             }
             else -> {}
         }
