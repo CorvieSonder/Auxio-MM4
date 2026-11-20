@@ -68,7 +68,6 @@ class MoodEditDialog : ViewBindingMaterialDialogFragment<DialogMoodEditBinding>(
                 else getString(R.string.lbl_edit_moods)
             )
             .setPositiveButton(R.string.lbl_ok) { _, _ -> apply() }
-            .setNegativeButton(R.string.lbl_cancel, null)
         if (songs.any { moodRepository.isEdited(it) }) {
             builder.setNeutralButton(R.string.lbl_moods_reset) { _, _ ->
                 musicModel.editMoods(songs.associateWith { null })
