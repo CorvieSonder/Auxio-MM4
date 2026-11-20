@@ -117,7 +117,7 @@
     <string name="lbl_rating">Rating</string>
     <string name="lbl_rate">Rate</string>
     <string name="lbl_rating_none">Not rated</string>
-    <string name="lbl_rating_reset">Use file</string>
+    <string name="lbl_rating_reset">Reset to file</string>
 
     <string name="lbl_sort">Sort</string>
     <string name="lbl_sort_mode">Sort by</string>

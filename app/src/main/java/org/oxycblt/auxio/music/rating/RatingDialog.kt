@@ -30,6 +30,7 @@ import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.DialogRatingBinding
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.resolve
+import org.oxycblt.auxio.music.write.TagWriteSettings
 import org.oxycblt.auxio.ui.ViewBindingMaterialDialogFragment
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Song
@@ -42,6 +43,7 @@ import org.oxycblt.musikr.Song
 class RatingDialog : ViewBindingMaterialDialogFragment<DialogRatingBinding>() {
     @Inject lateinit var ratingRepository: RatingRepository
     @Inject lateinit var musicRepository: MusicRepository
+    @Inject lateinit var tagWriteSettings: TagWriteSettings
 
     private val song: Song?
         get() =
@@ -89,6 +91,7 @@ class RatingDialog : ViewBindingMaterialDialogFragment<DialogRatingBinding>() {
             binding.ratingFile.text =
                 getString(R.string.fmt_rating_file, fileRating.format(context))
         }
+        binding.ratingWriteNote.isVisible = tagWriteSettings.writeToFiles
     }
 
     private fun updateValue(stars: Float) {
