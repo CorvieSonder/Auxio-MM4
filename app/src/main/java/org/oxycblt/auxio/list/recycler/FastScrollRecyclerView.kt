@@ -281,6 +281,13 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
         )
     }
 
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        // A drag cut short by the view going away never sees ACTION_UP, so end it here.
+        // Otherwise listeners keep thinking a fast scroll is still going on.
+        dragging = false
+    }
+
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         super.onLayout(changed, l, t, r, b)
         if (!showingThumb) {

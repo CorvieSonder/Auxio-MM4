@@ -155,6 +155,8 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                 object : ViewPager2.OnPageChangeCallback() {
                     override fun onPageSelected(position: Int) {
                         homeModel.synchronizeTabPosition(position)
+                        // A fast scroll on the previous tab cannot still be going on.
+                        homeModel.setFastScrolling(false)
                     }
                 }
             )
