@@ -53,5 +53,16 @@
             android:textColor="?android:attr/textColorSecondary"
             tools:text="In the file: 4★" />
 
+        <TextView
+            android:id="@+id/rating_write_note"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_small"
+            android:textAlignment="center"
+            android:text="@string/lbl_write_tags_playing"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?android:attr/textColorSecondary"
+            android:visibility="gone" />
+
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

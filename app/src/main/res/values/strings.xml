@@ -138,7 +138,7 @@
     <string name="lbl_rating">Rating</string>
     <string name="lbl_rate">Rate</string>
     <string name="lbl_rating_none">Not rated</string>
-    <string name="lbl_rating_reset">Use file</string>
+    <string name="lbl_rating_reset">Reset to file</string>
 
     <string name="lbl_sort">Sort</string>
     <string name="lbl_sort_mode">Sort by</string>
@@ -364,6 +364,7 @@
     <string name="set_hide_collaborators_desc">Only show artists that are directly credited on an album (works best on well-tagged libraries)</string>
     <string name="set_write_tags">Write edits to files</string>
     <string name="set_write_tags_desc">Also save ratings and moods set in the app into MP3 files (ID3v2)</string>
+    <string name="lbl_write_tags_playing">The song that is playing is saved to its file when the next song starts</string>
     <string name="set_images">Images</string>
     <string name="set_cover_mode">Album covers</string>
     <string name="set_cover_mode_off">Off</string>
