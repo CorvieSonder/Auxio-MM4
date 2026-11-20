@@ -54,13 +54,11 @@ class RatingDialog : ViewBindingMaterialDialogFragment<DialogRatingBinding>() {
     override fun onCreateBinding(inflater: LayoutInflater) = DialogRatingBinding.inflate(inflater)
 
     override fun onConfigDialog(builder: AlertDialog.Builder) {
-        builder
-            .setTitle(R.string.lbl_rating)
-            .setPositiveButton(R.string.lbl_ok) { _, _ ->
-                val song = song ?: return@setPositiveButton
-                val halfStars = (requireBinding().ratingBar.rating * 2).roundToInt()
-                ratingRepository.rate(song, Rating.fromHalfStars(halfStars))
-            }
+        builder.setTitle(R.string.lbl_rating).setPositiveButton(R.string.lbl_ok) { _, _ ->
+            val song = song ?: return@setPositiveButton
+            val halfStars = (requireBinding().ratingBar.rating * 2).roundToInt()
+            ratingRepository.rate(song, Rating.fromHalfStars(halfStars))
+        }
         val song = song
         if (song != null && ratingRepository.isRatedInApp(song)) {
             builder.setNeutralButton(R.string.lbl_rating_reset) { _, _ ->
