@@ -23,6 +23,7 @@ import android.view.LayoutInflater
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
+import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import com.google.android.material.chip.Chip
 import dagger.hilt.android.AndroidEntryPoint
@@ -31,6 +32,7 @@ import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.DialogMoodEditBinding
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.MusicViewModel
+import org.oxycblt.auxio.music.write.TagWriteSettings
 import org.oxycblt.auxio.ui.ViewBindingMaterialDialogFragment
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Song
@@ -43,6 +45,7 @@ import org.oxycblt.musikr.Song
 class MoodEditDialog : ViewBindingMaterialDialogFragment<DialogMoodEditBinding>() {
     @Inject lateinit var musicRepository: MusicRepository
     @Inject lateinit var moodRepository: MoodRepository
+    @Inject lateinit var tagWriteSettings: TagWriteSettings
     private val musicModel: MusicViewModel by activityViewModels()
 
     /** The chosen state of each mood shown, in the order shown. */
@@ -80,6 +83,7 @@ class MoodEditDialog : ViewBindingMaterialDialogFragment<DialogMoodEditBinding>(
             dismiss()
             return
         }
+        binding.moodWriteNote.isVisible = tagWriteSettings.writeToFiles
 
         val counts = mutableMapOf<String, Int>()
         val names = mutableMapOf<String, String>()
