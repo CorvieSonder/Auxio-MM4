@@ -37,6 +37,10 @@
         android:icon="@drawable/ic_import_24"
         android:title="@string/lbl_import" />
     <item
+        android:id="@+id/action_import_folder"
+        android:icon="@drawable/ic_import_24"
+        android:title="@string/lbl_import_folder" />
+    <item
         android:id="@+id/action_export"
         android:icon="@drawable/ic_save_24"
         android:title="@string/lbl_export" />

@@ -209,6 +209,13 @@
     <string name="lbl_move_to">Move to…</string>
     <string name="lbl_top_level">Top level</string>
     <string name="lbl_new_playlist_here">New playlist here</string>
+    <string name="lbl_import_folder">Import folder here</string>
+    <string name="lbl_imported_playlist_folder">Imported folder</string>
+    <string name="lbl_export_with_children">Include child playlists (exports a folder)</string>
+    <string name="lng_playlist_folder_exported">%d playlists exported</string>
+    <string name="lng_playlist_folder_imported">%1$d playlists imported, %2$d songs not found</string>
+    <string name="err_export_folder_failed">Unable to export the playlists to this folder</string>
+    <string name="err_import_folder_failed">Unable to import playlists from this folder</string>
     <string name="lbl_delete_children">Also delete the playlists inside it</string>
     <string name="lbl_open_playlist_level">Show playlists inside</string>
     <string name="desc_playlist_handle">Drag onto a playlist to move the selected playlists into it</string>
