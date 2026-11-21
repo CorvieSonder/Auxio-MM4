@@ -71,6 +71,8 @@ constructor(
         val folder: PlaylistDocument,
         val own: PlaylistDocument?,
         val items: List<PlaylistDocument>,
+        val hasIds: Boolean = false,
+        val fullExport: Boolean = false,
     )
 
     private class Counter {
@@ -95,7 +97,19 @@ constructor(
                     .filter { !it.isFolder && isPlaylistFile(it.name) && it != own }
                     .sortedBy { it.name.lowercase() }
             val folders = children.filter { it.isFolder }.sortedBy { it.name.lowercase() }
-            Scan(treeUri, folder, own, listOfNotNull(own) + folders + files)
+            val fullExport = children.any { it.name == FULL_EXPORT_MARKER }
+            val hasIds =
+                fullExport ||
+                    (listOfNotNull(own) + files).any {
+                        PlaylistIds.parse(
+                                PlaylistSyncRepository.readText(
+                                    context.contentResolver,
+                                    DocumentsContract.buildDocumentUriUsingTree(treeUri, it.id),
+                                )
+                            )
+                            .mmId != null
+                    }
+            Scan(treeUri, folder, own, listOfNotNull(own) + folders + files, hasIds, fullExport)
         } catch (e: Exception) {
             L.e("Unable to read the playlist folder $treeUri")
             L.e(e.stackTraceToString())
@@ -187,7 +201,7 @@ constructor(
     }
 
     /** The playlist file in [children] holding [folder]'s own songs: the one named like it. */
-    private fun findOwn(
+    internal fun findOwn(
         folder: PlaylistDocument,
         children: List<PlaylistDocument>,
     ): PlaylistDocument? {
@@ -201,7 +215,7 @@ constructor(
         }
     }
 
-    private suspend fun read(treeUri: Uri, file: PlaylistDocument): ImportedPlaylist? =
+    internal suspend fun read(treeUri: Uri, file: PlaylistDocument): ImportedPlaylist? =
         externalPlaylistManager.import(
             DocumentsContract.buildDocumentUriUsingTree(treeUri, file.id)
         )
@@ -211,7 +225,7 @@ constructor(
      * name. [ExternalPlaylistManager] makes up a name from the file name when #PLAYLIST is missing,
      * and that made-up name loses characters, so it is replaced by the plain file name.
      */
-    private fun nameOf(imported: ImportedPlaylist, file: PlaylistDocument): String {
+    internal fun nameOf(imported: ImportedPlaylist, file: PlaylistDocument): String {
         val stem = stemOf(file.name)
         val madeUp = file.name.split(".")[0].replace(Regex("[_-]"), " ").replace(Regex("\\s+"), " ")
         val name = imported.name
@@ -219,13 +233,19 @@ constructor(
     }
 
     private fun match(imported: ImportedPlaylist, counter: Counter): List<Song> {
-        val library = musicRepository.library ?: return listOf()
-        val songs = imported.paths.mapNotNull { it.firstNotNullOfOrNull(library::findSongByPath) }
-        counter.missingSongs += imported.paths.size - songs.size
+        val (songs, missing) = resolve(imported)
+        counter.missingSongs += missing
         return songs
     }
 
-    private suspend fun create(name: String, songs: List<Song>, parent: Playlist?): Playlist? {
+    /** The library songs of [imported], and how many of its paths matched none. */
+    internal fun resolve(imported: ImportedPlaylist): Pair<List<Song>, Int> {
+        val library = musicRepository.library ?: return listOf<Song>() to imported.paths.size
+        val songs = imported.paths.mapNotNull { it.firstNotNullOfOrNull(library::findSongByPath) }
+        return songs to imported.paths.size - songs.size
+    }
+
+    internal suspend fun create(name: String, songs: List<Song>, parent: Playlist?): Playlist? {
         val taken =
             withContext(Dispatchers.Main) {
                 playlistTreeRepository.childrenOf(parent).map { it.name.raw }.toSet()
@@ -246,7 +266,9 @@ constructor(
         return created
     }
 
-    private companion object {
-        val COPY_SUFFIX = Regex(" \\(\\d+\\)$")
+    companion object {
+        /** The file MediaMonkey writes into a folder when it exported all of its playlists. */
+        const val FULL_EXPORT_MARKER = "_mm-full-export.txt"
+        private val COPY_SUFFIX = Regex(" \\(\\d+\\)$")
     }
 }

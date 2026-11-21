@@ -44,4 +44,13 @@
             app:title="@string/set_square_covers" />
 
     </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/set_playlist_sync">
+
+        <Preference
+            app:key="@string/set_key_export_playlist_changes"
+            app:summary="@string/set_export_playlist_changes_desc"
+            app:title="@string/set_export_playlist_changes" />
+
+    </PreferenceCategory>
 </PreferenceScreen>
