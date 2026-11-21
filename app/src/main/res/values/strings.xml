@@ -263,6 +263,17 @@
     <string name="lbl_export_with_children">Include child playlists (exports a folder)</string>
     <string name="lbl_replace_existing_folder">Replace an existing folder of the same name</string>
     <string name="lbl_import_choose">Choose what to import</string>
+    <string name="lbl_import_sync">Sync: update the playlists linked to MediaMonkey instead of copying them</string>
+    <string name="lbl_sync_merge">Merge both (differences listed in _conflicts.txt)</string>
+    <string name="lbl_sync_overwrite">Use MediaMonkey\'s version</string>
+    <string name="lbl_sync_skip">Keep the phone\'s version (differences listed in _conflicts.txt)</string>
+    <string name="lbl_sync_delete_title">Deleted in MediaMonkey. Delete them here too?</string>
+    <string name="lbl_sync_keep">Keep</string>
+    <string name="lng_playlist_folder_synced">%1$d created, %2$d updated, %3$d changed on both sides, %4$d deleted, %5$d songs not found</string>
+    <string name="lng_playlist_changes_exported">%1$d changed playlists and %2$d deletions exported</string>
+    <string name="set_playlist_sync">Playlists</string>
+    <string name="set_export_playlist_changes">Export playlist changes</string>
+    <string name="set_export_playlist_changes_desc">Write the playlists changed since the last folder export or import into a \"changes\" folder, for MediaMonkey\'s \"Apply phone changes\"</string>
     <string name="lbl_import_folder_itself">Import \"%s\" itself as one playlist holding the items below</string>
     <string name="lng_playlist_folder_exported">%d playlists exported</string>
     <string name="lng_playlist_folder_imported">%1$d playlists imported, %2$d songs not found</string>
@@ -592,6 +603,11 @@
     <!-- As in the total duration of all songs in the music library -->
     <string name="fmt_lib_total_duration">Total duration: %s</string>
     <string name="fmt_lib_total_size">Total size: %s</string>
+
+    <plurals name="fmt_sync_conflicts">
+        <item quantity="one">%d playlist changed on both sides</item>
+        <item quantity="other">%d playlists changed on both sides</item>
+    </plurals>
 
     <plurals name="fmt_song_count">
         <item quantity="one">%d song</item>

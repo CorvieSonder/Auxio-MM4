@@ -42,6 +42,8 @@ constructor(
     private val playlistTreeRepository: PlaylistTreeRepository,
     private val exporter: PlaylistFolderExporter,
     private val importer: PlaylistFolderImporter,
+    private val sync: PlaylistFolderSync,
+    private val changesExporter: PlaylistChangesExporter,
 ) : ViewModel() {
     /** A request to pick a folder to import, awaiting a view that can show the folder picker. */
     val importRequest: Event<ImportRequest>
@@ -50,6 +52,10 @@ constructor(
     /** A scanned folder whose items the user should choose from before importing. */
     val importChoices: Event<ImportChoices>
         field = MutableEvent<ImportChoices>()
+
+    /** A sync that needs the user to choose how to handle conflicts and deletions. */
+    val syncQuestion: Event<PlaylistFolderSync.Plan>
+        field = MutableEvent<PlaylistFolderSync.Plan>()
 
     /** The outcome of the last export or import, awaiting a view that can show it. */
     val message: Event<FolderMessage>
@@ -83,10 +89,29 @@ constructor(
         }
     }
 
-    /** Import the [selected] items of [choices], wrapped in one playlist if [wrap]. */
-    fun importFolder(choices: ImportChoices, selected: List<PlaylistDocument>, wrap: Boolean) {
+    /**
+     * Import the [selected] items of [choices], wrapped in one playlist if [wrap]. With [sync],
+     * playlists linked to MediaMonkey are updated in place instead of copied.
+     */
+    fun importFolder(
+        choices: ImportChoices,
+        selected: List<PlaylistDocument>,
+        wrap: Boolean,
+        sync: Boolean,
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             val parent = choices.parentUid?.let { musicRepository.library?.findPlaylist(it) }
+            if (sync) {
+                val plan =
+                    this@PlaylistFolderViewModel.sync.plan(choices.scan, selected, wrap, parent)
+                when {
+                    plan == null -> message.put(FolderMessage.ImportFailed)
+                    plan.conflicts.isNotEmpty() || plan.missing.isNotEmpty() ->
+                        syncQuestion.put(plan)
+                    else -> applySync(plan, PlaylistFolderSync.ConflictChoice.OVERWRITE, false)
+                }
+                return@launch
+            }
             val result = importer.import(choices.scan, selected, wrap, parent)
             message.put(
                 if (result != null) {
@@ -94,6 +119,37 @@ constructor(
                 } else {
                     FolderMessage.ImportFailed
                 }
+            )
+        }
+    }
+
+    /** Finish a sync [plan] with the user's answers. */
+    fun answerSync(
+        plan: PlaylistFolderSync.Plan,
+        choice: PlaylistFolderSync.ConflictChoice,
+        delete: Boolean,
+    ) {
+        viewModelScope.launch(Dispatchers.IO) { applySync(plan, choice, delete) }
+    }
+
+    private suspend fun applySync(
+        plan: PlaylistFolderSync.Plan,
+        choice: PlaylistFolderSync.ConflictChoice,
+        delete: Boolean,
+    ) {
+        val result = sync.apply(plan, choice, delete)
+        message.put(
+            if (result != null) FolderMessage.Synced(result) else FolderMessage.ImportFailed
+        )
+    }
+
+    /** Write the playlists changed since the last sync into the folder at [treeUri]. */
+    fun exportChanges(treeUri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = changesExporter.export(treeUri)
+            message.put(
+                if (result != null) FolderMessage.ChangesExported(result.changed, result.deleted)
+                else FolderMessage.ExportFailed
             )
         }
     }
@@ -124,4 +180,8 @@ sealed interface FolderMessage {
     data class Imported(val playlists: Int, val missingSongs: Int) : FolderMessage
 
     data object ImportFailed : FolderMessage
+
+    data class Synced(val result: PlaylistFolderSync.Result) : FolderMessage
+
+    data class ChangesExported(val changed: Int, val deleted: Int) : FolderMessage
 }

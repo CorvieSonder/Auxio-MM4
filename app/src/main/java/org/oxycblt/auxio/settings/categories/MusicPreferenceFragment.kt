@@ -18,6 +18,11 @@
  
 package org.oxycblt.auxio.settings.categories
 
+import android.os.Bundle
+import android.view.View
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
@@ -26,8 +31,11 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.music.MusicViewModel
+import org.oxycblt.auxio.music.tree.FolderMessage
+import org.oxycblt.auxio.music.tree.PlaylistFolderViewModel
 import org.oxycblt.auxio.settings.BasePreferenceFragment
 import org.oxycblt.auxio.settings.ui.WrappedDialogPreference
+import org.oxycblt.auxio.util.collect
 import org.oxycblt.auxio.util.navigateSafe
 import timber.log.Timber as L
 
@@ -39,7 +47,32 @@ import timber.log.Timber as L
 @AndroidEntryPoint
 class MusicPreferenceFragment : BasePreferenceFragment(R.xml.preferences_music) {
     private val musicModel: MusicViewModel by viewModels()
+    private val folderModel: PlaylistFolderViewModel by activityViewModels()
     @Inject lateinit var imageLoader: ImageLoader
+    private val changesFolderLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+            if (uri != null) folderModel.exportChanges(uri)
+        }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        collect(folderModel.message.flow) { message ->
+            if (message is FolderMessage.ChangesExported || message is FolderMessage.ExportFailed) {
+                folderModel.message.consume()
+                val text =
+                    if (message is FolderMessage.ChangesExported) {
+                        getString(
+                            R.string.lng_playlist_changes_exported,
+                            message.changed,
+                            message.deleted,
+                        )
+                    } else {
+                        getString(R.string.err_export_folder_failed)
+                    }
+                Toast.makeText(requireContext(), text, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 
     override fun onOpenDialogPreference(preference: WrappedDialogPreference) {
         if (preference.key == getString(R.string.set_key_separators)) {
@@ -49,6 +82,12 @@ class MusicPreferenceFragment : BasePreferenceFragment(R.xml.preferences_music) 
     }
 
     override fun onSetupPreference(preference: Preference) {
+        if (preference.key == getString(R.string.set_key_export_playlist_changes)) {
+            preference.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+                changesFolderLauncher.launch(null)
+                true
+            }
+        }
         if (preference.key == getString(R.string.set_key_cover_mode)) {
             L.d("Configuring cover mode setting")
             preference.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, _ ->

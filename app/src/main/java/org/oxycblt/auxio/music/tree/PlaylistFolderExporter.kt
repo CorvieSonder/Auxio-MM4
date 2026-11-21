@@ -26,6 +26,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.playlist.ExportConfig
 import org.oxycblt.musikr.playlist.ExternalPlaylistManager
@@ -35,14 +36,15 @@ import timber.log.Timber as L
  * Exports a [Playlist] and all of its child playlists as nested folders of M3U8 files.
  *
  * Every playlist becomes a folder named after it. The playlist's own songs go into a file of the
- * same name inside that folder, and its child playlists become sub-folders. A playlist without
- * songs is only a folder. [PlaylistFolderImporter] reads the same layout.
+ * same name inside that folder (also when it has no songs, so that it carries the playlist's IDs),
+ * and its child playlists become sub-folders. [PlaylistFolderImporter] reads the same layout.
  */
 class PlaylistFolderExporter
 @Inject
 constructor(
     @ApplicationContext private val context: Context,
     private val playlistTreeRepository: PlaylistTreeRepository,
+    private val playlistSyncRepository: PlaylistSyncRepository,
 ) {
     private val externalPlaylistManager = ExternalPlaylistManager.from(context)
 
@@ -68,7 +70,22 @@ constructor(
                     .find { it.isFolder && it.name == name }
                     ?.let { PlaylistDocuments.clean(resolver, treeUri, it.id) }
             }
-            exportInto(treeUri, rootId, playlist, config, mutableSetOf(), replace)
+            val links = playlistSyncRepository.links()
+            val written = mutableListOf<PlaylistSyncLink>()
+            val count =
+                exportInto(
+                    treeUri,
+                    rootId,
+                    playlist,
+                    config,
+                    mutableSetOf(),
+                    replace,
+                    links,
+                    written,
+                )
+            // What was exported is the base that later changes are compared with.
+            playlistSyncRepository.save(written)
+            count
         } catch (e: Exception) {
             L.e("Unable to export $playlist as a folder")
             L.e(e.stackTraceToString())
@@ -87,6 +104,8 @@ constructor(
         config: ExportConfig,
         seen: MutableSet<Playlist>,
         reuse: Boolean,
+        links: Map<Music.UID, PlaylistSyncLink>,
+        written: MutableList<PlaylistSyncLink>,
     ): Int {
         if (!seen.add(playlist)) {
             return 0
@@ -116,22 +135,42 @@ constructor(
                 ) {
                     "Unable to create a folder for $playlist"
                 }
-        if (playlist.songs.isNotEmpty()) {
-            val fileUri =
-                requireNotNull(
-                    DocumentsContract.createDocument(resolver, folderUri, M3U8_MIME, "$name.m3u8")
-                ) {
-                    "Unable to create a file for $playlist"
-                }
-            check(externalPlaylistManager.export(playlist, fileUri, config)) {
-                "Unable to write $playlist"
+        // Every playlist gets its own file, even without songs, so that it carries its IDs.
+        val fileUri =
+            requireNotNull(
+                DocumentsContract.createDocument(resolver, folderUri, M3U8_MIME, "$name.m3u8")
+            ) {
+                "Unable to create a file for $playlist"
             }
+        check(externalPlaylistManager.export(playlist, fileUri, config)) {
+            "Unable to write $playlist"
         }
+        val state = playlistSyncRepository.stateOf(playlist)
+        val mmId = links[playlist.uid]?.mmId
+        val ids =
+            PlaylistIds(
+                auxioId = playlist.uid.toString(),
+                auxioParent = state.parentUid?.toString(),
+                mmId = mmId,
+                mmParent = state.parentUid?.let { links[it]?.mmId },
+            )
+        PlaylistSyncRepository.appendText(resolver, fileUri, ids.toLines())
+        written.add(state.toLink(playlist.uid, mmId))
         val folderId = DocumentsContract.getDocumentId(folderUri)
         var count = 1
         val children = withContext(Dispatchers.Main) { playlistTreeRepository.childrenOf(playlist) }
         for (child in children) {
-            count += exportInto(treeUri, folderId, child, config, seen, reuse && existing != null)
+            count +=
+                exportInto(
+                    treeUri,
+                    folderId,
+                    child,
+                    config,
+                    seen,
+                    reuse && existing != null,
+                    links,
+                    written,
+                )
         }
         return count
     }

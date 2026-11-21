@@ -51,6 +51,12 @@ fun Fragment.setupPlaylistFolders(folderModel: PlaylistFolderViewModel) {
             showImportChoices(folderModel, choices)
         }
     }
+    collect(folderModel.syncQuestion.flow) { plan ->
+        if (plan != null) {
+            folderModel.syncQuestion.consume()
+            askConflicts(folderModel, plan)
+        }
+    }
     collect(folderModel.message.flow) { message ->
         if (message != null) {
             folderModel.message.consume()
@@ -69,6 +75,21 @@ fun Fragment.setupPlaylistFolders(folderModel: PlaylistFolderViewModel) {
                         context.getString(R.string.err_export_folder_failed)
                     FolderMessage.ImportFailed ->
                         context.getString(R.string.err_import_folder_failed)
+                    is FolderMessage.Synced ->
+                        context.getString(
+                            R.string.lng_playlist_folder_synced,
+                            message.result.created,
+                            message.result.updated,
+                            message.result.conflicts,
+                            message.result.deleted,
+                            message.result.missingSongs,
+                        )
+                    is FolderMessage.ChangesExported ->
+                        context.getString(
+                            R.string.lng_playlist_changes_exported,
+                            message.changed,
+                            message.deleted,
+                        )
                 }
             Toast.makeText(context, text, Toast.LENGTH_LONG).show()
         }
@@ -87,8 +108,12 @@ private fun Fragment.showImportChoices(
     val context = requireContext()
     val scan = choices.scan
     val labels =
-        listOf(context.getString(R.string.lbl_import_folder_itself, scan.folder.name)) +
-            scan.items.map { if (it.isFolder) "${it.name}/" else it.name }
+        mutableListOf(context.getString(R.string.lbl_import_folder_itself, scan.folder.name))
+    if (scan.hasIds) {
+        labels.add(context.getString(R.string.lbl_import_sync))
+    }
+    val first = labels.size
+    labels.addAll(scan.items.map { if (it.isFolder) "${it.name}/" else it.name })
     val checked = BooleanArray(labels.size) { true }
     checked[0] = scan.own != null
     MaterialAlertDialogBuilder(context)
@@ -97,9 +122,62 @@ private fun Fragment.showImportChoices(
             checked[which] = isChecked
         }
         .setPositiveButton(R.string.lbl_import) { _, _ ->
-            val selected = scan.items.filterIndexed { i, _ -> checked[i + 1] }
-            folderModel.importFolder(choices, selected, checked[0])
+            val selected = scan.items.filterIndexed { i, _ -> checked[i + first] }
+            folderModel.importFolder(choices, selected, checked[0], scan.hasIds && checked[1])
         }
         .setNegativeButton(R.string.lbl_cancel, null)
+        .show()
+}
+
+/** Ask how to handle playlists changed on both sides, then whether to delete missing ones. */
+private fun Fragment.askConflicts(
+    folderModel: PlaylistFolderViewModel,
+    plan: PlaylistFolderSync.Plan,
+) {
+    if (plan.conflicts.isEmpty()) {
+        askDeletions(folderModel, plan, PlaylistFolderSync.ConflictChoice.OVERWRITE)
+        return
+    }
+    val context = requireContext()
+    val choices =
+        listOf(
+            PlaylistFolderSync.ConflictChoice.MERGE to R.string.lbl_sync_merge,
+            PlaylistFolderSync.ConflictChoice.OVERWRITE to R.string.lbl_sync_overwrite,
+            PlaylistFolderSync.ConflictChoice.SKIP to R.string.lbl_sync_skip,
+        )
+    MaterialAlertDialogBuilder(context)
+        .setTitle(
+            context.resources.getQuantityString(
+                R.plurals.fmt_sync_conflicts,
+                plan.conflicts.size,
+                plan.conflicts.size,
+            )
+        )
+        .setItems(choices.map { context.getString(it.second) }.toTypedArray()) { _, which ->
+            askDeletions(folderModel, plan, choices[which].first)
+        }
+        .setNegativeButton(R.string.lbl_cancel, null)
+        .show()
+}
+
+private fun Fragment.askDeletions(
+    folderModel: PlaylistFolderViewModel,
+    plan: PlaylistFolderSync.Plan,
+    choice: PlaylistFolderSync.ConflictChoice,
+) {
+    if (plan.missing.isEmpty()) {
+        folderModel.answerSync(plan, choice, false)
+        return
+    }
+    val context = requireContext()
+    MaterialAlertDialogBuilder(context)
+        .setTitle(R.string.lbl_sync_delete_title)
+        .setMessage(plan.missing.joinToString("\n") { it.name.raw })
+        .setPositiveButton(R.string.lbl_delete) { _, _ ->
+            folderModel.answerSync(plan, choice, true)
+        }
+        .setNegativeButton(R.string.lbl_sync_keep) { _, _ ->
+            folderModel.answerSync(plan, choice, false)
+        }
         .show()
 }
