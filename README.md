@@ -15,7 +15,7 @@ Auxio-MM4 installs next to the regular Auxio (its own app ID, `org.oxycblt.auxio
 Auxio-MM4 is based on [Auxio](https://github.com/OxygenCobalt/Auxio), an open-source music player for Android that is light on features but easy to build on. I'll do my best to always have upstream changes pulled into this fork, but unless those changes are urgent security/bugfixes, there will be a delay of at least days, if not weeks. This isn't my only project, & AI usage isn't exactly free. Speaking of:
 
 
-> [AI DISCLAIMER]
+> [!AI DISCLAIMER]
 > I did not write 99% of the code in this project. I'm an incredibly amateur programmer who, at best, can put together some scripts or use visual programming languages to do something slightly complex. I take no credit for the vast majority of work done here. If anything, I should thank the engineers at Anthropic. For all the horrible awful ethical issues that come with AI, Claude Code has been an incredible accessibility tool for me that has vastly expanded the amount of things that I can do within my very limited means. That being said, I take full responsibility for all AI-written code submitted by me, including potential performance or security issues. I'm not going to ignore people or post an AI response, even if I use AI to do most of the work. If I can, I hope to eventually support this repo on my own, without AI, & refactor code as needed.
 
 ## Features
