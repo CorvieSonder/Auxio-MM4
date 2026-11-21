@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="info_app_name" translatable="false">Auxio_AI Debug</string>
+    <string name="info_app_name" translatable="false">Auxio-MM4 Debug</string>
     <!-- FORK: app name and authority follow the fork app id -->
     <string name="pkg_authority_cover">org.oxycblt.auxio.fork.debug.image.CoverProvider</string>
 </resources>
