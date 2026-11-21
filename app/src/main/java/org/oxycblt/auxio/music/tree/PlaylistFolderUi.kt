@@ -20,6 +20,7 @@ package org.oxycblt.auxio.music.tree
 
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.oxycblt.auxio.R
@@ -153,7 +154,9 @@ private fun Fragment.askConflicts(
                 plan.conflicts.size,
             )
         )
-        .setItems(choices.map { context.getString(it.second) }.toTypedArray()) { _, which ->
+        .setSingleChoiceItems(choices.map { context.getString(it.second) }.toTypedArray(), 0, null)
+        .setPositiveButton(R.string.lbl_ok) { dialog, _ ->
+            val which = (dialog as AlertDialog).listView.checkedItemPosition
             askDeletions(folderModel, plan, choices[which].first)
         }
         .setNegativeButton(R.string.lbl_cancel, null)
