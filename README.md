@@ -1,191 +1,93 @@
-<p align="center"><img src="fastlane/metadata/android/en-US/images/icon.png" width="150"></p>
-<h1 align="center"><b>Auxio</b></h1>
-<h4 align="center">A simple, rational music player for Android.</h4>
-<p align="center">
-    <a href="https://github.com/oxygencobalt/Auxio/releases/tag/v4.1.5">
-        <img alt="Latest Version" src="https://img.shields.io/static/v1?label=tag&message=v4.1.5&color=64B5F6&style=flat">
-    </a>
-    <a href="https://github.com/oxygencobalt/Auxio/releases/">
-        <img alt="Releases" src="https://img.shields.io/github/downloads/OxygenCobalt/Auxio/total.svg?color=4B95DE&style=flat">
-    </a>
-    <a href="https://www.gnu.org/licenses/gpl-3.0">
-        <img src="https://img.shields.io/badge/license-GPL%20v3-2B6DBE.svg?style=flat">
-    </a>
-    <img alt="Minimum SDK Version" src="https://img.shields.io/badge/API-24%2B-1450A8?style=flat">
-</p>
-<h4 align="center"><a href="/CHANGELOG.md">Changelog</a> | <a href="https://github.com/OxygenCobalt/Auxio/wiki">Wiki</a> | <a href="https://github.com/OxygenCobalt/Auxio#Donate">Donate</a></h4>
-<p align="center">
-    <a href="https://f-droid.org/app/org.oxycblt.auxio"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" width="250"></a>
-    <a href="https://accrescent.app/app/org.oxycblt.auxio">
-        <img alt="Get it on Accrescent" src="https://accrescent.app/badges/get-it-on.png" width="250">
-    </a>
-</p>
-<p align="center">
-    <a href="https://hosted.weblate.org/engage/auxio/"><img height=64 src="https://hosted.weblate.org/widgets/auxio/-/strings/287x66-grey.png" alt="Translation status" /></a>
-</p>
+<h1 align="center"><b>Auxio-MM4</b></h1>
+<h4 align="center">Auxio: MM4 Edition. A fork designed for interoperability with MediaMonkey 4.</h4>
+
+> [!IMPORTANT]
+> **Unofficial fork.** Auxio-MM4 is a personal, unofficial fork of [Auxio](https://github.com/OxygenCobalt/Auxio) by Alexander Capehart (OxygenCobalt). It is not affiliated with, endorsed by or supported by the Auxio project. Please do not report problems with this fork to Auxio's issue tracker.
+>
+> **Not affiliated with MediaMonkey.** MediaMonkey is a trademark of Ventis Media Inc. This project is not affiliated with, endorsed by or supported by Ventis Media. It only reads and writes standard tags and playlist files, and its companion scripts use MediaMonkey 4's public scripting interface. No MediaMonkey code or artwork is included.
 
 ## About
 
-Auxio is a local music player with a fast, reliable UI/UX without the many useless features present in other music players. Built off of modern media playback libraries, Auxio has superior library support and listening quality compared to other apps that use outdated Android functionality. In short, **It plays music.**
+Auxio-MM4 is a personal project that may not be useful for anyone else. Like the description says, it's designed for interoperability with MediaMonkey 4. Why 4 & not 5? 4 has more plugins that I use for my huge library, & the themes look better. That's it, that's the reason. Again, something hyper-specific that may not be of use to you. If you are browsing Auxio forks & you like mine but wish it had x feature, go ahead & open an issue. Worst thing I can do is say no, & most of the time, I'll prolly have it added anyway as long as it doesn't bog down the app or majorly change how something works.
 
-**The default branch is the development version of the repository. For a stable version, see the master branch.**
+Auxio-MM4 installs next to the regular Auxio (its own app ID, `org.oxycblt.auxio.fork`) and does not touch Auxio's data.
 
-## Screenshots
+Auxio-MM4 is based on [Auxio](https://github.com/OxygenCobalt/Auxio), an open-source music player for Android that is light on features but easy to build on. I'll do my best to always have upstream changes pulled into this fork, but unless those changes are urgent security/bugfixes, there will be a delay of at least days, if not weeks. This isn't my only project, & AI usage isn't exactly free. Speaking of:
 
-<p align="center">
-    <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/shot0.png" width=250>
-    <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/shot1.png" width=250>
-    <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/shot2.png" width=250>
-    <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/shot3.png" width=250>
-    <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/shot4.png" width=250>
-    <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/shot5.png" width=250>
-</p>
 
+> [AI DISCLAIMER]
+> I did not write 99% of the code in this project. I'm an incredibly amateur programmer who, at best, can put together some scripts or use visual programming languages to do something slightly complex. I take no credit for the vast majority of work done here. If anything, I should thank the engineers at Anthropic. For all the horrible awful ethical issues that come with AI, Claude Code has been an incredible accessibility tool for me that has vastly expanded the amount of things that I can do within my very limited means. That being said, I take full responsibility for all AI-written code submitted by me, including potential performance or security issues. I'm not going to ignore people or post an AI response, even if I use AI to do most of the work. If I can, I hope to eventually support this repo on my own, without AI, & refactor code as needed.
 
 ## Features
 
-- Playback based on [Media3 ExoPlayer](https://developer.android.com/guide/topics/media/exoplayer)
-- Snappy UI derived from the latest Material Design guidelines
-- Opinionated UX that prioritizes ease of use over edge cases
-- Customizable behavior
-- Support for disc numbers, multiple artists, release types,
-precise/original dates, sort tags, and more
-- Advanced artist system that unifies artists and album artists
-- SD Card-aware folder management
-- Reliable playlisting functionality
-- Playback state persistence
-- Android Auto support
-- Automatic gapless playback
-- Full ReplayGain support (On MP3, FLAC, OGG, OPUS, and MP4 files)
-- External equalizer support (ex. Wavelet)
-- Edge-to-edge
-- Embedded covers support
-- Search functionality
-- Headset autoplay
-- Stylish widgets that automatically adapt to their size
-- Completely private and offline
-- No rounded album covers (if you want them)
+### From Auxio
+
+Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, disc numbers, release types, original dates and sort tags · SD-card-aware folders · gapless playback · ReplayGain · external equalizer support · Android Auto · widgets · search · completely private and offline. See [Auxio's README](https://github.com/OxygenCobalt/Auxio#features) for the full list.
+
+### Added in this fork
+
+**Playlists**
+- Nested playlists, as in MediaMonkey: any depth, move by drag or menu, pin to the top at each level
+- Sort a playlist by any field, remembered per playlist
+- Export and import nested playlists as folders of M3U8 files (replace an earlier export; choose what to import)
+- Two-way sync with MediaMonkey 4: linked playlists are updated in place (songs, order, name, nesting); changes made on both sides can be overwritten, kept or merged
+- Autoplaylists: Recently Added, Recently Played, Most Played, Rated and Now Playing
+
+**Tags**
+- Ratings from POPM frames (MediaMonkey, MusicBee, Windows Media Player (only MM tested)), with a choice of source and scale; a rating label in lists, a rating button in Now Playing, filter by rating
+- Composer and Mood: tabs, detail pages, search sections and sort (tabs hidden by default)
+- Grouping (TIT1) tab - in my library, this groups together things like Minecraft music, or 80s music
+- Edit moods and ratings in the app, and optionally write them into the files
+
+**Playback**
+- Playback speed and pitch
+- Sleep timer with fade-out or "finish the current song"
+- Now Playing top bar with quick buttons (rating, speed, sleep timer)
+
+**Other**
+- Select all / invert selection
+- Delete songs from a playlist or from the device
+- Use a song as the ringtone
+- Search bar in Settings
+
+### Planned
+
+- Phone and PC sync improvements as they come up
+- Lyrics (USLT and SYLT)
+- Crossfade
+- Resume position on long tracks
+- Library playlist and per-listener labels for shared media libraries
+- MediaMonkey-style custom tags (`Songs-DB_Custom1` to `Custom5`, Occasion)
+- Custom theme (we're going skeumorphic babyyyyy)
+- Configurable Now Playing buttons and rating symbol
+- Faster loading for large libraries (10,000+ songs)
+
+## MediaMonkey 4 scripts
+
+The PC side of playlist sync is a VBScript for MediaMonkey 4 (`PlaylistFolders.vbs`): copy it into MediaMonkey's `Scripts\Auto` folder and restart MediaMonkey. It adds right-click items to the playlist tree: export as playlist folder, import playlist folder here, and apply phone changes. *(Link to the scripts repository to be added when it is published.)*
 
 ## Permissions
 
 - Storage (`READ_MEDIA_AUDIO`, `READ_EXTERNAL_STORAGE`) to read and play your music files
 - Services (`FOREGROUND_SERVICE`, `WAKE_LOCK`) to keep the music playing in the background
-- Notifications (`POST_NOTIFICATION`) to indicate ongoing playback and music loading
+- Notifications (`POST_NOTIFICATION`) for playback and music loading
+- Modify system settings (`WRITE_SETTINGS`), only when you use a song as the ringtone
 
-## Donate
-
-You can support Auxio's development through [my Github Sponsors page](https://github.com/sponsors/OxygenCobalt). Get the ability to prioritize features and have your profile added to the README, Release Changelogs, and even the app itself!
-
-<h3 align="center">Legendary supporters:</h3>
-<p align="center">
-    <a href="https://github.com/bkkellyh"><img src="https://avatars.githubusercontent.com/u/248118457?v=4" width=250 /></a> 
-    <a href="ttps://github.com/gruntstumper"><img src="https://avatars.githubusercontent.com/u/308816080?v=4" width=125 /></a> 
-</p>
-<h3 align="center">
-    <a href="https://github.com/bkkellyh">@bkkellyh</a> - <i>$500!</i>, <a href="https://github.com/gruntstumper">@gruntstumper</a> - $100
-</h3>
-
-<hr />
-
-<p align="center"><b>$8/month supporters:</b></p>
-
-<p align="center">
-    <a href="https://github.com/uku3lig"><img src="https://avatars.githubusercontent.com/u/61147779?v=4" width=50 /></a>
-</p>
-<p align="center">
-    And **1** Private Sponsor!
-</p>
+Writing tags into files and deleting songs ask Android for permission each time; nothing leaves the device.
 
 ## Building
 
-Auxio relies on a patched version of Media3 that enables some extra playback features, alongside taglib for metadata
-parsing. This adds some caveats to the build process:
-1. `cmake` and `ninja-build` must be installed before building the project.
-2. The project uses submodules, so when cloning initially, use `git clone --recurse-submodules` to properly
-download the external code.
-3. You are **unable** to build this project on windows, as the custom Media3 build runs shell scripts that
-will only work on unix-based systems.
+There are no releases yet; build from source on Linux (the custom Media3 build runs shell scripts, so Windows is not supported). Builds will be added when the app is considered feature complete (as in, my list of planned features is mostly empty).
 
-### Set up Android Studio
+1. Install JDK 21, the Android SDK, NDK 28.2.13676358, `cmake` and `ninja`.
+2. Clone with submodules: `git clone --recurse-submodules <this repository>`
+3. Build: `./gradlew assembleDebug`
+4. Install over USB (with USB debugging on): `adb install -r app/build/outputs/apk/debug/app-debug.apk`
 
-#### Install Android Studio.
+## Credits and license
 
-```bash
-pkg -S android-studio
-```
-
-#### Configuring Android Studio:
-
-- Be sure to have NDK tools, version 28.2.13676358. You can search it on Languages & Frameworks > Android SDK.
-- Install Java-21 with your system package manager
-
-    ```bash
-    sudo pkg -S jdk21-openjdk
-    ```
-    Additionally: Set java version to jdk21-openjdk
-
-- Run ./gradlew assembleDebug
-
-#### Connecting to your Android Device
-
-You can connect your Mobile Phone through USB to run the app. 
-
-1. **Enable Developer Options on your phone**
-   - Go to **Settings > About phone**  
-   - Tap **Build number** 7 times until you see *"You are now a developer!"*
-
-2. **Enable USB debugging**
-   - Go to **Settings > Developer options**  
-   - Turn on **USB debugging**
-
-3. **Connect your phone to the computer**
-   - Use a USB cable  
-   - On your phone, accept the *Allow USB debugging?* prompt
-
-4. **Verify that your device is detected**
-   ```bash
-   cd ~/Android/Sdk/platform-tools
-   ./adb devices
-   ```
-
-Android Studio also offers virtual devices that come with this pre-configured.
-
-#### Install the app on the Android Phone
-To install the app on your physical device or emulator, run this command:
-
-```bash
-./gradlew installDebug
-```
-
-Auxio should now appear in the list of Apps
-
-#### Load music to Auxio (Optional)
-
-You can move files from your pc to your device / emulator to test the music using this command:
-
-```bash
-cd ~/Android/Sdk/platform-tools
-./adb push ~Music/ /sdcard/Music
-```
-
-## Contributing
-
-Auxio accepts most contributions as long as they follow the [Contribution Guidelines](/.github/CONTRIBUTING.md).
-
-However, feature additions and major UI changes are less likely to be accepted. See
-[Why Are These Features Missing?](https://github.com/OxygenCobalt/Auxio/wiki/Why-Are-These-Features-Missing%3F)
-for more information.
-
-
-
-## License
+Auxio-MM4 is built on [Auxio](https://github.com/OxygenCobalt/Auxio) by Alexander Capehart (OxygenCobalt) and its contributors. If you like Auxio, consider [supporting its developer](https://github.com/sponsors/OxygenCobalt).
 
 [![GNU GPLv3 Image](https://www.gnu.org/graphics/gplv3-127x51.png)](http://www.gnu.org/licenses/gpl-3.0.en.html)
 
-Auxio is Free Software: You can use, study share and improve it at your
-will. Specifically you can redistribute and/or modify it under the terms of the
-[GNU General Public License](https://www.gnu.org/licenses/gpl.html) as
-published by the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-More information can be found [here](https://github.com/OxygenCobalt/Auxio/wiki/Licenses).
+Like Auxio, this fork is Free Software under the [GNU General Public License](https://www.gnu.org/licenses/gpl.html), version 3 or (at your option) any later version. Upstream copyright notices are kept in every file.
