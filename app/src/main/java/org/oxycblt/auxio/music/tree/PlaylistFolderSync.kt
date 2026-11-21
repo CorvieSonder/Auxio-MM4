@@ -212,7 +212,7 @@ constructor(
             val ids = PlaylistIds.parse(text)
             ids.mmId?.let { seenMmIds.add(it) }
             val name = importer.nameOf(imported, file)
-            val (songs, missing) = importer.resolve(imported)
+            val (songs, missing) = importer.resolve(imported, EntryInfo.parseAll(text))
             return item(name, songs, missing, ids, findTarget(ids, name, parent), rest)
         }
 

@@ -89,6 +89,7 @@ constructor(
                 }
 
             val links = playlistSyncRepository.links()
+            val songsByPath = library.songs.associateBy(PlaylistSyncRepository::pathOf)
             val written = mutableListOf<PlaylistSyncLink>()
             val usedNames = mutableSetOf<String>()
             for (playlist in library.playlists) {
@@ -125,7 +126,11 @@ constructor(
                         mmId = link?.mmId,
                         mmParent = state.parentUid?.let { links[it]?.mmId },
                         baseName = base?.name,
-                        base = base?.songs,
+                        // With tag info, so MediaMonkey can find songs whose paths differ.
+                        base =
+                            base?.songs?.map { path ->
+                                songsByPath[path]?.let { EntryInfo.of(it).toBaseLine(path) } ?: path
+                            },
                     )
                 PlaylistSyncRepository.appendText(resolver, fileUri, ids.toLines())
                 written.add(state.toLink(playlist.uid, link?.mmId))
