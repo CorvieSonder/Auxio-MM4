@@ -28,6 +28,7 @@ import kotlinx.coroutines.withContext
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.tree.PlaylistDocuments.isPlaylistFile
 import org.oxycblt.auxio.music.tree.PlaylistDocuments.stemOf
+import org.oxycblt.musikr.Library
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
 import org.oxycblt.musikr.playlist.ExternalPlaylistManager
@@ -158,7 +159,8 @@ constructor(
     ) {
         for (file in items.filter { !it.isFolder }) {
             val imported = read(treeUri, file) ?: continue
-            if (create(nameOf(imported, file), match(imported, counter), parent) != null) {
+            val songs = match(treeUri, file, imported, counter)
+            if (create(nameOf(imported, file), songs, parent) != null) {
                 counter.playlists++
             }
         }
@@ -194,7 +196,7 @@ constructor(
     ): Playlist? {
         val ownImport = own?.let { read(treeUri, it) }
         val name = ownImport?.let { nameOf(it, own) } ?: folder.name
-        val songs = ownImport?.let { match(it, counter) } ?: listOf()
+        val songs = ownImport?.let { match(treeUri, own, it, counter) } ?: listOf()
         val playlist = create(name, songs, parent) ?: return null
         counter.playlists++
         return playlist
@@ -232,17 +234,51 @@ constructor(
         return if (name == null || name == madeUp) stem else name
     }
 
-    private fun match(imported: ImportedPlaylist, counter: Counter): List<Song> {
-        val (songs, missing) = resolve(imported)
+    private fun match(
+        treeUri: Uri,
+        file: PlaylistDocument,
+        imported: ImportedPlaylist,
+        counter: Counter,
+    ): List<Song> {
+        val (songs, missing) = resolve(imported, readInfos(treeUri, file))
         counter.missingSongs += missing
         return songs
     }
 
-    /** The library songs of [imported], and how many of its paths matched none. */
-    internal fun resolve(imported: ImportedPlaylist): Pair<List<Song>, Int> {
+    /** The tag info of each entry in [file], in the same order as its paths. */
+    internal fun readInfos(treeUri: Uri, file: PlaylistDocument): List<EntryInfo> =
+        EntryInfo.parseAll(
+            PlaylistSyncRepository.readText(
+                context.contentResolver,
+                DocumentsContract.buildDocumentUriUsingTree(treeUri, file.id),
+            )
+        )
+
+    /**
+     * The library songs of [imported], and how many of its entries matched none. A path that
+     * matches nothing falls back to the entry's tag info in [infos] (title and length).
+     */
+    internal fun resolve(
+        imported: ImportedPlaylist,
+        infos: List<EntryInfo>,
+    ): Pair<List<Song>, Int> {
         val library = musicRepository.library ?: return listOf<Song>() to imported.paths.size
-        val songs = imported.paths.mapNotNull { it.firstNotNullOfOrNull(library::findSongByPath) }
+        val matcher = matcherFor(library)
+        val songs =
+            imported.paths.mapIndexedNotNull { i, candidates ->
+                candidates.firstNotNullOfOrNull(library::findSongByPath)
+                    ?: infos.getOrNull(i)?.let(matcher::find)
+            }
         return songs to imported.paths.size - songs.size
+    }
+
+    private var matcher: Pair<Library, PlaylistSongMatcher>? = null
+
+    /** A [PlaylistSongMatcher] for [library], built once per library. */
+    @Synchronized
+    private fun matcherFor(library: Library): PlaylistSongMatcher {
+        matcher?.let { (cached, m) -> if (cached === library) return m }
+        return PlaylistSongMatcher(library).also { matcher = library to it }
     }
 
     internal suspend fun create(name: String, songs: List<Song>, parent: Playlist?): Playlist? {
