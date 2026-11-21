@@ -123,7 +123,8 @@ constructor(
         return try {
             val links = playlistSyncRepository.links()
             val seenMmIds = mutableSetOf<Long>()
-            val planner = Planner(scan, links, seenMmIds)
+            val seenAuxioIds = mutableSetOf<String>()
+            val planner = Planner(scan, links, seenMmIds, seenAuxioIds)
             val items =
                 if (wrap) {
                     listOf(
@@ -141,7 +142,12 @@ constructor(
             val missing =
                 if (scan.fullExport && library != null) {
                     links.values
-                        .filter { it.mmId != null && it.mmId !in seenMmIds }
+                        // A playlist made here has no MediaMonkey ID until MediaMonkey exports it
+                        // back, so it is also matched by its own ID.
+                        .filter {
+                            (it.mmId == null || it.mmId !in seenMmIds) &&
+                                it.playlistUid.toString() !in seenAuxioIds
+                        }
                         .mapNotNull { library.findPlaylist(it.playlistUid) }
                 } else {
                     listOf()
@@ -158,6 +164,7 @@ constructor(
         val scan: PlaylistFolderImporter.Scan,
         val links: Map<Music.UID, PlaylistSyncLink>,
         val seenMmIds: MutableSet<Long>,
+        val seenAuxioIds: MutableSet<String>,
     ) {
         private val claimed = mutableSetOf<Music.UID>()
 
@@ -211,6 +218,7 @@ constructor(
                 )
             val ids = PlaylistIds.parse(text)
             ids.mmId?.let { seenMmIds.add(it) }
+            ids.auxioId?.let { seenAuxioIds.add(it) }
             val name = importer.nameOf(imported, file)
             val (songs, missing) = importer.resolve(imported, EntryInfo.parseAll(text))
             return item(name, songs, missing, ids, findTarget(ids, name, parent), rest)
