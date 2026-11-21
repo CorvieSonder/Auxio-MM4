@@ -2,7 +2,7 @@
 <resources>
     <!-- Info namespace | App labels -->
     <!-- FORK: app name -->
-    <string name="info_app_name" translatable="false">Auxio_AI</string>
+    <string name="info_app_name" translatable="false">Auxio-MM4</string>
 
     <!-- Format Namespace | Value formatting/plurals -->
     <string name="fmt_two" translatable="false">%1$s • %2$s</string>
