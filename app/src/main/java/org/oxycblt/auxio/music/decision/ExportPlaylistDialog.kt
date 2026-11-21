@@ -99,13 +99,22 @@ class ExportPlaylistDialog : ViewBindingMaterialDialogFragment<DialogPlaylistExp
                 val playlist = pickerModel.currentPlaylistToExport.value
                 if (uri != null && playlist != null) {
                     L.d("Received folder URI $uri")
-                    folderModel.exportFolder(playlist, uri, pickerModel.currentExportConfig.value)
+                    folderModel.exportFolder(
+                        playlist,
+                        uri,
+                        pickerModel.currentExportConfig.value,
+                        requireBinding().exportReplace.isChecked,
+                    )
                 }
                 findNavController().navigateUp()
             }
 
         binding.exportWithChildrenRow.setOnClickListener {
             binding.exportWithChildren.isChecked = !binding.exportWithChildren.isChecked
+            updateReplaceRow()
+        }
+        binding.exportReplaceRow.setOnClickListener {
+            binding.exportReplace.isChecked = !binding.exportReplace.isChecked
         }
 
         binding.exportRelativePaths.setOnClickListener { updatePathStyle(absolute = false) }
@@ -162,6 +171,13 @@ class ExportPlaylistDialog : ViewBindingMaterialDialogFragment<DialogPlaylistExp
             binding.exportWithChildren.isChecked = true
         }
         binding.exportWithChildrenRow.isVisible = hasChildren
+        updateReplaceRow()
+    }
+
+    private fun updateReplaceRow() {
+        val binding = requireBinding()
+        binding.exportReplaceRow.isVisible =
+            binding.exportWithChildrenRow.isVisible && binding.exportWithChildren.isChecked
     }
 
     private fun updatePathStyle(absolute: Boolean) {

@@ -26,6 +26,8 @@ import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.oxycblt.auxio.music.MusicRepository
+import org.oxycblt.auxio.music.tree.PlaylistDocuments.isPlaylistFile
+import org.oxycblt.auxio.music.tree.PlaylistDocuments.stemOf
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
 import org.oxycblt.musikr.playlist.ExternalPlaylistManager
@@ -36,10 +38,13 @@ import timber.log.Timber as L
  * Imports nested folders of M3U8 files as nested playlists, the layout written by
  * [PlaylistFolderExporter].
  *
- * The picked folder becomes one playlist. A playlist file named like its folder holds that
- * playlist's own songs, other playlist files in the folder become child playlists with only songs,
- * and sub-folders become child playlists. Existing playlists are never changed: a name that is
- * already taken at a level gets a " (2)" suffix.
+ * A folder becomes one playlist. A playlist file named like its folder holds that playlist's own
+ * songs, other playlist files in the folder become child playlists with only songs, and sub-folders
+ * become child playlists. Existing playlists are never changed: a name that is already taken at a
+ * level gets a " (2)" suffix.
+ *
+ * The picked folder is first [scan]ned, so that the user can choose which of its items to import
+ * and whether to wrap them in one playlist for the folder itself.
  */
 class PlaylistFolderImporter
 @Inject
@@ -53,65 +58,150 @@ constructor(
     /** The outcome of an import. */
     data class Result(val playlists: Int, val missingSongs: Int)
 
-    private data class Entry(val id: String, val name: String, val isFolder: Boolean)
+    /**
+     * The contents of a picked folder.
+     *
+     * @param name The folder's name.
+     * @param own The playlist file holding the folder's own songs, if any.
+     * @param items The sub-folders and other playlist files, and [own] first if it exists, that can
+     *   be chosen for import.
+     */
+    data class Scan(
+        val treeUri: Uri,
+        val folder: PlaylistDocument,
+        val own: PlaylistDocument?,
+        val items: List<PlaylistDocument>,
+    )
 
     private class Counter {
         var playlists = 0
         var missingSongs = 0
     }
 
-    /**
-     * Import the folder at [treeUri] as a playlist inside [parent], or at the top level if null.
-     *
-     * @return The [Result], or null if nothing could be imported.
-     */
-    suspend fun import(treeUri: Uri, parent: Playlist?): Result? {
+    /** List what the folder at [treeUri] holds, or null if it cannot be read. */
+    fun scan(treeUri: Uri): Scan? {
         return try {
             val rootId = DocumentsContract.getTreeDocumentId(treeUri)
             val rootName =
-                queryName(DocumentsContract.buildDocumentUriUsingTree(treeUri, rootId)) ?: "_"
-            val counter = Counter()
-            importFolder(treeUri, Entry(rootId, rootName, true), parent, counter)
-            if (counter.playlists > 0) Result(counter.playlists, counter.missingSongs) else null
+                PlaylistDocuments.queryName(
+                    context.contentResolver,
+                    DocumentsContract.buildDocumentUriUsingTree(treeUri, rootId),
+                ) ?: "_"
+            val folder = PlaylistDocument(rootId, rootName, true)
+            val children = PlaylistDocuments.listChildren(context.contentResolver, treeUri, rootId)
+            val own = findOwn(folder, children)
+            val files =
+                children
+                    .filter { !it.isFolder && isPlaylistFile(it.name) && it != own }
+                    .sortedBy { it.name.lowercase() }
+            val folders = children.filter { it.isFolder }.sortedBy { it.name.lowercase() }
+            Scan(treeUri, folder, own, listOfNotNull(own) + folders + files)
         } catch (e: Exception) {
-            L.e("Unable to import the playlist folder $treeUri")
+            L.e("Unable to read the playlist folder $treeUri")
             L.e(e.stackTraceToString())
             null
         }
     }
 
-    private suspend fun importFolder(
-        treeUri: Uri,
-        folder: Entry,
+    /**
+     * Import the [selected] items of [scan] into [parent], or at the top level if null.
+     *
+     * @param wrap Whether to create one playlist for the folder itself, holding the folder's own
+     *   songs and the selected items as children. Otherwise the selected items go straight into
+     *   [parent], and the folder's own file becomes a playlist like any other file.
+     * @return The [Result], or null if nothing could be imported.
+     */
+    suspend fun import(
+        scan: Scan,
+        selected: List<PlaylistDocument>,
+        wrap: Boolean,
         parent: Playlist?,
-        counter: Counter,
-    ) {
-        val children = listChildren(treeUri, folder.id)
-        val files = children.filter { !it.isFolder && isPlaylistFile(it.name) }
-        // The exporter's folder may have been renamed to "<name> (1)" by the provider.
-        val baseName = folder.name.replace(COPY_SUFFIX, "")
-        val own = files.find {
-            stemOf(it.name).equals(folder.name, ignoreCase = true) ||
-                stemOf(it.name).equals(baseName, ignoreCase = true)
-        }
-        val ownImport = own?.let { read(treeUri, it) }
-        val name = ownImport?.let { nameOf(it, own) } ?: folder.name
-        val songs = ownImport?.let { match(it, counter) } ?: listOf()
-        val playlist = create(name, songs, parent) ?: return
-        counter.playlists++
-
-        for (file in files.filter { it != own }.sortedBy { it.name.lowercase() }) {
-            val imported = read(treeUri, file) ?: continue
-            if (create(nameOf(imported, file), match(imported, counter), playlist) != null) {
-                counter.playlists++
-            }
-        }
-        for (child in children.filter { it.isFolder }.sortedBy { it.name.lowercase() }) {
-            importFolder(treeUri, child, playlist, counter)
+    ): Result? {
+        return try {
+            val counter = Counter()
+            val target =
+                if (wrap) {
+                    createFolderPlaylist(scan.treeUri, scan.folder, scan.own, parent, counter)
+                        ?: return null
+                } else {
+                    parent
+                }
+            importItems(scan.treeUri, selected.filter { !wrap || it != scan.own }, target, counter)
+            if (counter.playlists > 0) Result(counter.playlists, counter.missingSongs) else null
+        } catch (e: Exception) {
+            L.e("Unable to import the playlist folder ${scan.treeUri}")
+            L.e(e.stackTraceToString())
+            null
         }
     }
 
-    private suspend fun read(treeUri: Uri, file: Entry): ImportedPlaylist? =
+    /** Import [items] into [parent]: files as playlists, folders as nested playlists. */
+    private suspend fun importItems(
+        treeUri: Uri,
+        items: List<PlaylistDocument>,
+        parent: Playlist?,
+        counter: Counter,
+    ) {
+        for (file in items.filter { !it.isFolder }) {
+            val imported = read(treeUri, file) ?: continue
+            if (create(nameOf(imported, file), match(imported, counter), parent) != null) {
+                counter.playlists++
+            }
+        }
+        for (child in items.filter { it.isFolder }) {
+            importFolder(treeUri, child, parent, counter)
+        }
+    }
+
+    private suspend fun importFolder(
+        treeUri: Uri,
+        folder: PlaylistDocument,
+        parent: Playlist?,
+        counter: Counter,
+    ) {
+        val children = PlaylistDocuments.listChildren(context.contentResolver, treeUri, folder.id)
+        val own = findOwn(folder, children)
+        val playlist = createFolderPlaylist(treeUri, folder, own, parent, counter) ?: return
+        val files =
+            children
+                .filter { !it.isFolder && isPlaylistFile(it.name) && it != own }
+                .sortedBy { it.name.lowercase() }
+        val folders = children.filter { it.isFolder }.sortedBy { it.name.lowercase() }
+        importItems(treeUri, files + folders, playlist, counter)
+    }
+
+    /** Create the playlist for [folder], with the songs of its [own] file if it has one. */
+    private suspend fun createFolderPlaylist(
+        treeUri: Uri,
+        folder: PlaylistDocument,
+        own: PlaylistDocument?,
+        parent: Playlist?,
+        counter: Counter,
+    ): Playlist? {
+        val ownImport = own?.let { read(treeUri, it) }
+        val name = ownImport?.let { nameOf(it, own) } ?: folder.name
+        val songs = ownImport?.let { match(it, counter) } ?: listOf()
+        val playlist = create(name, songs, parent) ?: return null
+        counter.playlists++
+        return playlist
+    }
+
+    /** The playlist file in [children] holding [folder]'s own songs: the one named like it. */
+    private fun findOwn(
+        folder: PlaylistDocument,
+        children: List<PlaylistDocument>,
+    ): PlaylistDocument? {
+        // The exporter's folder may have been renamed to "<name> (1)" by the provider.
+        val baseName = folder.name.replace(COPY_SUFFIX, "")
+        return children.find {
+            !it.isFolder &&
+                isPlaylistFile(it.name) &&
+                (stemOf(it.name).equals(folder.name, ignoreCase = true) ||
+                    stemOf(it.name).equals(baseName, ignoreCase = true))
+        }
+    }
+
+    private suspend fun read(treeUri: Uri, file: PlaylistDocument): ImportedPlaylist? =
         externalPlaylistManager.import(
             DocumentsContract.buildDocumentUriUsingTree(treeUri, file.id)
         )
@@ -121,7 +211,7 @@ constructor(
      * name. [ExternalPlaylistManager] makes up a name from the file name when #PLAYLIST is missing,
      * and that made-up name loses characters, so it is replaced by the plain file name.
      */
-    private fun nameOf(imported: ImportedPlaylist, file: Entry): String {
+    private fun nameOf(imported: ImportedPlaylist, file: PlaylistDocument): String {
         val stem = stemOf(file.name)
         val madeUp = file.name.split(".")[0].replace(Regex("[_-]"), " ").replace(Regex("\\s+"), " ")
         val name = imported.name
@@ -156,37 +246,7 @@ constructor(
         return created
     }
 
-    private fun listChildren(treeUri: Uri, folderId: String): List<Entry> {
-        val uri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, folderId)
-        val entries = mutableListOf<Entry>()
-        context.contentResolver.query(uri, PROJECTION, null, null, null)?.use { cursor ->
-            while (cursor.moveToNext()) {
-                val id = cursor.getString(0) ?: continue
-                val name = cursor.getString(1) ?: continue
-                val isFolder = cursor.getString(2) == DocumentsContract.Document.MIME_TYPE_DIR
-                entries.add(Entry(id, name, isFolder))
-            }
-        }
-        return entries
-    }
-
-    private fun queryName(uri: Uri): String? =
-        context.contentResolver.query(uri, PROJECTION, null, null, null)?.use { cursor ->
-            if (cursor.moveToFirst()) cursor.getString(1) else null
-        }
-
     private companion object {
-        val PROJECTION =
-            arrayOf(
-                DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-                DocumentsContract.Document.COLUMN_DISPLAY_NAME,
-                DocumentsContract.Document.COLUMN_MIME_TYPE,
-            )
         val COPY_SUFFIX = Regex(" \\(\\d+\\)$")
-
-        fun isPlaylistFile(name: String) =
-            name.endsWith(".m3u8", ignoreCase = true) || name.endsWith(".m3u", ignoreCase = true)
-
-        fun stemOf(name: String) = name.substringBeforeLast('.')
     }
 }
