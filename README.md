@@ -1,7 +1,7 @@
 <h1 align="center"><b>Auxio-MM4</b></h1>
 <h4 align="center">Auxio: MM4 Edition. A fork designed for interoperability with MediaMonkey 4.</h4>
 
-> [!IMPORTANT]
+> [!CAUTION]
 > **Unofficial fork.** Auxio-MM4 is a personal, unofficial fork of [Auxio](https://github.com/OxygenCobalt/Auxio) by Alexander Capehart (OxygenCobalt). It is not affiliated with, endorsed by or supported by the Auxio project. Please do not report problems with this fork to Auxio's issue tracker.
 >
 > **Not affiliated with MediaMonkey.** MediaMonkey is a trademark of Ventis Media Inc. This project is not affiliated with, endorsed by or supported by Ventis Media. It only reads and writes standard tags and playlist files, and its companion scripts use MediaMonkey 4's public scripting interface. No MediaMonkey code or artwork is included.
@@ -15,8 +15,8 @@ Auxio-MM4 installs next to the regular Auxio (its own app ID, `org.oxycblt.auxio
 Auxio-MM4 is based on [Auxio](https://github.com/OxygenCobalt/Auxio), an open-source music player for Android that is light on features but easy to build on. I'll do my best to always have upstream changes pulled into this fork, but unless those changes are urgent security/bugfixes, there will be a delay of at least days, if not weeks. This isn't my only project, & AI usage isn't exactly free. Speaking of:
 
 
-> [!AI DISCLAIMER]
-> I did not write 99% of the code in this project. I'm an incredibly amateur programmer who, at best, can put together some scripts or use visual programming languages to do something slightly complex. I take no credit for the vast majority of work done here. If anything, I should thank the engineers at Anthropic. For all the horrible awful ethical issues that come with AI, Claude Code has been an incredible accessibility tool for me that has vastly expanded the amount of things that I can do within my very limited means. That being said, I take full responsibility for all AI-written code submitted by me, including potential performance or security issues. I'm not going to ignore people or post an AI response, even if I use AI to do most of the work. If I can, I hope to eventually support this repo on my own, without AI, & refactor code as needed.
+> [!IMPORTANT]
+> **AI DISCLAIMER** I did not write 99% of the code in this project. I'm an incredibly amateur programmer who, at best, can put together some scripts or use visual programming languages to do something slightly complex. I take no credit for the vast majority of work done here. If anything, I should thank the engineers at Anthropic. For all the horrible awful ethical issues that come with AI, Claude Code has been an incredible accessibility tool for me that has vastly expanded the amount of things that I can do within my very limited means. That being said, I take full responsibility for all AI-written code submitted by me, including potential performance or security issues. I'm not going to ignore people or post an AI response, even if I use AI to do most of the work. If I can, I hope to eventually support this repo on my own, without AI, & refactor code as needed.
 
 ## Features
 
@@ -38,6 +38,7 @@ Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, di
 - Composer and Mood: tabs, detail pages, search sections and sort (tabs hidden by default)
 - Grouping (TIT1) tab - in my library, this groups together things like Minecraft music, or 80s music
 - Edit moods and ratings in the app, and optionally write them into the files
+- Send Mood & Ratings edits back to MediaMonkey, & restore changes to the phone's db if migrating or accidentally overwritten.
 
 **Playback**
 - Playback speed and pitch
