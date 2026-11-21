@@ -21,6 +21,7 @@ package org.oxycblt.auxio.music.tree
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.util.collect
 
@@ -34,7 +35,7 @@ fun Fragment.setupPlaylistFolders(folderModel: PlaylistFolderViewModel) {
             val request = folderModel.pendingImport
             folderModel.pendingImport = null
             if (uri != null && request != null) {
-                folderModel.importFolder(uri, request.parentUid)
+                folderModel.scanFolder(uri, request.parentUid)
             }
         }
     collect(folderModel.importRequest.flow) { request ->
@@ -42,6 +43,12 @@ fun Fragment.setupPlaylistFolders(folderModel: PlaylistFolderViewModel) {
             folderModel.importRequest.consume()
             folderModel.pendingImport = request
             launcher.launch(null)
+        }
+    }
+    collect(folderModel.importChoices.flow) { choices ->
+        if (choices != null) {
+            folderModel.importChoices.consume()
+            showImportChoices(folderModel, choices)
         }
     }
     collect(folderModel.message.flow) { message ->
@@ -66,4 +73,33 @@ fun Fragment.setupPlaylistFolders(folderModel: PlaylistFolderViewModel) {
             Toast.makeText(context, text, Toast.LENGTH_LONG).show()
         }
     }
+}
+
+/**
+ * Let the user tick which items of a scanned folder to import, and whether to import the folder
+ * itself as one playlist holding them. That option starts ticked when the folder has its own
+ * playlist file, as exported folders do.
+ */
+private fun Fragment.showImportChoices(
+    folderModel: PlaylistFolderViewModel,
+    choices: PlaylistFolderViewModel.ImportChoices,
+) {
+    val context = requireContext()
+    val scan = choices.scan
+    val labels =
+        listOf(context.getString(R.string.lbl_import_folder_itself, scan.folder.name)) +
+            scan.items.map { if (it.isFolder) "${it.name}/" else it.name }
+    val checked = BooleanArray(labels.size) { true }
+    checked[0] = scan.own != null
+    MaterialAlertDialogBuilder(context)
+        .setTitle(R.string.lbl_import_choose)
+        .setMultiChoiceItems(labels.toTypedArray(), checked) { _, which, isChecked ->
+            checked[which] = isChecked
+        }
+        .setPositiveButton(R.string.lbl_import) { _, _ ->
+            val selected = scan.items.filterIndexed { i, _ -> checked[i + 1] }
+            folderModel.importFolder(choices, selected, checked[0])
+        }
+        .setNegativeButton(R.string.lbl_cancel, null)
+        .show()
 }

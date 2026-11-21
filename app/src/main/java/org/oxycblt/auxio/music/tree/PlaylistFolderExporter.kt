@@ -49,16 +49,26 @@ constructor(
     /**
      * Export [playlist] and its descendants into the document tree at [treeUri].
      *
+     * @param replace Whether to write into an existing folder of the same name after removing its
+     *   playlist files, instead of creating a new "<name> (1)" folder next to it.
      * @return The number of playlists exported, or null if the export failed.
      */
-    suspend fun export(playlist: Playlist, treeUri: Uri, config: ExportConfig): Int? {
+    suspend fun export(
+        playlist: Playlist,
+        treeUri: Uri,
+        config: ExportConfig,
+        replace: Boolean = false,
+    ): Int? {
         return try {
-            val rootUri =
-                DocumentsContract.buildDocumentUriUsingTree(
-                    treeUri,
-                    DocumentsContract.getTreeDocumentId(treeUri),
-                )
-            exportInto(playlist, rootUri, config, mutableSetOf())
+            val rootId = DocumentsContract.getTreeDocumentId(treeUri)
+            if (replace) {
+                val resolver = context.contentResolver
+                val name = fileNameOf(playlist.name.raw)
+                PlaylistDocuments.listChildren(resolver, treeUri, rootId)
+                    .find { it.isFolder && it.name == name }
+                    ?.let { PlaylistDocuments.clean(resolver, treeUri, it.id) }
+            }
+            exportInto(treeUri, rootId, playlist, config, mutableSetOf(), replace)
         } catch (e: Exception) {
             L.e("Unable to export $playlist as a folder")
             L.e(e.stackTraceToString())
@@ -66,30 +76,46 @@ constructor(
         }
     }
 
+    /**
+     * Write [playlist] into a folder inside [parentId]. With [reuse], a folder of the same name
+     * that is left over from a cleaned export is written into instead of creating a new one.
+     */
     private suspend fun exportInto(
+        treeUri: Uri,
+        parentId: String,
         playlist: Playlist,
-        parentUri: Uri,
         config: ExportConfig,
         seen: MutableSet<Playlist>,
+        reuse: Boolean,
     ): Int {
         if (!seen.add(playlist)) {
             return 0
         }
         val resolver = context.contentResolver
         val name = fileNameOf(playlist.name.raw)
+        val parentUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, parentId)
+        val existing =
+            if (reuse) {
+                PlaylistDocuments.listChildren(resolver, treeUri, parentId).find {
+                    it.isFolder && it.name == name
+                }
+            } else {
+                null
+            }
         // The provider renames the folder to "<name> (1)" if one with this name already exists,
         // so nothing gets overwritten.
         val folderUri =
-            requireNotNull(
-                DocumentsContract.createDocument(
-                    resolver,
-                    parentUri,
-                    DocumentsContract.Document.MIME_TYPE_DIR,
-                    name,
-                )
-            ) {
-                "Unable to create a folder for $playlist"
-            }
+            existing?.let { DocumentsContract.buildDocumentUriUsingTree(treeUri, it.id) }
+                ?: requireNotNull(
+                    DocumentsContract.createDocument(
+                        resolver,
+                        parentUri,
+                        DocumentsContract.Document.MIME_TYPE_DIR,
+                        name,
+                    )
+                ) {
+                    "Unable to create a folder for $playlist"
+                }
         if (playlist.songs.isNotEmpty()) {
             val fileUri =
                 requireNotNull(
@@ -101,10 +127,11 @@ constructor(
                 "Unable to write $playlist"
             }
         }
+        val folderId = DocumentsContract.getDocumentId(folderUri)
         var count = 1
         val children = withContext(Dispatchers.Main) { playlistTreeRepository.childrenOf(playlist) }
         for (child in children) {
-            count += exportInto(child, folderUri, config, seen)
+            count += exportInto(treeUri, folderId, child, config, seen, reuse && existing != null)
         }
         return count
     }

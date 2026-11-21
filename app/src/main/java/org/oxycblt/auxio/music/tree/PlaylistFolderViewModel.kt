@@ -47,6 +47,10 @@ constructor(
     val importRequest: Event<ImportRequest>
         field = MutableEvent<ImportRequest>()
 
+    /** A scanned folder whose items the user should choose from before importing. */
+    val importChoices: Event<ImportChoices>
+        field = MutableEvent<ImportChoices>()
+
     /** The outcome of the last export or import, awaiting a view that can show it. */
     val message: Event<FolderMessage>
         field = MutableEvent<FolderMessage>()
@@ -67,11 +71,23 @@ constructor(
         importRequest.put(ImportRequest(parent?.uid))
     }
 
-    /** Import the folder at [treeUri] into the playlist with [parentUid], or the top level. */
-    fun importFolder(treeUri: Uri, parentUid: Music.UID?) {
+    /** List the folder at [treeUri] so the user can choose what to import from it. */
+    fun scanFolder(treeUri: Uri, parentUid: Music.UID?) {
         viewModelScope.launch(Dispatchers.IO) {
-            val parent = parentUid?.let { musicRepository.library?.findPlaylist(it) }
-            val result = importer.import(treeUri, parent)
+            val scan = importer.scan(treeUri)
+            if (scan == null) {
+                message.put(FolderMessage.ImportFailed)
+            } else {
+                importChoices.put(ImportChoices(scan, parentUid))
+            }
+        }
+    }
+
+    /** Import the [selected] items of [choices], wrapped in one playlist if [wrap]. */
+    fun importFolder(choices: ImportChoices, selected: List<PlaylistDocument>, wrap: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val parent = choices.parentUid?.let { musicRepository.library?.findPlaylist(it) }
+            val result = importer.import(choices.scan, selected, wrap, parent)
             message.put(
                 if (result != null) {
                     FolderMessage.Imported(result.playlists, result.missingSongs)
@@ -83,9 +99,9 @@ constructor(
     }
 
     /** Export [playlist] and its descendants into the folder at [treeUri]. */
-    fun exportFolder(playlist: Playlist, treeUri: Uri, config: ExportConfig) {
+    fun exportFolder(playlist: Playlist, treeUri: Uri, config: ExportConfig, replace: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val count = exporter.export(playlist, treeUri, config)
+            val count = exporter.export(playlist, treeUri, config, replace)
             message.put(
                 if (count != null) FolderMessage.Exported(count) else FolderMessage.ExportFailed
             )
@@ -94,6 +110,9 @@ constructor(
 
     /** A pending folder import into the playlist with [parentUid], or the top level if null. */
     data class ImportRequest(val parentUid: Music.UID?)
+
+    /** A scanned folder to import into the playlist with [parentUid], or the top level if null. */
+    data class ImportChoices(val scan: PlaylistFolderImporter.Scan, val parentUid: Music.UID?)
 }
 
 /** The outcome of a folder export or import. */
