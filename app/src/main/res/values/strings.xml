@@ -408,6 +408,8 @@
     <string name="set_repeat_pause_desc">Pause when a song repeats</string>
     <string name="set_remember_pause">Remember pause</string>
     <string name="set_remember_pause_desc">Remain playing/paused when skipping or editing queue</string>
+    <string name="set_true_gapless">True gapless</string>
+    <string name="set_true_gapless_desc">Trims silence at the start and end of each song (quieter than −50 dB, lasting at least 0.5 s). Pauses inside a song are kept. Crossfade is turned off while this is on</string>
     <string name="set_crossfade">Crossfade</string>
     <string name="set_crossfade_length">Crossfade length</string>
     <string name="set_crossfade_length_desc">Seconds that songs overlap when one ends on its own (0 is off)</string>

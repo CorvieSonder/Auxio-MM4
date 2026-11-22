@@ -26,7 +26,7 @@ import org.oxycblt.auxio.settings.Settings
 
 /** User configuration for crossfading between songs. */
 interface CrossfadeSettings : Settings<Nothing> {
-    /** How long songs overlap, in milliseconds. 0 if crossfade is off. */
+    /** How long songs overlap, in milliseconds. 0 if crossfade is off or true gapless is on. */
     val crossfadeMs: Long
     /** Whether to play consecutive tracks of the same album gaplessly instead. */
     val skipWithinAlbum: Boolean
@@ -35,7 +35,14 @@ interface CrossfadeSettings : Settings<Nothing> {
 class CrossfadeSettingsImpl @Inject constructor(@ApplicationContext context: Context) :
     Settings.Impl<Nothing>(context), CrossfadeSettings {
     override val crossfadeMs: Long
-        get() = sharedPreferences.getInt(getString(R.string.set_key_crossfade), 0) * 1000L
+        get() =
+            if (sharedPreferences.getBoolean(getString(R.string.set_key_true_gapless), false)) {
+                // True gapless trims the silence between songs instead, which a crossfade
+                // would undo.
+                0L
+            } else {
+                sharedPreferences.getInt(getString(R.string.set_key_crossfade), 0) * 1000L
+            }
 
     override val skipWithinAlbum: Boolean
         get() = sharedPreferences.getBoolean(getString(R.string.set_key_crossfade_skip_album), true)
