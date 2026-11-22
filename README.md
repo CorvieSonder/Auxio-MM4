@@ -43,6 +43,7 @@ Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, di
 **Playback**
 - Playback speed and pitch
 - Sleep timer with fade-out or "finish the current song"
+- Crossfade between songs (0–12 s), gapless within albums
 - Now Playing top bar with quick buttons (rating, speed, sleep timer)
 - Lyrics page next to the queue: synced lyrics (SYLT) follow playback, with a timing offset; plain lyrics (USLT, Vorbis, MP4) and sidecar `.lrc` files are supported but untested
 
@@ -51,11 +52,12 @@ Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, di
 - Delete songs from a playlist or from the device
 - Use a song as the ringtone
 - Search bar in Settings
+- Listened status: export which songs were played to the end, and when, as a CSV file
 
 ### Planned
 
 - Phone and PC sync improvements as they come up
-- Crossfade
+- Skip silence
 - Resume position on long tracks
 - Library playlist for shared media libraries
 - MediaMonkey-style custom tags (`Songs-DB_Custom1` to `Custom5`, Occasion)
