@@ -292,9 +292,19 @@ class PlaylistDetailFragment :
         } else {
             binding.detailCover.bind(playlist)
         }
+        binding.detailCover.setPinned(playlistTreeRepository.isPinned(playlist))
 
         binding.detailType.text = binding.context.getString(R.string.lbl_playlist)
         binding.detailName.text = playlist.name.resolve(binding.context)
+        binding.detailName.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            if (playlistTreeRepository.isLibrary(playlist)) R.drawable.ic_library_playlist_24
+            else 0,
+            0,
+            0,
+            0,
+        )
+        binding.detailName.compoundDrawablePadding =
+            binding.context.resources.getDimensionPixelSize(R.dimen.spacing_tiny)
 
         val shown = detailModel.songsOf(playlist)
         val songs = editedPlaylist ?: shown

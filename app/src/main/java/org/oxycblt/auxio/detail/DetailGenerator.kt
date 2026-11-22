@@ -257,7 +257,10 @@ private class DetailGeneratorImpl(
         }
         val songs = playlistSortRepository.songs(playlist)
         if (songs.isNotEmpty()) {
-            sections.add(DetailSection.Songs(songs))
+            val label =
+                if (playlistTreeRepository.isLibrary(playlist)) R.string.lbl_songs_in_playlists
+                else R.string.lbl_songs
+            sections.add(DetailSection.Songs(songs, label))
         }
         return Detail(playlist, sections)
     }
@@ -308,9 +311,11 @@ sealed interface DetailSection {
         override val stringRes = R.string.lbl_playlists
     }
 
-    data class Songs(override val items: List<Song>) : PlainSection<Song>() {
+    data class Songs(
+        override val items: List<Song>,
+        override val stringRes: Int = R.string.lbl_songs,
+    ) : PlainSection<Song>() {
         override val order = 12
-        override val stringRes = R.string.lbl_songs
     }
 
     data class Discs(val discs: Map<Disc?, List<Song>>) : DetailSection {
