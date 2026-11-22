@@ -420,8 +420,9 @@ constructor(
             }
         }
 
+        var buttonWidth: Int? = null
         if (row != null) {
-            fitActionItems(actionItems, overflowItems)
+            buttonWidth = fitActionItems(actionItems, overflowItems)
         }
 
         var lastItem: MenuItemImpl? = null
@@ -431,45 +432,73 @@ constructor(
             }
             lastItem = item
             val btn = createActionButton(item)
-            container.addView(btn)
+            if (buttonWidth != null) {
+                // Squeeze the buttons a little so that they all fit.
+                btn.minimumWidth = buttonWidth
+                btn.minWidth = buttonWidth
+                container.addView(
+                    btn,
+                    LinearLayout.LayoutParams(buttonWidth, LayoutParams.WRAP_CONTENT),
+                )
+            } else {
+                container.addView(btn)
+            }
             actionButtons[item.itemId] = btn
         }
 
         if (overflowItems.isNotEmpty() && !overflowIntoMenu) {
-            container.addView(createOverflowButton(overflowItems))
+            val overflowButton = createOverflowButton(overflowItems)
+            if (buttonWidth != null) {
+                overflowButton.minimumWidth = buttonWidth
+                overflowButton.minWidth = buttonWidth
+                container.addView(
+                    overflowButton,
+                    LinearLayout.LayoutParams(buttonWidth, LayoutParams.WRAP_CONTENT),
+                )
+            } else {
+                container.addView(overflowButton)
+            }
         }
 
         container.isVisible = container.isNotEmpty() && (row == null || actionRowShown)
         onActionsRebuilt?.invoke()
     }
 
-    /** Move actions into the overflow menu until the rest fits into the width of this toolbar. */
+    /**
+     * Move actions into the overflow menu until the rest fits into the width of this toolbar. The
+     * buttons may shrink down to [R.dimen.size_touchable_min] before any action is moved.
+     *
+     * @return The width to give each button so that they all fit, or null to keep their usual
+     *   width.
+     */
     @SuppressLint("RestrictedApi")
     private fun fitActionItems(
         actionItems: MutableList<MenuItemImpl>,
         overflowItems: MutableList<MenuItemImpl>,
-    ) {
+    ): Int? {
         val available = width - paddingLeft - paddingRight
         if (available <= 0) {
             // Not laid out yet, onSizeChanged will come back to this.
-            return
+            return null
         }
         val buttonSize = resources.getDimensionPixelSize(R.dimen.size_touchable_small)
+        val minButtonSize = resources.getDimensionPixelSize(R.dimen.size_touchable_min)
         val dividerSize = resources.getDimensionPixelSize(R.dimen.spacing_medium)
-        fun needed(): Int {
-            val buttons =
-                actionItems.size + if (overflowItems.isNotEmpty() && !overflowIntoMenu) 1 else 0
-            val dividers = (actionItems.map { it.groupId }.distinct().size - 1).coerceAtLeast(0)
-            return buttons * buttonSize + dividers * dividerSize
-        }
+        fun buttons() =
+            actionItems.size + if (overflowItems.isNotEmpty() && !overflowIntoMenu) 1 else 0
+        fun dividers() =
+            (actionItems.map { it.groupId }.distinct().size - 1).coerceAtLeast(0) * dividerSize
+        // The width each button gets when the buttons share the row equally.
+        fun shared() = (available - dividers()) / buttons().coerceAtLeast(1)
         for (itemId in overflowPriority) {
-            if (needed() <= available) {
+            if (shared() >= minButtonSize) {
                 break
             }
             val item = actionItems.find { it.itemId == itemId } ?: continue
             actionItems.remove(item)
             overflowItems.add(item)
         }
+        return if (shared() < buttonSize) shared() else null
     }
 
     /** Create a divider that takes up the free space between two groups of actions. */
