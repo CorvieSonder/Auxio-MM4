@@ -44,6 +44,7 @@ Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, di
 - Playback speed and pitch
 - Sleep timer with fade-out or "finish the current song"
 - Now Playing top bar with quick buttons (rating, speed, sleep timer)
+- Lyrics page next to the queue: synced lyrics (SYLT) follow playback, with a timing offset; plain lyrics (USLT, Vorbis, MP4) and sidecar `.lrc` files are supported but untested
 
 **Other**
 - Select all / invert selection
@@ -54,7 +55,6 @@ Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, di
 ### Planned
 
 - Phone and PC sync improvements as they come up
-- Lyrics (USLT and SYLT)
 - Crossfade
 - Resume position on long tracks
 - Library playlist and per-listener labels for shared media libraries
