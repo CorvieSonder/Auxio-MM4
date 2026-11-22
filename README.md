@@ -49,6 +49,7 @@ Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, di
 - True gapless: trims silence at the start and end of each song (off by default; replaces crossfade while on)
 - Resume long songs: songs of 15 minutes or longer continue where they were left off (off by default; untested)
 - Now Playing top bar with quick buttons (rating, speed, sleep timer); choose which buttons show and in what order, including any song menu action; the rest go into the ⋮ menu
+- Improvements to landscape mode: a full-height cover with the Now Playing buttons, title and play controls laid over it; tap the cover to hide or show them
 - Lyrics page next to the queue: synced lyrics (SYLT) follow playback, with a timing offset; plain lyrics (USLT, Vorbis, MP4) and sidecar `.lrc` files are supported but untested
 
 **Other**
