@@ -60,6 +60,16 @@
             app:key="@string/set_key_lyrics_text_size"
             app:title="@string/set_lyrics_text_size"
             app:useSimpleSummaryProvider="true" />
+        <SeekBarPreference
+            android:max="3000"
+            app:defaultValue="0"
+            app:key="@string/set_key_lyrics_timing"
+            app:min="-3000"
+            app:seekBarIncrement="100"
+            app:showSeekBarValue="true"
+            app:summary="@string/set_lyrics_timing_desc"
+            app:title="@string/set_lyrics_timing"
+            app:updatesContinuously="true" />
         <SwitchPreferenceCompat
             app:defaultValue="false"
             app:key="@string/set_key_lyrics_keep_screen_on"

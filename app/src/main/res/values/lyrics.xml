@@ -15,10 +15,13 @@
     <string name="set_lyrics_text_size_small">Small</string>
     <string name="set_lyrics_text_size_medium">Medium</string>
     <string name="set_lyrics_text_size_large">Large</string>
+    <string name="set_lyrics_timing">Lyrics timing (ms)</string>
+    <string name="set_lyrics_timing_desc">Lyrics too slow ← move → lyrics too fast. Applies to synced lyrics.</string>
     <string name="set_lyrics_keep_screen_on">Keep screen on</string>
     <string name="set_lyrics_keep_screen_on_desc">Keep the screen awake while the lyrics are shown and a song is playing</string>
 
     <string name="set_key_lyrics_text_size" translatable="false">auxio_lyrics_text_size</string>
+    <string name="set_key_lyrics_timing" translatable="false">auxio_lyrics_timing</string>
     <string name="set_key_lyrics_keep_screen_on" translatable="false">auxio_lyrics_keep_screen_on</string>
 
     <integer name="lyrics_text_size_small">0</integer>
