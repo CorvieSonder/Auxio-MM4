@@ -71,6 +71,7 @@ constructor(
     private var overflowClickListener: OnClickListener? = null
     private var actionRow: LinearLayout? = null
     private var actionRowShown = true
+    private var fitInline = false
     private var overflowPriority = listOf<Int>()
     private val actionButtons = mutableMapOf<Int, RippleFixMaterialButton>()
     private var overflowIntoMenu = false
@@ -344,6 +345,15 @@ constructor(
     }
 
     /**
+     * Keep the actions beside the navigation button, but fit them into the width of this toolbar
+     * the way [setActionsBelow] does: squeeze them, then move them into the overflow menu.
+     */
+    fun setActionsFitInline() {
+        fitInline = true
+        rebuildActionButtons()
+    }
+
+    /**
      * Set which actions give way first when the row made by [setActionsBelow] is too narrow.
      *
      * @param itemIds The IDs of the menu items to move into the overflow menu, in the order they
@@ -367,7 +377,7 @@ constructor(
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        if (actionRow != null && w != oldw) {
+        if ((actionRow != null || fitInline) && w != oldw) {
             // How many actions fit depends on the width.
             post { rebuildActionButtons() }
         }
@@ -421,8 +431,8 @@ constructor(
         }
 
         var buttonWidth: Int? = null
-        if (row != null) {
-            buttonWidth = fitActionItems(actionItems, overflowItems)
+        if (row != null || fitInline) {
+            buttonWidth = fitActionItems(actionItems, overflowItems, inline = row == null)
         }
 
         var lastItem: MenuItemImpl? = null
@@ -475,19 +485,26 @@ constructor(
     private fun fitActionItems(
         actionItems: MutableList<MenuItemImpl>,
         overflowItems: MutableList<MenuItemImpl>,
+        inline: Boolean,
     ): Int? {
-        val available = width - paddingLeft - paddingRight
-        if (available <= 0) {
+        val buttonSize = resources.getDimensionPixelSize(R.dimen.size_touchable_small)
+        // Inline actions share the toolbar with the navigation button.
+        val navigation = binding.toolbarNavigationButton
+        val reserved =
+            if (inline && navigation.isVisible) navigation.width.takeIf { it > 0 } ?: buttonSize
+            else 0
+        val available = width - paddingLeft - paddingRight - reserved
+        if (width <= 0 || available <= 0) {
             // Not laid out yet, onSizeChanged will come back to this.
             return null
         }
-        val buttonSize = resources.getDimensionPixelSize(R.dimen.size_touchable_small)
         val minButtonSize = resources.getDimensionPixelSize(R.dimen.size_touchable_min)
         val dividerSize = resources.getDimensionPixelSize(R.dimen.spacing_medium)
         fun buttons() =
             actionItems.size + if (overflowItems.isNotEmpty() && !overflowIntoMenu) 1 else 0
         fun dividers() =
-            (actionItems.map { it.groupId }.distinct().size - 1).coerceAtLeast(0) * dividerSize
+            if (inline) 0
+            else (actionItems.map { it.groupId }.distinct().size - 1).coerceAtLeast(0) * dividerSize
         // The width each button gets when the buttons share the row equally.
         fun shared() = (available - dividers()) / buttons().coerceAtLeast(1)
         for (itemId in overflowPriority) {
