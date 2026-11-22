@@ -48,6 +48,7 @@ import coil3.asImage
 import coil3.request.ImageRequest
 import coil3.request.target
 import coil3.request.transformations
+import coil3.transform.Transformation
 import coil3.util.CoilUtils
 import com.google.android.material.R as MR
 import com.google.android.material.shape.MaterialShapeDrawable
@@ -57,11 +58,13 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlin.math.min
 import org.oxycblt.auxio.R
+import org.oxycblt.auxio.image.coil.FolderTransformation
 import org.oxycblt.auxio.image.coil.GalleryCoverCollection
 import org.oxycblt.auxio.image.coil.RoundedRectTransformation
 import org.oxycblt.auxio.image.coil.SmatteringCoverComposition
 import org.oxycblt.auxio.image.coil.SquareCropTransformation
 import org.oxycblt.auxio.image.coil.StackCoverComposition
+import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.auxio.ui.Effect
 import org.oxycblt.auxio.ui.Spatial
 import org.oxycblt.auxio.ui.UISettings
@@ -97,6 +100,7 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
     @Inject lateinit var imageLoader: ImageLoader
     @Inject lateinit var uiSettings: UISettings
     @Inject lateinit var imageSettings: ImageSettings
+    @Inject lateinit var playlistTreeRepository: PlaylistTreeRepository
 
     private val image: ImageView
 
@@ -549,7 +553,9 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
      *
      * @param playlist the [Playlist] to bind.
      */
-    fun bind(playlist: Playlist) =
+    fun bind(playlist: Playlist) {
+        // A playlist that holds other playlists is drawn as a folder, with its covers on the front.
+        val isFolder = playlistTreeRepository.childrenOf(playlist).isNotEmpty()
         // Playlists are organized in a straight diagonal stack to give the appearance of an
         // "orderly" pile of covers.
         bindImpl(
@@ -562,9 +568,17 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
                 )
             },
             context.getString(R.string.desc_playlist_image, playlist.name),
-            R.drawable.ic_playlist_24,
+            if (isFolder) R.drawable.ic_playlist_folder_24 else R.drawable.ic_playlist_24,
             squareishShapeAppearance,
+            if (isFolder) {
+                FolderTransformation(
+                    context.getAttrColorCompat(MR.attr.colorSecondary).defaultColor
+                )
+            } else {
+                null
+            },
         )
+    }
 
     /**
      * Bind the covers of a generic list of [Song]s.
@@ -599,11 +613,12 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
         desc: String,
         @DrawableRes errorRes: Int,
         shapeAppearanceModel: ShapeAppearanceModel,
+        extraTransformation: Transformation? = null,
     ) {
         // prep proper shape to use if necessary. be safe and do it now
         // idk if doing it at layout time will cause issues
         updateShapeAppearance(shapeAppearanceModel)
-        bindWait(img, desc, errorRes, shapeAppearanceModel)
+        bindWait(img, desc, errorRes, shapeAppearanceModel, extraTransformation)
     }
 
     private fun bindWait(
@@ -611,14 +626,15 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
         desc: String,
         @DrawableRes errorRes: Int,
         shapeAppearanceModel: ShapeAppearanceModel,
+        extraTransformation: Transformation?,
     ) {
         // for some reason randomly corner radii started breaking on menus
         // fix this by waiting until we are laid out instead
         val size = resolveSize()
         if (size != null) {
-            bindSized(img, desc, errorRes, size, shapeAppearanceModel)
+            bindSized(img, desc, errorRes, size, shapeAppearanceModel, extraTransformation)
         } else {
-            doOnLayout { bindImpl(img, desc, errorRes, shapeAppearanceModel) }
+            doOnLayout { bindImpl(img, desc, errorRes, shapeAppearanceModel, extraTransformation) }
         }
     }
 
@@ -628,6 +644,7 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
         @DrawableRes errorRes: Int,
         size: Size,
         shapeAppearanceModel: ShapeAppearanceModel,
+        extraTransformation: Transformation?,
     ) {
         val request =
             ImageRequest.Builder(context)
@@ -641,11 +658,14 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
         val cornerRadius = shapeAppearanceModel.topLeftCornerSize.getCornerSize(bounds)
         val cornersTransformation = RoundedRectTransformation(cornerRadius)
         val circular = shapeAppearanceModel.topLeftCornerSize is RelativeCornerSize
-        if (circular || imageSettings.forceSquareCovers) {
-            request.transformations(SquareCropTransformation.INSTANCE, cornersTransformation)
-        } else {
-            request.transformations(cornersTransformation)
-        }
+        val transformations =
+            if (circular || imageSettings.forceSquareCovers) {
+                mutableListOf(SquareCropTransformation.INSTANCE, cornersTransformation)
+            } else {
+                mutableListOf<Transformation>(cornersTransformation)
+            }
+        extraTransformation?.let { transformations.add(it) }
+        request.transformations(transformations)
 
         // Dispose of any previous image request and load a new image.
         CoilUtils.dispose(image)
