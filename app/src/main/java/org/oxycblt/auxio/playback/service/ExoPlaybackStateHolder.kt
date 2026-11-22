@@ -53,6 +53,10 @@ import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.playback.PlaybackSettings
 import org.oxycblt.auxio.playback.crossfade.CrossfadeController
 import org.oxycblt.auxio.playback.crossfade.CrossfadeSettings
+import org.oxycblt.auxio.playback.gapless.SilenceTrimmingAudioProcessor
+import org.oxycblt.auxio.playback.gapless.SilenceTrimmingAudioSink
+import org.oxycblt.auxio.playback.gapless.TrueGaplessProcessorChain
+import org.oxycblt.auxio.playback.gapless.TrueGaplessSettings
 import org.oxycblt.auxio.playback.persist.PersistenceRepository
 import org.oxycblt.auxio.playback.replaygain.ReplayGainAudioProcessor
 import org.oxycblt.auxio.playback.state.DeferredPlayback
@@ -724,21 +728,45 @@ class ExoPlaybackStateHolder(
         private val musicRepository: MusicRepository,
         private val imageSettings: ImageSettings,
         private val crossfadeSettings: CrossfadeSettings,
+        private val trueGaplessSettings: TrueGaplessSettings,
     ) {
         fun create(): ExoPlaybackStateHolder {
             // Since Auxio is a music player, only specify an audio renderer to save
             // battery/apk size/cache size]
             val audioRenderer = RenderersFactory { handler, _, audioListener, _, _ ->
+                // Each renderer gets its own silence trimmer, as the trimmer keeps track of
+                // where its songs start and end.
+                val ffmpegTrimmer = SilenceTrimmingAudioProcessor(trueGaplessSettings)
+                val mediaCodecTrimmer = SilenceTrimmingAudioProcessor(trueGaplessSettings)
                 arrayOf<BaseRenderer>(
-                    FfmpegAudioRenderer(handler, audioListener, replayGainProcessor),
+                    FfmpegAudioRenderer(
+                        handler,
+                        audioListener,
+                        SilenceTrimmingAudioSink(
+                            DefaultAudioSink.Builder()
+                                .setAudioProcessorChain(
+                                    TrueGaplessProcessorChain(ffmpegTrimmer, replayGainProcessor)
+                                )
+                                .build(),
+                            ffmpegTrimmer,
+                        ),
+                    ),
                     MediaCodecAudioRenderer(
                         context,
                         MediaCodecSelector.DEFAULT,
                         handler,
                         audioListener,
-                        DefaultAudioSink.Builder(context)
-                            .setAudioProcessors(arrayOf(replayGainProcessor))
-                            .build(),
+                        SilenceTrimmingAudioSink(
+                            DefaultAudioSink.Builder(context)
+                                .setAudioProcessorChain(
+                                    TrueGaplessProcessorChain(
+                                        mediaCodecTrimmer,
+                                        replayGainProcessor,
+                                    )
+                                )
+                                .build(),
+                            mediaCodecTrimmer,
+                        ),
                     ),
                 )
             }

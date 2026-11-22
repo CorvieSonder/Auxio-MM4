@@ -27,6 +27,13 @@
             app:summary="@string/set_remember_pause_desc"
             app:title="@string/set_remember_pause" />
 
+        <SwitchPreferenceCompat
+            app:defaultValue="false"
+            app:disableDependentsState="true"
+            app:key="@string/set_key_true_gapless"
+            app:summary="@string/set_true_gapless_desc"
+            app:title="@string/set_true_gapless" />
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/set_crossfade">
@@ -34,6 +41,7 @@
         <SeekBarPreference
             android:max="12"
             app:defaultValue="0"
+            app:dependency="@string/set_key_true_gapless"
             app:key="@string/set_key_crossfade"
             app:min="0"
             app:showSeekBarValue="true"
@@ -42,6 +50,7 @@
 
         <SwitchPreferenceCompat
             app:defaultValue="true"
+            app:dependency="@string/set_key_true_gapless"
             app:key="@string/set_key_crossfade_skip_album"
             app:summary="@string/set_crossfade_skip_album_desc"
             app:title="@string/set_crossfade_skip_album" />
