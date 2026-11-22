@@ -196,8 +196,25 @@ constructor(
     ): Playlist? {
         val ownImport = own?.let { read(treeUri, it) }
         val name = ownImport?.let { nameOf(it, own) } ?: folder.name
-        val songs = ownImport?.let { match(treeUri, own, it, counter) } ?: listOf()
+        val library =
+            own != null &&
+                PlaylistIds.parse(
+                        PlaylistSyncRepository.readText(
+                            context.contentResolver,
+                            DocumentsContract.buildDocumentUriUsingTree(treeUri, own.id),
+                        )
+                    )
+                    .library
+        // A library playlist's songs come from its children.
+        val songs =
+            if (library) listOf()
+            else ownImport?.let { match(treeUri, own, it, counter) } ?: listOf()
         val playlist = create(name, songs, parent) ?: return null
+        if (library && parent == null) {
+            withContext(Dispatchers.Main) {
+                playlistTreeRepository.setLibrary(listOf(playlist), true)
+            }
+        }
         counter.playlists++
         return playlist
     }

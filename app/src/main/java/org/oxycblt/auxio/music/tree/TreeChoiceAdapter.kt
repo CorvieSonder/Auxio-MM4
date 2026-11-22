@@ -50,9 +50,15 @@ sealed interface TreeChoice {
      * @param canOpen Whether the [Playlist] has children that can be shown.
      * @param isActive Whether the [Playlist] is highlighted, such as when the songs being added are
      *   already in it.
+     * @param isSelectable Whether the [Playlist] itself can be chosen. If not, it is dimmed and can
+     *   only be opened.
      */
-    data class Node(val playlist: Playlist, val canOpen: Boolean, val isActive: Boolean) :
-        TreeChoice
+    data class Node(
+        val playlist: Playlist,
+        val canOpen: Boolean,
+        val isActive: Boolean,
+        val isSelectable: Boolean = true,
+    ) : TreeChoice
 }
 
 /**
@@ -94,11 +100,13 @@ class TreeChoiceViewHolder private constructor(private val binding: ItemTreeChoi
         when (choice) {
             is TreeChoice.Up -> {
                 showIcon(R.drawable.ic_back_24)
+                binding.treeName.alpha = 1f
                 binding.treeName.text = choice.level.name.resolve(binding.context)
                 binding.treeOpen.isInvisible = true
             }
             is TreeChoice.TopLevel -> {
                 showIcon(R.drawable.ic_playlist_24)
+                binding.treeName.alpha = 1f
                 binding.treeName.text = binding.context.getString(R.string.lbl_top_level)
                 binding.treeOpen.isInvisible = true
             }
@@ -108,6 +116,9 @@ class TreeChoiceViewHolder private constructor(private val binding: ItemTreeChoi
                 binding.treeCover.bind(choice.playlist)
                 binding.treeCover.isActivated = choice.isActive
                 binding.treeName.text = choice.playlist.name.resolve(binding.context)
+                val alpha = if (choice.isSelectable) 1f else DISABLED_ALPHA
+                binding.treeCover.alpha = alpha
+                binding.treeName.alpha = alpha
                 binding.treeOpen.isInvisible = !choice.canOpen
                 binding.treeOpen.setOnClickListener { listener.onOpen(choice.playlist) }
             }
@@ -122,6 +133,8 @@ class TreeChoiceViewHolder private constructor(private val binding: ItemTreeChoi
     }
 
     companion object {
+        private const val DISABLED_ALPHA = 0.38f
+
         /**
          * Create a new instance.
          *
@@ -141,7 +154,8 @@ class TreeChoiceViewHolder private constructor(private val binding: ItemTreeChoi
                         oldItem is TreeChoice.Node && newItem is TreeChoice.Node ->
                             oldItem.playlist.name == newItem.playlist.name &&
                                 oldItem.canOpen == newItem.canOpen &&
-                                oldItem.isActive == newItem.isActive
+                                oldItem.isActive == newItem.isActive &&
+                                oldItem.isSelectable == newItem.isSelectable
                         else -> oldItem == newItem
                     }
             }

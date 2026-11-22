@@ -19,10 +19,15 @@
 package org.oxycblt.auxio.music.tree
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.oxycblt.auxio.detail.persist.PlaylistSortRepository
 import org.oxycblt.auxio.list.ListSettings
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.util.Event
@@ -35,7 +40,12 @@ import timber.log.Timber as L
 @HiltViewModel
 class PlaylistTreeViewModel
 @Inject
-constructor(private val playlistTreeRepository: PlaylistTreeRepository) : ViewModel() {
+constructor(
+    private val playlistTreeRepository: PlaylistTreeRepository,
+    private val musicRepository: MusicRepository,
+    private val playlistSortRepository: PlaylistSortRepository,
+    private val playlistFolderImporter: PlaylistFolderImporter,
+) : ViewModel() {
     /** The [Music.UID]s of playlists the user wants to move. Shown with the move dialog. */
     val moveDecision: Event<List<Music.UID>>
         field = MutableEvent<List<Music.UID>>()
@@ -68,6 +78,65 @@ constructor(private val playlistTreeRepository: PlaylistTreeRepository) : ViewMo
      */
     fun setPinned(playlists: List<Playlist>, pinned: Boolean) {
         playlistTreeRepository.setPinned(playlists, pinned)
+    }
+
+    /**
+     * Whether a playlist is a library playlist.
+     *
+     * @param playlist The [Playlist] to look up.
+     */
+    fun isLibrary(playlist: Playlist) = playlistTreeRepository.isLibrary(playlist)
+
+    /**
+     * Whether a playlist can be made a library playlist. Only top-level playlists can.
+     *
+     * @param playlist The [Playlist] to look up.
+     */
+    fun canBeLibrary(playlist: Playlist) = playlistTreeRepository.parentOf(playlist) == null
+
+    /**
+     * Make a playlist a library playlist. Its own songs move into a new child playlist first, so
+     * that they are still shown.
+     *
+     * @param playlist The top-level [Playlist] to change.
+     * @param songsName The name of the child playlist that gets the playlist's own songs.
+     */
+    fun makeLibrary(playlist: Playlist, songsName: String) {
+        if (!canBeLibrary(playlist) || isLibrary(playlist)) {
+            return
+        }
+        L.d("Making $playlist a library playlist")
+        viewModelScope.launch(Dispatchers.IO) {
+            val songs = playlist.songs
+            if (songs.isNotEmpty()) {
+                playlistFolderImporter.create(songsName, songs, playlist) ?: return@launch
+                val current = musicRepository.library?.findPlaylist(playlist.uid) ?: return@launch
+                musicRepository.rewritePlaylist(current, listOf())
+            }
+            withContext(Dispatchers.Main) {
+                playlistTreeRepository.setLibrary(listOf(playlist), true)
+            }
+        }
+    }
+
+    /**
+     * Turn a library playlist back into a normal playlist. The songs it shows now become its own
+     * songs, in the order shown.
+     *
+     * @param playlist The library [Playlist] to change.
+     */
+    fun stopLibrary(playlist: Playlist) {
+        if (!isLibrary(playlist)) {
+            return
+        }
+        L.d("Turning $playlist back into a normal playlist")
+        val songs = playlistSortRepository.songs(playlist)
+        viewModelScope.launch(Dispatchers.IO) {
+            musicRepository.rewritePlaylist(playlist, songs)
+            withContext(Dispatchers.Main) {
+                playlistTreeRepository.setLibrary(listOf(playlist), false)
+            }
+        }
     }
 }
 
@@ -144,6 +213,15 @@ constructor(
         level = level?.let { playlistTreeRepository.parentOf(it) }
         refreshChoices()
     }
+
+    /**
+     * Whether moving the playlists would put a library playlist inside another playlist, which is
+     * not allowed.
+     *
+     * @param parent The new parent [Playlist], or null for the top level.
+     */
+    fun movesLibraryDown(parent: Playlist?) =
+        parent != null && playlistsToMove.value.orEmpty().any(playlistTreeRepository::isLibrary)
 
     /**
      * Move the playlists.

@@ -89,6 +89,11 @@ class AddToPlaylistDialog :
         when (choice) {
             is TreeChoice.Up -> pickerModel.closePlaylistAddLevel()
             is TreeChoice.Node -> {
+                if (!choice.isSelectable) {
+                    // Library playlists cannot take songs, but their children can.
+                    pickerModel.openPlaylistAddLevel(choice.playlist)
+                    return
+                }
                 musicModel.addToPlaylist(
                     pickerModel.currentSongsToAdd.value ?: return,
                     choice.playlist,

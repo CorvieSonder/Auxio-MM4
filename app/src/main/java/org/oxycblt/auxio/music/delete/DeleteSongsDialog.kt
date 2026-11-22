@@ -42,7 +42,9 @@ import kotlinx.coroutines.withContext
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.MusicViewModel
+import org.oxycblt.auxio.music.auto.AutoPlaylist
 import org.oxycblt.auxio.music.resolve
+import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.auxio.util.getPlural
 import org.oxycblt.auxio.util.showToast
 import org.oxycblt.musikr.Music
@@ -57,6 +59,7 @@ import timber.log.Timber as L
 @AndroidEntryPoint
 class DeleteSongsDialog : DialogFragment() {
     @Inject lateinit var musicRepository: MusicRepository
+    @Inject lateinit var playlistTreeRepository: PlaylistTreeRepository
     private val musicModel: MusicViewModel by activityViewModels()
     private var deleteLauncher: ActivityResultLauncher<IntentSenderRequest>? = null
     private var songs = listOf<Song>()
@@ -77,9 +80,10 @@ class DeleteSongsDialog : DialogFragment() {
                 .orEmpty()
                 .mapNotNull { library?.findSong(it) }
         playlist =
-            BundleCompat.getParcelable(args, KEY_PLAYLIST, Music.UID::class.java)?.let {
-                library?.findPlaylist(it)
-            }
+            BundleCompat.getParcelable(args, KEY_PLAYLIST, Music.UID::class.java)
+                ?.let { library?.findPlaylist(it) }
+                // Automatic playlists cannot be edited.
+                ?.takeUnless { it is AutoPlaylist }
         choice = savedInstanceState?.getInt(KEY_CHOICE) ?: 0
     }
 
@@ -121,12 +125,47 @@ class DeleteSongsDialog : DialogFragment() {
     private fun removeFromPlaylist() {
         val playlist = playlist ?: return
         val removed = songs.toSet()
+        if (playlistTreeRepository.isLibrary(playlist)) {
+            confirmLibraryRemove(playlist, removed)
+            return
+        }
         L.d("Removing ${removed.size} songs from $playlist")
         val context = requireContext().applicationContext
         // Outlives the dialog, like the other playlist edits.
         musicModel.rewritePlaylist(playlist, playlist.songs.filter { it !in removed })
         context.showToast(R.string.lng_deleted_from_playlist)
         dismiss()
+    }
+
+    private fun confirmLibraryRemove(playlist: Playlist, removed: Set<Song>) {
+        // A library playlist has no songs of its own, so take the songs out of every playlist
+        // below it that holds them.
+        val holders =
+            playlistTreeRepository.descendantsOf(playlist).filter { child ->
+                child.songs.any(removed::contains)
+            }
+        if (holders.isEmpty()) {
+            dismiss()
+            return
+        }
+        val context = requireContext()
+        val names =
+            holders.joinToString("\n") { holder ->
+                (playlistTreeRepository.pathOf(holder) + holder).drop(1).joinToString(" › ") {
+                    it.name.resolve(context)
+                }
+            }
+        MaterialAlertDialogBuilder(context)
+            .setTitle(getString(R.string.fmt_delete_from_playlist, playlist.name.resolve(context)))
+            .setMessage(getString(R.string.fmt_library_remove_from, names))
+            .setPositiveButton(R.string.lbl_delete) { _, _ ->
+                L.d("Removing ${removed.size} songs from ${holders.size} playlists in $playlist")
+                musicModel.removeFromPlaylists(holders, removed)
+                context.applicationContext.showToast(R.string.lng_deleted_from_playlist)
+                dismiss()
+            }
+            .setNegativeButton(R.string.lbl_cancel, null)
+            .show()
     }
 
     private fun confirmDeviceDelete() {

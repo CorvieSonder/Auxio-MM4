@@ -90,6 +90,10 @@ class MovePlaylistDialog :
     }
 
     private fun moveTo(parent: Playlist?) {
+        if (moveModel.movesLibraryDown(parent)) {
+            requireContext().showToast(R.string.lng_library_stays_top)
+            return
+        }
         if (!moveModel.move(parent)) {
             // Stay open, so that another place can be picked.
             requireContext().showToast(R.string.lng_playlist_name_taken)

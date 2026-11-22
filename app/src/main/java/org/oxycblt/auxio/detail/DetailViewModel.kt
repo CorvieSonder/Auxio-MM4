@@ -187,6 +187,18 @@ constructor(
         field = MutableStateFlow<List<Song>?>(null)
 
     /** The current [Sort] used for [Song]s in [playlistSongList] outside of editing. */
+    /** Whether the current [Playlist] is a library playlist, which has no saved order. */
+    val isLibraryPlaylist: Boolean
+        get() = currentPlaylist.value?.let { playlistTreeRepository.isLibrary(it) } ?: false
+
+    /**
+     * Get the songs a [Playlist] shows, unsorted.
+     *
+     * @param playlist The [Playlist] to look up.
+     * @return The songs of the descendants of a library playlist, otherwise its own songs.
+     */
+    fun songsOf(playlist: Playlist) = playlistTreeRepository.songsOf(playlist)
+
     val playlistSongSort: Sort
         get() =
             currentPlaylist.value?.let { playlistSortRepository.getSort(it) }
@@ -431,6 +443,10 @@ constructor(
     /** Start a playlist editing session. Does nothing if a playlist is not being shown. */
     fun startPlaylistEdit() {
         val playlist = currentPlaylist.value ?: return
+        if (playlistTreeRepository.isLibrary(playlist)) {
+            // A library playlist has no songs of its own to edit.
+            return
+        }
         L.d("Starting playlist edit")
         // Editing works on the saved order, so show that order once editing ends too.
         playlistSortRepository.setSort(playlist, PlaylistSortRepository.DEFAULT)
@@ -654,8 +670,16 @@ constructor(
                 playlistSongInstructions,
                 null,
             ) {
-                // An automatic playlist cannot be edited, so it only gets the sort button.
-                if (playlist?.parent is AutoPlaylist) SortHeader(it) else EditHeader(it)
+                // Automatic and library playlists cannot be edited, so they only get the sort
+                // button.
+                val parent = playlist?.parent
+                if (
+                    parent is AutoPlaylist || parent?.let(playlistTreeRepository::isLibrary) == true
+                ) {
+                    SortHeader(it)
+                } else {
+                    EditHeader(it)
+                }
             }
             return
         }

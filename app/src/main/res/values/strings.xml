@@ -219,8 +219,14 @@
     <string name="lng_playlist_added">Added to playlist</string>
     <string name="lng_playlist_moved">Playlist moved</string>
     <string name="lng_playlist_name_taken">A playlist with the same name is already there</string>
+    <string name="fmt_library_remove_from">The songs will be removed from these playlists:\n\n%s</string>
+    <string name="lng_library_stays_top">A library playlist stays at the top level</string>
     <string name="lbl_pin">Pin to top</string>
     <string name="lbl_unpin">Unpin</string>
+    <string name="lbl_library_on">Make library playlist</string>
+    <string name="lbl_library_off">Stop library playlist</string>
+    <!-- Name of the child playlist that gets a playlist's own songs when it becomes a library playlist -->
+    <string name="fmt_library_own_songs">%s (songs)</string>
     <string name="lbl_move_to">Move to…</string>
     <string name="lbl_top_level">Top level</string>
     <string name="lbl_new_playlist_here">New playlist here</string>

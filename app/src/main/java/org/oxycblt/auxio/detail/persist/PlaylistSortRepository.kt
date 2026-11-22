@@ -28,6 +28,7 @@ import kotlinx.coroutines.withContext
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.auto.AutoPlaylist
+import org.oxycblt.auxio.music.tree.PlaylistTreeRepository
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
@@ -38,13 +39,14 @@ import timber.log.Timber as L
  * can be read synchronously, and are persisted in the background.
  *
  * A playlist without a chosen [Sort] uses [DEFAULT], which keeps the saved order of the playlist.
+ * Library playlists have no saved order, so they use [LIBRARY_DEFAULT] instead of any custom sort.
  */
 interface PlaylistSortRepository {
     /**
      * Get the [Sort] chosen for a [Playlist].
      *
      * @param playlist The [Playlist] to get the [Sort] of.
-     * @return The chosen [Sort], or [DEFAULT] if there is none.
+     * @return The chosen [Sort], or [DEFAULT] (or [LIBRARY_DEFAULT]) if there is none.
      */
     fun getSort(playlist: Playlist): Sort
 
@@ -57,12 +59,13 @@ interface PlaylistSortRepository {
     fun setSort(playlist: Playlist, sort: Sort)
 
     /**
-     * Get the songs of a [Playlist] in the order its chosen [Sort] gives.
+     * Get the songs a [Playlist] shows, in the order its chosen [Sort] gives. For a library
+     * playlist, these are the songs of its descendants.
      *
      * @param playlist The [Playlist] to get the songs of.
      * @return The sorted songs of the [Playlist].
      */
-    fun songs(playlist: Playlist): List<Song> = getSort(playlist).songs(playlist.songs)
+    fun songs(playlist: Playlist): List<Song>
 
     /**
      * Add a [Listener] to this instance.
@@ -87,6 +90,9 @@ interface PlaylistSortRepository {
     companion object {
         /** The default [Sort], which keeps the saved order of a playlist. */
         val DEFAULT = Sort(Sort.Mode.ByCustom, Sort.Direction.ASCENDING)
+
+        /** The default [Sort] of a library playlist, which has no saved order. */
+        val LIBRARY_DEFAULT = Sort(Sort.Mode.ByName, Sort.Direction.ASCENDING)
     }
 }
 
@@ -96,6 +102,7 @@ class PlaylistSortRepositoryImpl
 constructor(
     private val playlistSortDao: PlaylistSortDao,
     private val musicRepository: MusicRepository,
+    private val playlistTreeRepository: PlaylistTreeRepository,
 ) : PlaylistSortRepository, MusicRepository.UpdateListener {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val listeners = mutableListOf<PlaylistSortRepository.Listener>()
@@ -121,7 +128,16 @@ constructor(
         }
     }
 
-    override fun getSort(playlist: Playlist) = sorts[playlist.uid] ?: PlaylistSortRepository.DEFAULT
+    override fun getSort(playlist: Playlist): Sort {
+        val sort = sorts[playlist.uid] ?: PlaylistSortRepository.DEFAULT
+        if (sort.mode is Sort.Mode.ByCustom && playlistTreeRepository.isLibrary(playlist)) {
+            return PlaylistSortRepository.LIBRARY_DEFAULT
+        }
+        return sort
+    }
+
+    override fun songs(playlist: Playlist) =
+        getSort(playlist).songs(playlistTreeRepository.songsOf(playlist))
 
     override fun setSort(playlist: Playlist, sort: Sort) {
         if (getSort(playlist) == sort) {

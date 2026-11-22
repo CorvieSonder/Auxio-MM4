@@ -30,6 +30,7 @@ import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.auto.AutoPlaylist
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Playlist
+import org.oxycblt.musikr.Song
 import timber.log.Timber as L
 
 /**
@@ -127,6 +128,33 @@ interface PlaylistTreeRepository {
     fun pinnedFirst(playlists: List<Playlist>): List<Playlist>
 
     /**
+     * Whether a playlist is a library playlist, which shows every song of its descendants instead
+     * of songs of its own.
+     *
+     * @param playlist The [Playlist] to look up.
+     * @return true if [playlist] is a library playlist.
+     */
+    fun isLibrary(playlist: Playlist): Boolean
+
+    /**
+     * Make playlists library playlists, or turn them back into normal playlists. Only the flag is
+     * changed; moving or copying songs is up to the caller.
+     *
+     * @param playlists The [Playlist]s to change.
+     * @param library true to make [playlists] library playlists.
+     */
+    fun setLibrary(playlists: List<Playlist>, library: Boolean)
+
+    /**
+     * Get the songs a playlist shows, unsorted.
+     *
+     * @param playlist The [Playlist] to look up.
+     * @return For a library playlist, every song of its descendants, each once. Otherwise the
+     *   playlist's own songs.
+     */
+    fun songsOf(playlist: Playlist): List<Song>
+
+    /**
      * Forget the position and pin of deleted playlists.
      *
      * @param playlists The [Playlist]s that were deleted.
@@ -149,7 +177,10 @@ interface PlaylistTreeRepository {
 
     /** A listener for changes to the playlist tree. */
     interface Listener {
-        /** Called when a playlist was moved, pinned or unpinned, or when the tree was loaded. */
+        /**
+         * Called when a playlist was moved, pinned or unpinned, made a library playlist or a normal
+         * one, or when the tree was loaded.
+         */
         fun onPlaylistTreeChanged()
     }
 }
@@ -170,6 +201,10 @@ constructor(
     private val earlyPinChanges = mutableMapOf<Music.UID, Boolean>()
     private var pinsLoaded = false
     @Volatile private var pins = setOf<Music.UID>()
+    // Same as the pins, for the library playlists.
+    private val earlyLibraryChanges = mutableMapOf<Music.UID, Boolean>()
+    private var librariesLoaded = false
+    @Volatile private var libraries = setOf<Music.UID>()
 
     init {
         scope.launch {
@@ -189,7 +224,18 @@ constructor(
                     L.e(e.stackTraceToString())
                     mutableSetOf()
                 }
-            L.d("Loaded ${loaded.size} nested playlists and ${loadedPins.size} pins")
+            val loadedLibraries =
+                try {
+                    playlistTreeDao.getLibraryPlaylists().mapTo(mutableSetOf()) { it.playlistUid }
+                } catch (e: Exception) {
+                    L.e("Unable to load library playlists")
+                    L.e(e.stackTraceToString())
+                    mutableSetOf()
+                }
+            L.d(
+                "Loaded ${loaded.size} nested playlists, ${loadedPins.size} pins and " +
+                    "${loadedLibraries.size} library playlists"
+            )
             withContext(Dispatchers.Main) {
                 // Moves and pins made while loading take priority over the persisted ones.
                 parents = loaded + parents
@@ -199,6 +245,12 @@ constructor(
                 earlyPinChanges.clear()
                 pinsLoaded = true
                 pins = loadedPins
+                for ((uid, library) in earlyLibraryChanges) {
+                    if (library) loadedLibraries.add(uid) else loadedLibraries.remove(uid)
+                }
+                earlyLibraryChanges.clear()
+                librariesLoaded = true
+                libraries = loadedLibraries
                 dispatchTreeChanged()
             }
         }
@@ -233,6 +285,44 @@ constructor(
                 L.e(e.stackTraceToString())
             }
         }
+    }
+
+    override fun isLibrary(playlist: Playlist) = playlist.uid in libraries
+
+    override fun setLibrary(playlists: List<Playlist>, library: Boolean) {
+        val changed =
+            playlists
+                .filter { it !is AutoPlaylist }
+                .map { it.uid }
+                .filter { (it in libraries) != library }
+        if (changed.isEmpty()) {
+            return
+        }
+        L.d("Setting ${changed.size} playlists to library=$library")
+        libraries = if (library) libraries + changed else libraries - changed.toSet()
+        if (!librariesLoaded) {
+            changed.forEach { earlyLibraryChanges[it] = library }
+        }
+        dispatchTreeChanged()
+        scope.launch {
+            try {
+                if (library) {
+                    playlistTreeDao.insertLibraryPlaylists(changed.map(::LibraryPlaylist))
+                } else {
+                    playlistTreeDao.deleteLibraryPlaylists(changed)
+                }
+            } catch (e: Exception) {
+                L.e("Unable to persist the library flag of ${changed.size} playlists")
+                L.e(e.stackTraceToString())
+            }
+        }
+    }
+
+    override fun songsOf(playlist: Playlist): List<Song> {
+        if (!isLibrary(playlist)) {
+            return playlist.songs
+        }
+        return descendantsOf(playlist).flatMap { it.songs }.distinct()
     }
 
     override fun pinnedFirst(playlists: List<Playlist>): List<Playlist> {
@@ -291,6 +381,10 @@ constructor(
         if (parent == null) {
             return true
         }
+        if (isLibrary(playlist)) {
+            // Library playlists stay at the top level.
+            return false
+        }
         return parent.uid != playlist.uid && pathOf(parent).none { it.uid == playlist.uid }
     }
 
@@ -335,17 +429,20 @@ constructor(
         // Children of a forgotten playlist become top-level playlists.
         val removed = parents.filter { (child, parent) -> child in uids || parent in uids }.keys
         val unpinned = pins.intersect(uids)
-        if (removed.isEmpty() && unpinned.isEmpty()) {
+        val unflagged = libraries.intersect(uids)
+        if (removed.isEmpty() && unpinned.isEmpty() && unflagged.isEmpty()) {
             return
         }
         L.d("Forgetting ${removed.size} tree entries and ${unpinned.size} pins")
         parents = parents - removed
         pins = pins - unpinned
+        libraries = libraries - unflagged
         dispatchTreeChanged()
         scope.launch {
             try {
                 playlistTreeDao.deleteNodes(removed.toList())
                 playlistTreeDao.deletePins(unpinned.toList())
+                playlistTreeDao.deleteLibraryPlaylists(unflagged.toList())
             } catch (e: Exception) {
                 L.e("Unable to forget ${removed.size} tree entries")
                 L.e(e.stackTraceToString())
