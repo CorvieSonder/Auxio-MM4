@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Space above the title in the landscape playback overlay, where its scrim fades out. -->
+    <dimen name="playback_overlay_fade">48dp</dimen>
+</resources>
