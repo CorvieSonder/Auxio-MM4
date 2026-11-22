@@ -60,8 +60,8 @@ class Auxio : Application() {
             BuildConfig.APPLICATION_ID != "org.oxycblt.auxio" &&
                 BuildConfig.APPLICATION_ID != "org.oxycblt.auxio.debug" &&
                 // FORK: the fork's ids get normal debug logging
-                BuildConfig.APPLICATION_ID != "org.oxycblt.auxio.fork" &&
-                BuildConfig.APPLICATION_ID != "org.oxycblt.auxio.fork.debug"
+                BuildConfig.APPLICATION_ID != "org.oxycblt.auxio.mm4" &&
+                BuildConfig.APPLICATION_ID != "org.oxycblt.auxio.mm4.debug"
         ) {
             Timber.plant(CopyleftNoticeTree())
         } else if (BuildConfig.DEBUG) {

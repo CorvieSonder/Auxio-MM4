@@ -19,7 +19,7 @@
 
     <!-- Pkg Namespace | Dynamic package names -->
     <!-- FORK: authority follows the fork app id -->
-    <string name="pkg_authority_cover">org.oxycblt.auxio.fork.image.CoverProvider</string>
+    <string name="pkg_authority_cover">org.oxycblt.auxio.mm4.image.CoverProvider</string>
 
     <!-- Supporter Namespace | Sponsor usernames  -->
     <string name="sup_bkkellyh">bkkellyh - $500!</string>
