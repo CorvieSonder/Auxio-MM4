@@ -177,11 +177,10 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
             // listener with a non-consuming listener.
             setOnApplyWindowInsetsListener { _, insets -> insets }
 
-            // We know that there will only be a fixed amount of tabs, so we manually set this
-            // limit to the maximum amount possible. This will prevent the tab ripple from
-            // bugging out due to dynamically inflating each fragment, at the cost of slower
-            // debug UI performance.
-            offscreenPageLimit = Tab.MAX_SEQUENCE_IDX + 1
+            // Only keep the visible tab and its neighbours alive. Laying out every tab at once
+            // made re-creating this view (for example when leaving settings) take over a second
+            // on large libraries, as every list had to measure and bind its rows up front.
+            offscreenPageLimit = 1
 
             dampen()
         }
