@@ -38,6 +38,7 @@ Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, di
 - Ratings from POPM frames (MediaMonkey, MusicBee, Windows Media Player (only MM tested)), with a choice of source and scale; a rating label in lists, a rating button in Now Playing, filter by rating
 - Composer and Mood: tabs, detail pages, search sections and sort (tabs hidden by default)
 - Grouping (TIT1) tab - in my library, this groups together things like Minecraft music, or 80s music
+- MediaMonkey custom fields (Custom 1–5 and Occasion): name them, and show them in song details, search, sort and their own tabs (off by default)
 - Edit moods and ratings in the app, and optionally write them into the files
 - Send Mood & Ratings edits back to MediaMonkey, & restore changes to the phone's db if migrating or accidentally overwritten.
 
@@ -60,7 +61,6 @@ Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, di
 ### Planned
 
 - Phone and PC sync improvements as they come up
-- MediaMonkey-style custom tags (`Songs-DB_Custom1` to `Custom5`, Occasion)
 - Custom theme (we're going skeumorphic babyyyyy)
 - Configurable Now Playing buttons and rating symbol
 - Faster loading for large libraries (10,000+ songs)
