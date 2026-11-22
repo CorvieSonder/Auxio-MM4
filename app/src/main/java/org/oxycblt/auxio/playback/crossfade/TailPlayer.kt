@@ -108,6 +108,18 @@ class TailPlayer(
             player.volume = value
         }
 
+    /** Whether audio is playing right now. */
+    val isPlaying: Boolean
+        get() = player.isPlaying
+
+    /** The position in the song, in milliseconds. */
+    val positionMs: Long
+        get() = player.currentPosition
+
+    /** The length of the song, in milliseconds. */
+    val durationMs: Long
+        get() = player.duration
+
     fun play() {
         player.play()
     }
