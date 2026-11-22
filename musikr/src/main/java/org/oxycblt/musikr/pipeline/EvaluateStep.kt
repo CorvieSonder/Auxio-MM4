@@ -29,6 +29,7 @@ import org.oxycblt.musikr.model.LibraryFactory
 import org.oxycblt.musikr.playlist.db.StoredPlaylists
 import org.oxycblt.musikr.playlist.interpret.PlaylistInterpreter
 import org.oxycblt.musikr.tag.interpret.TagInterpreter
+import org.oxycblt.musikr.util.Perf
 
 internal interface EvaluateStep {
     suspend fun evaluate(extractedMusic: Channel<Extracted>): MutableLibrary
@@ -54,22 +55,35 @@ private class EvaluateStepImpl(
 ) : EvaluateStep {
     override suspend fun evaluate(extractedMusic: Channel<Extracted>): MutableLibrary {
         val builder = MusicGraph.builder()
+        val loopStart = Perf.now()
+        var interpretMs = 0L
         for (extracted in extractedMusic) {
             when (extracted) {
-                is RawSong -> builder.add(tagInterpreter.interpret(extracted))
+                is RawSong -> {
+                    val interpretStart = Perf.now()
+                    val preSong = tagInterpreter.interpret(extracted)
+                    interpretMs += Perf.now() - interpretStart
+                    builder.add(preSong)
+                }
                 is RawPlaylist -> builder.add(playlistInterpreter.interpret(extracted.file))
                 is NotAudio -> {}
                 is InvalidSong -> {}
             }
         }
-        val graph = builder.build()
+        Perf.since("evaluate loop (waits on extract)", loopStart)
+        Perf.log("tag interpret (sum): ${interpretMs}ms")
+        val graph = Perf.time("graph build") { builder.build() }
 
         // Render graph to Graphviz in debug mode
         if (BuildConfig.DEBUG) {
             val fileName = "music_graph_debug.dot"
-            graph.renderToGraphviz(context, fileName)
+            Perf.time("graphviz render (debug only)") {
+                graph.renderToGraphviz(context, fileName)
+            }
         }
 
-        return libraryFactory.create(graph, storedPlaylists, playlistInterpreter)
+        return Perf.time("library create") {
+            libraryFactory.create(graph, storedPlaylists, playlistInterpreter)
+        }
     }
 }
