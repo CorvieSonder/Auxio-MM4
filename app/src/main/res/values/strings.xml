@@ -497,4 +497,17 @@
         <item quantity="one">%d second</item>
         <item quantity="other">%d seconds</item>
     </plurals>
+
+    <!-- Settings backup -->
+    <string name="set_backup">Backup</string>
+    <string name="set_backup_export">Back up settings and data</string>
+    <string name="set_backup_export_desc">Save settings, playlists and other app data to a file</string>
+    <string name="set_backup_import">Restore from backup</string>
+    <string name="set_backup_import_desc">Replace settings and app data with a backup file</string>
+    <string name="lbl_backup_restore">Restore from backup?</string>
+    <string name="lng_backup_restore_warning">Your current settings, playlists and other app data will be replaced. Music folders are not part of a backup and stay as they are. Auxio will restart.</string>
+    <string name="lng_backup_saved">Backup saved</string>
+    <string name="err_backup_failed">Could not save the backup</string>
+    <string name="err_backup_invalid">This file is not an Auxio backup</string>
+    <string name="err_backup_too_new">This backup was made by a newer version of Auxio</string>
 </resources>

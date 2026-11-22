@@ -28,6 +28,7 @@ import javax.inject.Inject
 import org.oxycblt.auxio.home.HomeSettings
 import org.oxycblt.auxio.image.ImageSettings
 import org.oxycblt.auxio.playback.PlaybackSettings
+import org.oxycblt.auxio.settings.backup.BackupRestorer
 import org.oxycblt.auxio.ui.UISettings
 import org.oxycblt.auxio.util.CopyleftNoticeTree
 import timber.log.Timber
@@ -45,6 +46,8 @@ class Auxio : Application() {
     @Inject lateinit var homeSettings: HomeSettings
 
     override fun onCreate() {
+        // Must run before Hilt creates anything that opens a database or reads a setting.
+        BackupRestorer.applyPending(this)
         super.onCreate()
         @Suppress("KotlinConstantConditions")
         if (

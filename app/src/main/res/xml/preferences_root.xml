@@ -45,4 +45,18 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory app:title="@string/set_backup">
+
+        <Preference
+            app:key="@string/set_key_backup_export"
+            app:summary="@string/set_backup_export_desc"
+            app:title="@string/set_backup_export" />
+
+        <Preference
+            app:key="@string/set_key_backup_import"
+            app:summary="@string/set_backup_import_desc"
+            app:title="@string/set_backup_import" />
+
+    </PreferenceCategory>
+
 </PreferenceScreen>
