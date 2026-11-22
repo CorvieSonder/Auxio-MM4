@@ -210,7 +210,7 @@
     <string name="lbl_top_level">Top level</string>
     <string name="lbl_new_playlist_here">New playlist here</string>
     <string name="lbl_import_folder">Import folder here</string>
-    <string name="lbl_imported_playlist_folder">Imported folder</string>
+    <string name="lbl_imported_playlist_folder">Import folder</string>
     <string name="lbl_export_with_children">Include child playlists (exports a folder)</string>
     <string name="lbl_replace_existing_folder">Replace an existing folder of the same name</string>
     <string name="lbl_import_choose">Choose what to import</string>
