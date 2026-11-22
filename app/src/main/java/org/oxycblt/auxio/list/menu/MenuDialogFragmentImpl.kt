@@ -64,22 +64,25 @@ class SongMenuDialogFragment : MenuDialogFragment<Menu.ForSong>() {
     override val parcel
         get() = args.parcel
 
-    override fun addLeadingItems(menu: Menu.ForSong, builder: android.view.Menu) {
+    override fun editMenu(menu: Menu.ForSong, builder: android.view.Menu) {
         if (menu.res != R.menu.playback_song) {
             return
         }
-        // Actions hidden from the playback panel bar are shown here instead, unless the menu
-        // already has them.
-        val context = requireContext()
-        val ownIds = NowPlayingBar.itemIds(context, R.menu.playback_song)
+        // The playback panel menu lists every action that is not on its bar right now, hidden or
+        // not fitting, in the order the user chose for the bar.
         val entries =
-            NowPlayingBar.hiddenEntries(context, barSettings.barActions).filter {
-                it.first !in ownIds
-            }
-        for ((itemId, title, parent) in entries) {
-            builder.add(parent.groupId, itemId, android.view.Menu.NONE, title).icon = parent.icon
+            NowPlayingBar.songMenuEntries(
+                requireContext(),
+                barSettings.barActions,
+                barRequests.onBar,
+            )
+        builder.clear()
+        for (entry in entries) {
+            builder
+                .add(android.view.Menu.NONE, entry.itemId, android.view.Menu.NONE, entry.title)
+                .icon = entry.icon
         }
-        barItemIds = entries.mapTo(mutableSetOf()) { it.first }
+        barItemIds = entries.filter { it.fromBar }.mapTo(mutableSetOf()) { it.itemId }
     }
 
     // Nothing to disable in song menus.

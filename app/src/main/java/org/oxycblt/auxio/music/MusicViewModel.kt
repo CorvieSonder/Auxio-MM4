@@ -136,7 +136,8 @@ constructor(
                 musicRepository.createPlaylist(name, songs)
                 val message =
                     when (reason) {
-                        PlaylistDecision.New.Reason.NEW -> PlaylistMessage.NewPlaylistSuccess
+                        PlaylistDecision.New.Reason.NEW,
+                        PlaylistDecision.New.Reason.SAVE_QUEUE -> PlaylistMessage.NewPlaylistSuccess
                         PlaylistDecision.New.Reason.ADD -> PlaylistMessage.AddSuccess
                         PlaylistDecision.New.Reason.IMPORT -> PlaylistMessage.ImportSuccess
                     }
@@ -391,6 +392,7 @@ sealed interface PlaylistDecision {
             NEW,
             ADD,
             IMPORT,
+            SAVE_QUEUE,
         }
     }
 

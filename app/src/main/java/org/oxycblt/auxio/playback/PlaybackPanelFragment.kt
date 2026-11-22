@@ -44,6 +44,7 @@ import org.oxycblt.auxio.detail.DetailViewModel
 import org.oxycblt.auxio.home.HomeViewModel
 import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.music.MusicViewModel
+import org.oxycblt.auxio.music.PlaylistDecision
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
 import org.oxycblt.auxio.playback.bar.NowPlayingBar
@@ -130,6 +131,10 @@ class PlaybackPanelFragment :
             setOnMenuItemClickListener(this@PlaybackPanelFragment)
             // The actions sit in their own row below the title.
             setActionsBelow()
+        }
+        binding.playbackToolbar.setOverflowIntoMenu {
+            // The song menu lists the actions that are hidden or do not fit.
+            barRequests.onBar = binding.playbackToolbar.actionItemIds
         }
         applyBarActions()
         barSettings.registerListener(this)
@@ -258,11 +263,13 @@ class PlaybackPanelFragment :
 
     /** Show the bar actions in the order chosen by the user, leaving out the hidden ones. */
     private fun applyBarActions() {
+        val context = requireContext()
         val toolbar = requireBinding().playbackToolbar
-        toolbar.inflateMenu(R.menu.toolbar_playback)
-        toolbar.arrangeMenuItems(
-            NowPlayingBar.shownItemIds(requireContext(), toolbar.menu, barSettings.barActions)
-        )
+        val menu = NowPlayingBar.inflate(context)
+        val itemIds = NowPlayingBar.shownItemIds(context, menu, barSettings.barActions)
+        toolbar.arrangeMenuItems(menu, itemIds)
+        // The last actions give way first when they do not all fit.
+        toolbar.setOverflowPriority(itemIds.filter { it != NowPlayingBar.MORE_ITEM_ID }.reversed())
         // A new menu starts with the default icons.
         updateSleepTimer(sleepTimer.state.value)
     }
@@ -292,9 +299,16 @@ class PlaybackPanelFragment :
             R.id.action_artist_details -> navigateToCurrentArtist()
             R.id.action_album_details -> navigateToCurrentAlbum()
             R.id.action_genre_details -> navigateToCurrentGenre()
-            R.id.action_save_queue -> musicModel.createPlaylist(songs = playbackModel.queue)
+            R.id.action_save_queue ->
+                musicModel.createPlaylist(
+                    songs = playbackModel.queue,
+                    reason = PlaylistDecision.New.Reason.SAVE_QUEUE,
+                )
             R.id.action_settings -> homeModel.showSettings()
             R.id.action_share -> playbackModel.song.value?.let { requireContext().share(it) }
+            // Song menu actions that the user moved onto the bar.
+            R.id.action_detail -> playbackModel.song.value?.let(detailModel::showSong)
+            R.id.action_open_equalizer -> openEqualizer()
             R.id.action_song_menu -> openSongMenu()
             else -> return false
         }
