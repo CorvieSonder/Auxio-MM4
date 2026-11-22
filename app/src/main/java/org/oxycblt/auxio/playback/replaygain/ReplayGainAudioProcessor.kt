@@ -52,8 +52,9 @@ constructor(
     private val playbackManager: PlaybackStateManager,
     private val playbackSettings: PlaybackSettings,
 ) : BaseAudioProcessor(), PlaybackStateManager.Listener, PlaybackSettings.Listener {
-    private var volume = 1f
-        set(value) {
+    /** The ReplayGain adjustment of the current song, as a linear volume factor. */
+    var volume = 1f
+        private set(value) {
             field = value
             // Processed bytes are no longer valid, flush the stream
             flush()

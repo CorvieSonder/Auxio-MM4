@@ -29,6 +29,25 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="@string/set_crossfade">
+
+        <SeekBarPreference
+            android:max="12"
+            app:defaultValue="0"
+            app:key="@string/set_key_crossfade"
+            app:min="0"
+            app:showSeekBarValue="true"
+            app:summary="@string/set_crossfade_length_desc"
+            app:title="@string/set_crossfade_length" />
+
+        <SwitchPreferenceCompat
+            app:defaultValue="true"
+            app:key="@string/set_key_crossfade_skip_album"
+            app:summary="@string/set_crossfade_skip_album_desc"
+            app:title="@string/set_crossfade_skip_album" />
+
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/set_replay_gain">
 
         <org.oxycblt.auxio.settings.ui.IntListPreference

@@ -51,6 +51,8 @@ import kotlinx.coroutines.yield
 import org.oxycblt.auxio.image.ImageSettings
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.playback.PlaybackSettings
+import org.oxycblt.auxio.playback.crossfade.CrossfadeController
+import org.oxycblt.auxio.playback.crossfade.CrossfadeSettings
 import org.oxycblt.auxio.playback.persist.PersistenceRepository
 import org.oxycblt.auxio.playback.replaygain.ReplayGainAudioProcessor
 import org.oxycblt.auxio.playback.state.DeferredPlayback
@@ -77,6 +79,8 @@ class ExoPlaybackStateHolder(
     private val replayGainProcessor: ReplayGainAudioProcessor,
     private val musicRepository: MusicRepository,
     private val imageSettings: ImageSettings,
+    mediaSourceFactory: MediaSource.Factory,
+    crossfadeSettings: CrossfadeSettings,
 ) :
     PlaybackStateHolder,
     Player.Listener,
@@ -88,6 +92,15 @@ class ExoPlaybackStateHolder(
     private val restoreScope = CoroutineScope(Dispatchers.IO + saveJob)
     private var currentSaveJob: Job? = null
     private var openAudioEffectSession = false
+    private val crossfade =
+        CrossfadeController(
+            context,
+            player,
+            mediaSourceFactory,
+            crossfadeSettings,
+            { replayGainProcessor.volume },
+            ::advanceForCrossfade,
+        )
 
     var sessionOngoing = false
         private set
@@ -109,6 +122,7 @@ class ExoPlaybackStateHolder(
         replayGainProcessor.release()
         imageSettings.unregisterListener(this)
         playbackSettings.unregisterListener(this)
+        crossfade.release()
         player.release()
     }
 
@@ -229,6 +243,7 @@ class ExoPlaybackStateHolder(
     }
 
     override fun seekTo(positionMs: Long) {
+        crossfade.cancel()
         player.seekTo(positionMs)
         deferSave()
         // Ack handled w/ExoPlayer events
@@ -247,6 +262,7 @@ class ExoPlaybackStateHolder(
     }
 
     override fun newPlayback(command: PlaybackCommand) {
+        crossfade.cancel()
         parent = command.parent
         player.shuffleModeEnabled = command.shuffled
         player.setMediaItems(command.queue.map { it.buildMediaItem() })
@@ -278,6 +294,7 @@ class ExoPlaybackStateHolder(
     }
 
     override fun next() {
+        crossfade.cancel()
         // Replicate the old pseudo-circular queue behavior when no repeat option is implemented.
         // Basically, you can't skip back and wrap around the queue, but you can skip forward and
         // wrap around the queue, albeit playback will be paused.
@@ -302,6 +319,7 @@ class ExoPlaybackStateHolder(
     }
 
     override fun prev() {
+        crossfade.cancel()
         if (playbackSettings.rewindWithPrev) {
             player.seekToPrevious()
         } else if (player.hasPreviousMediaItem()) {
@@ -317,6 +335,7 @@ class ExoPlaybackStateHolder(
     }
 
     override fun goto(index: Int) {
+        crossfade.cancel()
         val indices = player.unscrambleQueueIndices()
         if (indices.isEmpty()) {
             return
@@ -444,6 +463,7 @@ class ExoPlaybackStateHolder(
     }
 
     override fun endSession() {
+        crossfade.cancel()
         // This session has ended, so we need to reset this flag for when the next
         // session starts.
         playbackManager.playing(false)
@@ -458,6 +478,7 @@ class ExoPlaybackStateHolder(
     }
 
     override fun reset(ack: StateAck.NewPlayback) {
+        crossfade.cancel()
         player.setMediaItems(listOf())
         playbackManager.ack(this, ack)
         deferSave()
@@ -467,6 +488,10 @@ class ExoPlaybackStateHolder(
 
     override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
         super.onPlayWhenReadyChanged(playWhenReady, reason)
+
+        if (!playWhenReady) {
+            crossfade.cancel()
+        }
 
         if (player.playWhenReady) {
             // Mark that we have started playing so that the notification can now be posted.
@@ -484,6 +509,25 @@ class ExoPlaybackStateHolder(
             L.d("Closing audio effect session")
             broadcastAudioEffectAction(AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION)
             openAudioEffectSession = false
+        }
+    }
+
+    override fun onPlaybackSuppressionReasonChanged(playbackSuppressionReason: Int) {
+        super.onPlaybackSuppressionReasonChanged(playbackSuppressionReason)
+        if (playbackSuppressionReason != Player.PLAYBACK_SUPPRESSION_REASON_NONE) {
+            crossfade.cancel()
+        }
+    }
+
+    override fun onPositionDiscontinuity(
+        oldPosition: Player.PositionInfo,
+        newPosition: Player.PositionInfo,
+        reason: Int,
+    ) {
+        super.onPositionDiscontinuity(oldPosition, newPosition, reason)
+        if (reason != Player.DISCONTINUITY_REASON_AUTO_TRANSITION) {
+            // Seeks and skips that did not go through this class, for example a removed song.
+            crossfade.cancel()
         }
     }
 
@@ -519,6 +563,19 @@ class ExoPlaybackStateHolder(
         ) {
             L.d("Player state changed, must synchronize state")
             playbackManager.ack(this, StateAck.ProgressionChanged)
+        }
+
+        if (
+            events.containsAny(
+                Player.EVENT_IS_PLAYING_CHANGED,
+                Player.EVENT_MEDIA_ITEM_TRANSITION,
+                Player.EVENT_POSITION_DISCONTINUITY,
+                Player.EVENT_TIMELINE_CHANGED,
+                Player.EVENT_REPEAT_MODE_CHANGED,
+                Player.EVENT_PLAYBACK_PARAMETERS_CHANGED,
+            )
+        ) {
+            crossfade.update()
         }
     }
 
@@ -561,6 +618,12 @@ class ExoPlaybackStateHolder(
     private fun updatePauseOnRepeat() {
         player.pauseAtEndOfMediaItems =
             player.repeatMode == Player.REPEAT_MODE_ONE && playbackSettings.pauseOnRepeat
+    }
+
+    private fun advanceForCrossfade() {
+        player.seekToNextMediaItem()
+        playbackManager.ack(this, StateAck.IndexMoved)
+        deferSave()
     }
 
     private fun save(cb: () -> Unit) {
@@ -654,6 +717,7 @@ class ExoPlaybackStateHolder(
         private val replayGainProcessor: ReplayGainAudioProcessor,
         private val musicRepository: MusicRepository,
         private val imageSettings: ImageSettings,
+        private val crossfadeSettings: CrossfadeSettings,
     ) {
         fun create(): ExoPlaybackStateHolder {
             // Since Auxio is a music player, only specify an audio renderer to save
@@ -698,6 +762,8 @@ class ExoPlaybackStateHolder(
                 replayGainProcessor,
                 musicRepository,
                 imageSettings,
+                mediaSourceFactory,
+                crossfadeSettings,
             )
         }
     }
