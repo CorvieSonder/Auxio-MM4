@@ -296,7 +296,11 @@ class PlaylistDetailFragment :
         }
         binding.detailCover.setPinned(playlistTreeRepository.isPinned(playlist))
 
-        binding.detailType.text = binding.context.getString(R.string.lbl_playlist)
+        binding.detailType.text =
+            binding.context.getString(
+                if (playlistTreeRepository.isLibrary(playlist)) R.string.lbl_library_playlist
+                else R.string.lbl_playlist
+            )
         binding.detailName.text = playlist.name.resolve(binding.context)
         binding.detailName.setCompoundDrawablesRelativeWithIntrinsicBounds(
             if (playlistTreeRepository.isLibrary(playlist)) R.drawable.ic_library_playlist_24
