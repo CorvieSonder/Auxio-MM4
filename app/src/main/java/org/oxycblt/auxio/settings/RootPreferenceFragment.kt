@@ -28,6 +28,7 @@ import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.music.MusicViewModel
+import org.oxycblt.auxio.settings.backup.BackupUi
 import org.oxycblt.auxio.settings.ui.WrappedDialogPreference
 import org.oxycblt.auxio.util.navigateSafe
 import timber.log.Timber as L
@@ -40,9 +41,11 @@ import timber.log.Timber as L
 @AndroidEntryPoint
 class RootPreferenceFragment : BasePreferenceFragment(R.xml.preferences_root) {
     private val musicModel: MusicViewModel by activityViewModels()
+    private lateinit var backupUi: BackupUi
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        backupUi = BackupUi(this)
 
         enterTransition = MaterialFadeThrough()
         returnTransition = MaterialFadeThrough()
@@ -88,6 +91,8 @@ class RootPreferenceFragment : BasePreferenceFragment(R.xml.preferences_root) {
             }
             getString(R.string.set_key_reindex) -> musicModel.refresh()
             getString(R.string.set_key_rescan) -> musicModel.rescan()
+            getString(R.string.set_key_backup_export) -> backupUi.export()
+            getString(R.string.set_key_backup_import) -> backupUi.import()
             else -> return super.onPreferenceTreeClick(preference)
         }
 

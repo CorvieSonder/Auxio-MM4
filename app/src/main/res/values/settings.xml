@@ -13,6 +13,8 @@
 
     <string name="set_key_reindex" translatable="false">auxio_reindex</string>
     <string name="set_key_rescan" translatable="false">auxio_rescan</string>
+    <string name="set_key_backup_export" translatable="false">auxio_backup_export</string>
+    <string name="set_key_backup_import" translatable="false">auxio_backup_import</string>
     <string name="set_key_observing" translatable="false">auxio_observing</string>
     <string name="set_key_music_dirs" translatable="false">auxio_music_dirs</string>
     <string name="set_key_excluded_dirs" translatable="false">auxio_excluded_dirs</string>
