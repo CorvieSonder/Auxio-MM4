@@ -32,7 +32,7 @@ Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, di
 - Export and import nested playlists as folders of M3U8 files (replace an earlier export; choose what to import)
 - Two-way sync with MediaMonkey 4: linked playlists are updated in place (songs, order, name, nesting); changes made on both sides can be overwritten, kept or merged
 - Autoplaylists: Recently Added, Recently Played, Most Played, Rated and Now Playing
-- Library playlists: a top-level playlist can show every song of the playlists inside it, each once, kept up to date (for example one per person sharing a media library); also in MediaMonkey 4 through the script (PC side untested)
+- Library playlists: a top-level playlist can show every song of the playlists inside it, each once, kept up to date (for example one per person sharing a media library); also in MediaMonkey 4 through the script
 
 **Tags**
 - Ratings from POPM frames (MediaMonkey, MusicBee, Windows Media Player (only MM tested)), with a choice of source and scale; a rating label in lists, a rating button in Now Playing, filter by rating
