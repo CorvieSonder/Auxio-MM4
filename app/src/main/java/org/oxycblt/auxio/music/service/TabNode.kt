@@ -58,6 +58,13 @@ sealed class TabNode {
                 MusicType.COMPOSERS -> 'c'
                 MusicType.MOODS -> 'o'
                 MusicType.GROUPINGS -> 'u'
+                // Custom tags are not browsable in Android Auto, so these are never sent.
+                MusicType.CUSTOM_1 -> '1'
+                MusicType.CUSTOM_2 -> '2'
+                MusicType.CUSTOM_3 -> '3'
+                MusicType.CUSTOM_4 -> '4'
+                MusicType.CUSTOM_5 -> '5'
+                MusicType.CUSTOM_6 -> '6'
             }}"
         override val bitmapRes: Int
             get() =
@@ -69,7 +76,13 @@ sealed class TabNode {
                     MusicType.PLAYLISTS -> R.drawable.ic_playlist_bitmap_24
                     MusicType.COMPOSERS -> R.drawable.ic_genre_bitmap_24
                     MusicType.MOODS -> R.drawable.ic_genre_bitmap_24
-                    MusicType.GROUPINGS -> R.drawable.ic_genre_bitmap_24
+                    MusicType.GROUPINGS,
+                    MusicType.CUSTOM_1,
+                    MusicType.CUSTOM_2,
+                    MusicType.CUSTOM_3,
+                    MusicType.CUSTOM_4,
+                    MusicType.CUSTOM_5,
+                    MusicType.CUSTOM_6 -> R.drawable.ic_genre_bitmap_24
                 }
 
         override val nameRes = type.nameRes

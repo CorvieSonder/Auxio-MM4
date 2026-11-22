@@ -40,9 +40,11 @@ interface PlainHeader : Header {
  * A basic header with no additional actions.
  *
  * @param titleRes The string resource used for the header's title.
+ * @param title A title to show instead of [titleRes], for names chosen by the user.
  * @author Alexander Capehart (OxygenCobalt)
  */
-data class BasicHeader(@StringRes override val titleRes: Int) : PlainHeader
+data class BasicHeader(@StringRes override val titleRes: Int, val title: String? = null) :
+    PlainHeader
 
 interface Divider<T> {
     val anchor: T?

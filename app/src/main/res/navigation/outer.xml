@@ -72,6 +72,9 @@
         <action
             android:id="@+id/separators_settings"
             app:destination="@id/separators_dialog" />
+        <action
+            android:id="@+id/custom_tags_settings"
+            app:destination="@id/custom_tags_dialog" />
     </fragment>
 
     <fragment
@@ -108,6 +111,12 @@
         android:name="org.oxycblt.auxio.music.interpret.SeparatorsDialog"
         android:label="separators_dialog"
         tools:layout="@layout/dialog_separators" />
+
+    <dialog
+        android:id="@+id/custom_tags_dialog"
+        android:name="org.oxycblt.auxio.music.tags.CustomTagsDialog"
+        android:label="custom_tags_dialog"
+        tools:layout="@layout/dialog_custom_tags" />
 
     <fragment
         android:id="@+id/about_fragment"

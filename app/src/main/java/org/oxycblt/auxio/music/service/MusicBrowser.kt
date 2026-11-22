@@ -34,6 +34,7 @@ import org.oxycblt.auxio.search.SearchEngine
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
+import org.oxycblt.musikr.CustomValue
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
@@ -136,6 +137,8 @@ private constructor(
             is Mood -> null
             // Not browsable in Android Auto.
             is Grouping -> null
+            // Not browsable in Android Auto.
+            is CustomValue -> null
         }
     }
 
@@ -221,14 +224,23 @@ private constructor(
                     MusicType.PLAYLISTS -> homeGenerator.playlists().map { it.toMediaItem(context) }
                     MusicType.COMPOSERS -> listOf()
                     MusicType.MOODS -> listOf()
-                    MusicType.GROUPINGS -> listOf()
+                    MusicType.GROUPINGS,
+                    MusicType.CUSTOM_1,
+                    MusicType.CUSTOM_2,
+                    MusicType.CUSTOM_3,
+                    MusicType.CUSTOM_4,
+                    MusicType.CUSTOM_5,
+                    MusicType.CUSTOM_6 -> listOf()
                 }
         }
 
-    // Composers, moods and groupings are not browsable in Android Auto.
+    // Composers, moods, groupings and custom tags are not browsable in Android Auto.
     private fun autoTabs() =
         homeGenerator.tabs().filter {
-            it != MusicType.COMPOSERS && it != MusicType.MOODS && it != MusicType.GROUPINGS
+            it != MusicType.COMPOSERS &&
+                it != MusicType.MOODS &&
+                it != MusicType.GROUPINGS &&
+                it.customSlot == null
         }
 
     private fun getChildMediaItems(uid: Music.UID): List<MediaItem>? {

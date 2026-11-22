@@ -18,12 +18,15 @@
  
 package org.oxycblt.auxio.list.sort
 
+import android.content.Context
 import org.oxycblt.auxio.IntegerTable
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.music.rating.rating
+import org.oxycblt.auxio.music.tags.CustomTag
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
+import org.oxycblt.musikr.CustomValue
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
@@ -125,6 +128,18 @@ data class Sort(val mode: Mode, val direction: Direction) {
     }
 
     /**
+     * Sort a list of [CustomValue]s.
+     *
+     * @param custom values The list of [CustomValue]s.
+     * @return A new list of [CustomValue]s sorted by this [Sort]'s configuration.
+     */
+    fun customValues(customValues: Collection<CustomValue>): List<CustomValue> {
+        val mutable = customValues.toMutableList()
+        mode.sortCustomValues(mutable, direction)
+        return mutable
+    }
+
+    /**
      * Sort a list of [Playlist]s.
      *
      * @param playlists The list of [Playlist]s.
@@ -156,6 +171,9 @@ data class Sort(val mode: Mode, val direction: Direction) {
         val intCode: Int
         val stringRes: Int
 
+        /** The name of this mode, as shown in sort dialogs. */
+        fun label(context: Context) = context.getString(stringRes)
+
         fun sortSongs(songs: MutableList<Song>, direction: Direction) {
             throw NotImplementedError("Sorting songs is not supported for this mode")
         }
@@ -186,6 +204,10 @@ data class Sort(val mode: Mode, val direction: Direction) {
 
         fun sortGroupings(groupings: MutableList<Grouping>, direction: Direction) {
             throw NotImplementedError("Sorting groupings is not supported for this mode")
+        }
+
+        fun sortCustomValues(customValues: MutableList<CustomValue>, direction: Direction) {
+            throw NotImplementedError("Sorting customValues is not supported for this mode")
         }
 
         data object ByName : Mode {
@@ -246,6 +268,16 @@ data class Sort(val mode: Mode, val direction: Direction) {
 
             private val Grouping.decade: Int?
                 get() = DECADE_REGEX.matchEntire(name.raw)?.groupValues?.get(1)?.toIntOrNull()
+
+            override fun sortCustomValues(
+                customValues: MutableList<CustomValue>,
+                direction: Direction,
+            ) {
+                when (direction) {
+                    Direction.ASCENDING -> customValues.sortBy { it.name }
+                    Direction.DESCENDING -> customValues.sortByDescending { it.name }
+                }
+            }
 
             override fun sortPlaylists(playlists: MutableList<Playlist>, direction: Direction) {
                 when (direction) {
@@ -382,6 +414,17 @@ data class Sort(val mode: Mode, val direction: Direction) {
                 }
             }
 
+            override fun sortCustomValues(
+                customValues: MutableList<CustomValue>,
+                direction: Direction,
+            ) {
+                customValues.sortBy { it.name }
+                when (direction) {
+                    Direction.ASCENDING -> customValues.sortBy { it.durationMs }
+                    Direction.DESCENDING -> customValues.sortByDescending { it.durationMs }
+                }
+            }
+
             override fun sortPlaylists(playlists: MutableList<Playlist>, direction: Direction) {
                 playlists.sortBy { it.name }
                 when (direction) {
@@ -440,6 +483,17 @@ data class Sort(val mode: Mode, val direction: Direction) {
                 when (direction) {
                     Direction.ASCENDING -> groupings.sortBy { it.songs.size }
                     Direction.DESCENDING -> groupings.sortByDescending { it.songs.size }
+                }
+            }
+
+            override fun sortCustomValues(
+                customValues: MutableList<CustomValue>,
+                direction: Direction,
+            ) {
+                customValues.sortBy { it.name }
+                when (direction) {
+                    Direction.ASCENDING -> customValues.sortBy { it.songs.size }
+                    Direction.DESCENDING -> customValues.sortByDescending { it.songs.size }
                 }
             }
 
@@ -530,9 +584,33 @@ data class Sort(val mode: Mode, val direction: Direction) {
             }
         }
 
+        /**
+         * Sort songs by their first value of the custom tag in [slot]. Songs without a value come
+         * last in either direction.
+         */
+        data class ByCustomTag(val slot: Int) : Mode {
+            override val intCode = IntegerTable.SORT_BY_CUSTOM_TAG + slot - 1
+            override val stringRes = R.string.lbl_custom_value
+
+            override fun label(context: Context) = CustomTag.nameOf(context, slot)
+
+            override fun sortSongs(songs: MutableList<Song>, direction: Direction) {
+                songs.sortBy { it.name }
+                val value = { song: Song -> song.customValues.firstOrNull { it.slot == slot } }
+                when (direction) {
+                    Direction.ASCENDING ->
+                        songs.sortWith(compareBy(nullsLast()) { value(it)?.name })
+                    Direction.DESCENDING ->
+                        songs.sortWith(compareBy(nullsLast(reverseOrder())) { value(it)?.name })
+                }
+            }
+        }
+
         companion object {
             fun fromIntCode(intCode: Int): Mode? =
                 when (intCode) {
+                    in CUSTOM_TAG_CODES ->
+                        ByCustomTag(intCode - IntegerTable.SORT_BY_CUSTOM_TAG + 1)
                     ByName.intCode -> ByName
                     ByArtist.intCode -> ByArtist
                     ByAlbum.intCode -> ByAlbum
@@ -546,6 +624,10 @@ data class Sort(val mode: Mode, val direction: Direction) {
                     ByRating.intCode -> ByRating
                     else -> null
                 }
+
+            private val CUSTOM_TAG_CODES =
+                IntegerTable.SORT_BY_CUSTOM_TAG until
+                    IntegerTable.SORT_BY_CUSTOM_TAG + CustomTag.SLOTS.last
         }
     }
 

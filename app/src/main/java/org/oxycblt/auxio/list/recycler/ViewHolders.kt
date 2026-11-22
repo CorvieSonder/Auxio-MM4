@@ -44,6 +44,7 @@ import org.oxycblt.auxio.util.inflater
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
+import org.oxycblt.musikr.CustomValue
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
@@ -441,6 +442,60 @@ class GroupingViewHolder private constructor(private val binding: ItemParentBind
     }
 }
 
+/** A [RecyclerView.ViewHolder] that displays a [CustomValue]. Use [from] to create an instance. */
+class CustomValueViewHolder private constructor(private val binding: ItemParentBinding) :
+    SelectionIndicatorAdapter.ViewHolder(binding.root) {
+    /**
+     * Bind new data to this instance.
+     *
+     * @param custom value The new [CustomValue] to bind.
+     * @param listener An [SelectableListListener] to bind interactions to.
+     */
+    fun bind(customValue: CustomValue, listener: SelectableListListener<CustomValue>) {
+        listener.bind(customValue, this, menuButton = binding.parentMenu)
+        binding.parentImage.bind(customValue)
+        binding.parentName.text = customValue.name.resolve(binding.context)
+        binding.parentInfo.text =
+            binding.context.getString(
+                R.string.fmt_two,
+                binding.context.getPlural(R.plurals.fmt_artist_count, customValue.artists.size),
+                binding.context.getPlural(R.plurals.fmt_song_count, customValue.songs.size),
+            )
+    }
+
+    override fun updatePlayingIndicator(isActive: Boolean, isPlaying: Boolean) {
+        binding.root.isSelected = isActive
+        binding.parentImage.setPlaying(isPlaying)
+    }
+
+    override fun updateSelectionIndicator(isSelected: Boolean) {
+        binding.root.isActivated = isSelected
+    }
+
+    companion object {
+        /** Unique ID for this ViewHolder type. */
+        const val VIEW_TYPE = IntegerTable.VIEW_TYPE_CUSTOM_VALUE
+
+        /**
+         * Create a new instance.
+         *
+         * @param parent The parent to inflate this instance from.
+         * @return A new instance.
+         */
+        fun from(parent: ViewGroup) =
+            CustomValueViewHolder(ItemParentBinding.inflate(parent.context.inflater, parent, false))
+
+        /** A comparator that can be used with DiffUtil. */
+        val DIFF_CALLBACK =
+            object : SimpleDiffCallback<CustomValue>() {
+                override fun areContentsTheSame(oldItem: CustomValue, newItem: CustomValue) =
+                    oldItem.name == newItem.name &&
+                        oldItem.artists.size == newItem.artists.size &&
+                        oldItem.songs.size == newItem.songs.size
+            }
+    }
+}
+
 /**
  * A [RecyclerView.ViewHolder] that displays a [Playlist]. Use [from] to create an instance.
  *
@@ -583,7 +638,7 @@ class BasicHeaderViewHolder private constructor(private val binding: ItemHeaderB
      * @param basicHeader The new [BasicHeader] to bind.
      */
     fun bind(basicHeader: BasicHeader) {
-        binding.title.text = binding.context.getString(basicHeader.titleRes)
+        binding.title.text = basicHeader.title ?: binding.context.getString(basicHeader.titleRes)
     }
 
     companion object {
@@ -603,7 +658,7 @@ class BasicHeaderViewHolder private constructor(private val binding: ItemHeaderB
         val DIFF_CALLBACK =
             object : SimpleDiffCallback<BasicHeader>() {
                 override fun areContentsTheSame(oldItem: BasicHeader, newItem: BasicHeader) =
-                    oldItem.titleRes == newItem.titleRes
+                    oldItem == newItem
             }
     }
 }

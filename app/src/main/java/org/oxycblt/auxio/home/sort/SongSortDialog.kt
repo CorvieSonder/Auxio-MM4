@@ -20,9 +20,11 @@ package org.oxycblt.auxio.home.sort
 
 import androidx.fragment.app.activityViewModels
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import org.oxycblt.auxio.home.HomeViewModel
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.list.sort.SortDialog
+import org.oxycblt.auxio.music.MusicSettings
 
 /**
  * A [SortDialog] that controls the [Sort] of [HomeViewModel.songList].
@@ -39,6 +41,8 @@ class SongSortDialog : SortDialog() {
         homeModel.applySongSort(sort)
     }
 
+    @Inject lateinit var musicSettings: MusicSettings
+
     override fun getModeChoices() =
         listOf(
             Sort.Mode.ByName,
@@ -48,5 +52,5 @@ class SongSortDialog : SortDialog() {
             Sort.Mode.ByDuration,
             Sort.Mode.ByDateAdded,
             Sort.Mode.ByRating,
-        )
+        ) + musicSettings.customTags.filter { it.enabled }.map { Sort.Mode.ByCustomTag(it.slot) }
 }

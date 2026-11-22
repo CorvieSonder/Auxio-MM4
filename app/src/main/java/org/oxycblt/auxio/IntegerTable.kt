@@ -39,6 +39,9 @@ object IntegerTable {
     const val VIEW_TYPE_MOOD = 0xA0D1
     /** GroupingViewHolder */
     const val VIEW_TYPE_GROUPING = 0xA0D2
+
+    /** CustomValueViewHolder */
+    const val VIEW_TYPE_CUSTOM_VALUE = 0xA0D3
     /** PlaylistViewHolder */
     const val VIEW_TYPE_PLAYLIST = 0xA004
     /** BasicHeaderViewHolder */
@@ -103,6 +106,24 @@ object IntegerTable {
     const val MUSIC_MODE_MOODS = 0xA142
     /** MusicMode.GROUPINGS */
     const val MUSIC_MODE_GROUPINGS = 0xA144
+
+    /** MusicMode.CUSTOM_1 (custom tags use 0xA146 to 0xA14B) */
+    const val MUSIC_MODE_CUSTOM_1 = 0xA146
+
+    /** MusicMode.CUSTOM_2 */
+    const val MUSIC_MODE_CUSTOM_2 = 0xA147
+
+    /** MusicMode.CUSTOM_3 */
+    const val MUSIC_MODE_CUSTOM_3 = 0xA148
+
+    /** MusicMode.CUSTOM_4 */
+    const val MUSIC_MODE_CUSTOM_4 = 0xA149
+
+    /** MusicMode.CUSTOM_5 */
+    const val MUSIC_MODE_CUSTOM_5 = 0xA14A
+
+    /** MusicMode.CUSTOM_6 */
+    const val MUSIC_MODE_CUSTOM_6 = 0xA14B
     /** Sort.Mode.ByName */
     const val SORT_BY_NAME = 0xA10C
     /** Sort.Mode.ByArtist */
@@ -123,6 +144,9 @@ object IntegerTable {
     const val SORT_BY_DATE_ADDED = 0xA118
     /** Sort.Mode.ByRating */
     const val SORT_BY_RATING = 0xA130
+
+    /** Sort.Mode.ByCustomTag for slot 1; slot n uses this + n - 1 (up to 0xA155) */
+    const val SORT_BY_CUSTOM_TAG = 0xA150
     /** ReplayGainMode.Off (No longer used but still reserved) */
     const val REPLAY_GAIN_MODE_OFF = 0xA110
     /** ReplayGainMode.Track */
@@ -161,6 +185,9 @@ object IntegerTable {
     const val PLAY_SONG_FROM_MOOD = 0xA143
     /** PlaySong.FromGrouping */
     const val PLAY_SONG_FROM_GROUPING = 0xA145
+
+    /** PlaySong.FromCustomValue */
+    const val PLAY_SONG_FROM_CUSTOM_VALUE = 0xA14C
     /** CoverMode.SaveSpace */
     const val COVER_MODE_SAVE_SPACE = 0xA125
     /** CoverMode.AsIs */

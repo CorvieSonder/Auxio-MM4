@@ -14,6 +14,11 @@
             app:summary="@string/set_separators_desc"
             app:title="@string/set_separators" />
 
+        <org.oxycblt.auxio.settings.ui.WrappedDialogPreference
+            app:key="@string/set_key_custom_tags"
+            app:summary="@string/set_custom_tags_desc"
+            app:title="@string/lbl_custom_tags" />
+
         <SwitchPreferenceCompat
             app:defaultValue="true"
             app:key="@string/set_key_auto_sort_names"

@@ -36,6 +36,7 @@ internal data class LibraryImpl(
     override val composers: Set<ComposerImpl>,
     override val moods: Set<MoodImpl>,
     override val groupings: Set<GroupingImpl>,
+    override val customValues: Set<CustomValueImpl>,
     override val playlists: Set<PlaylistImpl>,
     private val storedPlaylists: StoredPlaylists,
     private val playlistInterpreter: PlaylistInterpreter,
@@ -50,6 +51,7 @@ internal data class LibraryImpl(
     private val composerUidMap = composers.associateBy { it.uid }
     private val moodUidMap = moods.associateBy { it.uid }
     private val groupingUidMap = groupings.associateBy { it.uid }
+    private val customValueUidMap = customValues.associateBy { it.uid }
     private val playlistUidMap = playlists.associateBy { it.uid }
 
     override fun empty() = songs.isEmpty()
@@ -71,6 +73,8 @@ internal data class LibraryImpl(
     override fun findMood(uid: Music.UID) = moodUidMap[uid]
 
     override fun findGrouping(uid: Music.UID) = groupingUidMap[uid]
+
+    override fun findCustomValue(uid: Music.UID) = customValueUidMap[uid]
 
     override fun findPlaylist(uid: Music.UID) = playlistUidMap[uid]
 

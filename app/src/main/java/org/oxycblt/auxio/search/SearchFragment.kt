@@ -26,6 +26,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.isInvisible
+import androidx.core.view.isVisible
 import androidx.core.view.postDelayed
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.activityViewModels
@@ -46,6 +47,7 @@ import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.list.PlainDivider
 import org.oxycblt.auxio.list.PlainHeader
 import org.oxycblt.auxio.list.menu.Menu
+import org.oxycblt.auxio.music.MusicSettings
 import org.oxycblt.auxio.music.MusicType
 import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.music.PlaylistDecision
@@ -67,6 +69,7 @@ import org.oxycblt.auxio.util.showToast
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
+import org.oxycblt.musikr.CustomValue
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
@@ -91,6 +94,7 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
     override val listModel: ListViewModel by activityViewModels()
     override val playbackModel: PlaybackViewModel by activityViewModels()
     override val musicModel: MusicViewModel by activityViewModels()
+    @Inject lateinit var musicSettings: MusicSettings
     @Inject lateinit var playlistTreeRepository: PlaylistTreeRepository
     private val searchAdapter =
         SearchAdapter(this) {
@@ -172,6 +176,12 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
         binding.searchFilterComposers.isChecked = MusicType.COMPOSERS in filters
         binding.searchFilterMoods.isChecked = MusicType.MOODS in filters
         binding.searchFilterGroupings.isChecked = MusicType.GROUPINGS in filters
+        val customTags = musicSettings.customTags
+        for ((chip, tag) in customFilterChips(binding).zip(customTags)) {
+            chip.isVisible = tag.enabled
+            chip.text = tag.resolveName(requireContext())
+            chip.isChecked = tag.enabled && tag.musicType in filters
+        }
         binding.searchFilters.apply {
             setOnCheckedStateChangeListener { _, ids ->
                 val filters =
@@ -185,6 +195,12 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
                             R.id.search_filter_composers -> MusicType.COMPOSERS
                             R.id.search_filter_moods -> MusicType.MOODS
                             R.id.search_filter_groupings -> MusicType.GROUPINGS
+                            R.id.search_filter_custom_1 -> MusicType.CUSTOM_1
+                            R.id.search_filter_custom_2 -> MusicType.CUSTOM_2
+                            R.id.search_filter_custom_3 -> MusicType.CUSTOM_3
+                            R.id.search_filter_custom_4 -> MusicType.CUSTOM_4
+                            R.id.search_filter_custom_5 -> MusicType.CUSTOM_5
+                            R.id.search_filter_custom_6 -> MusicType.CUSTOM_6
                             else -> null
                         }
                     }
@@ -240,6 +256,7 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
             is Composer -> detailModel.showComposer(item)
             is Mood -> detailModel.showMood(item)
             is Grouping -> detailModel.showGrouping(item)
+            is CustomValue -> detailModel.showCustomValue(item)
             is Playlist -> detailModel.showPlaylist(item)
         }
     }
@@ -253,6 +270,7 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
             is Composer -> listModel.openMenu(R.menu.parent, item)
             is Mood -> listModel.openMenu(R.menu.parent, item)
             is Grouping -> listModel.openMenu(R.menu.parent, item)
+            is CustomValue -> listModel.openMenu(R.menu.parent, item)
             is Playlist -> listModel.openMenu(R.menu.playlist, item)
         }
     }
@@ -321,6 +339,11 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
                 findNavController()
                     .navigateSafe(SearchFragmentDirections.showGrouping(show.grouping.uid))
             }
+            is Show.CustomValueDetails -> {
+                L.d("Navigating to ${show.customValue}")
+                findNavController()
+                    .navigateSafe(SearchFragmentDirections.showCustomValue(show.customValue.uid))
+            }
             is Show.GenreDetails -> {
                 L.d("Navigating to ${show.genre}")
                 findNavController().navigateSafe(SearchFragmentDirections.showGenre(show.genre.uid))
@@ -347,6 +370,7 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
                 is Menu.ForComposer -> SearchFragmentDirections.openComposerMenu(menu.parcel)
                 is Menu.ForMood -> SearchFragmentDirections.openMoodMenu(menu.parcel)
                 is Menu.ForGrouping -> SearchFragmentDirections.openGroupingMenu(menu.parcel)
+                is Menu.ForCustomValue -> SearchFragmentDirections.openCustomValueMenu(menu.parcel)
                 is Menu.ForGenre -> SearchFragmentDirections.openGenreMenu(menu.parcel)
                 is Menu.ForPlaylist -> SearchFragmentDirections.openPlaylistMenu(menu.parcel)
                 is Menu.ForSelection -> SearchFragmentDirections.openSelectionMenu(menu.parcel)
@@ -499,4 +523,14 @@ class SearchFragment : ListFragment<Music, FragmentSearchBinding>() {
             show()
         }
     }
+
+    private fun customFilterChips(binding: FragmentSearchBinding) =
+        listOf(
+            binding.searchFilterCustom1,
+            binding.searchFilterCustom2,
+            binding.searchFilterCustom3,
+            binding.searchFilterCustom4,
+            binding.searchFilterCustom5,
+            binding.searchFilterCustom6,
+        )
 }

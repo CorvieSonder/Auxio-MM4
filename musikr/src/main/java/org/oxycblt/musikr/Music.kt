@@ -107,6 +107,7 @@ sealed interface Music {
             COMPOSER(0xA106, 'c'),
             MOOD(0xA105, 'm'),
             GROUPING(0xA104, 'i'),
+            CUSTOM_VALUE(0xA103, 'x'),
         }
 
         /**
@@ -345,6 +346,12 @@ interface Song : Music {
      * otherwise often one, but there can be multiple if more than one grouping name was specified.
      */
     val groupings: List<Grouping>
+    /**
+     * The parent [CustomValue]s of this [Song]. Empty if no custom value was specified in the
+     * metadata, otherwise often one, but there can be multiple if more than one custom value name
+     * was specified.
+     */
+    val customValues: List<CustomValue>
 }
 
 /**
@@ -453,6 +460,23 @@ interface Grouping : MusicParent {
     /** The total duration of the songs by this grouping, in milliseconds. */
     val durationMs: Long
     /** Useful information to quickly obtain a (single) cover for a Grouping. */
+    val covers: CoverCollection
+}
+
+/**
+ * A custom value.
+ *
+ * Unlike [Artist], songs without a custom value are not grouped into an "unknown" custom value.
+ */
+interface CustomValue : MusicParent {
+    override val name: Name.Known
+    /** The [CustomTagSpec.slot] of the custom tag this value was read from. */
+    val slot: Int
+    /** The artists of the [Song]s in this [CustomValue]. */
+    val artists: Collection<Artist>
+    /** The total duration of the songs with this value, in milliseconds. */
+    val durationMs: Long
+    /** Useful information to quickly obtain a (single) cover for a CustomValue. */
     val covers: CoverCollection
 }
 

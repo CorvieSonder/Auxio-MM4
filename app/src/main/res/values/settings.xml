@@ -80,6 +80,9 @@
     <string name="set_key_mood_songs_sort" translatable="false">auxio_mood_songs_sort</string>
     <string name="set_key_groupings_sort" translatable="false">auxio_groupings_sort</string>
     <string name="set_key_grouping_songs_sort" translatable="false">auxio_grouping_songs_sort</string>
+    <string name="set_key_custom_tags" translatable="false">auxio_custom_tags</string>
+    <string name="set_key_custom_values_sort" translatable="false">auxio_custom_values_sort</string>
+    <string name="set_key_custom_value_songs_sort" translatable="false">auxio_custom_value_songs_sort</string>
 
     <string name="set_key_library_revision" translatable="false">auxio_library_revision</string>
 

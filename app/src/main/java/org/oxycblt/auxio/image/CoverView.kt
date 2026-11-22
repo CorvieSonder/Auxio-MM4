@@ -72,6 +72,7 @@ import org.oxycblt.auxio.util.getDrawableCompat
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
+import org.oxycblt.musikr.CustomValue
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
@@ -520,6 +521,26 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
             },
             context.getString(R.string.desc_grouping_image, grouping.name),
             R.drawable.ic_grouping_24,
+            squareishShapeAppearance,
+        )
+
+    /**
+     * Bind a [CustomValue]'s image to this view.
+     *
+     * @param custom value The [CustomValue] to bind to the view.
+     */
+    fun bind(customValue: CustomValue) =
+        bindImpl(
+            { size ->
+                GalleryCoverCollection(
+                    customValue.covers,
+                    customValue.uid.toString().hashCode(),
+                    responsiveCornerRatio(size),
+                    backgroundColor(),
+                )
+            },
+            context.getString(R.string.desc_custom_value_image, customValue.name),
+            R.drawable.ic_custom_value_24,
             squareishShapeAppearance,
         )
 

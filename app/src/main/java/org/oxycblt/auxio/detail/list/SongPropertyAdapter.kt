@@ -64,7 +64,7 @@ class SongPropertyAdapter :
  * @param value The value of the property.
  * @author Alexander Capehart (OxygenCobalt)
  */
-data class SongProperty(@StringRes val name: Int, val value: Value) {
+data class SongProperty(@StringRes val name: Int, val value: Value, val title: String? = null) {
     sealed interface Value {
         data class MusicName(val music: Music) : Value
 
@@ -103,7 +103,7 @@ class SongPropertyViewHolder private constructor(private val binding: ItemSongPr
     RecyclerView.ViewHolder(binding.root) {
     fun bind(property: SongProperty) {
         val context = binding.context
-        binding.propertyName.hint = context.getString(property.name)
+        binding.propertyName.hint = property.title ?: context.getString(property.name)
         when (property.value) {
             is SongProperty.Value.MusicName -> {
                 val music = property.value.music

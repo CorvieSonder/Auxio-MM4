@@ -35,6 +35,7 @@ import org.oxycblt.auxio.music.rating.RatingDialog
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
 import org.oxycblt.auxio.music.ringtone.setAsRingtone
+import org.oxycblt.auxio.music.tags.CustomTag
 import org.oxycblt.auxio.music.tree.PlaylistFolderViewModel
 import org.oxycblt.auxio.music.tree.PlaylistTreeViewModel
 import org.oxycblt.auxio.playback.PlaySong
@@ -45,6 +46,7 @@ import org.oxycblt.auxio.util.share
 import org.oxycblt.auxio.util.showToast
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
+import org.oxycblt.musikr.CustomValue
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
@@ -442,6 +444,54 @@ class GroupingMenuDialogFragment : MenuDialogFragment<Menu.ForGrouping>() {
             }
             R.id.action_playlist_add -> musicModel.addToPlaylist(menu.grouping)
             R.id.action_share -> requireContext().share(menu.grouping)
+            else -> error("Unexpected menu item $item")
+        }
+    }
+}
+
+/** [MenuDialogFragment] implementation for a [CustomValue]. */
+@AndroidEntryPoint
+class CustomValueMenuDialogFragment : MenuDialogFragment<Menu.ForCustomValue>() {
+    override val menuModel: MenuViewModel by viewModels()
+    override val listModel: ListViewModel by activityViewModels()
+    private val detailModel: DetailViewModel by activityViewModels()
+    private val musicModel: MusicViewModel by activityViewModels()
+    private val playbackModel: PlaybackViewModel by activityViewModels()
+    private val args: CustomValueMenuDialogFragmentArgs by navArgs()
+
+    override val parcel
+        get() = args.parcel
+
+    override fun getDisabledItemIds(menu: Menu.ForCustomValue) = setOf<Int>()
+
+    override fun updateMenu(binding: DialogMenuBinding, menu: Menu.ForCustomValue) {
+        val context = requireContext()
+        binding.menuCover.bind(menu.customValue)
+        binding.menuType.text = CustomTag.nameOf(context, menu.customValue.slot)
+        binding.menuName.text = menu.customValue.name.resolve(context)
+        binding.menuInfo.text =
+            getString(
+                R.string.fmt_two,
+                context.getPlural(R.plurals.fmt_artist_count, menu.customValue.artists.size),
+                context.getPlural(R.plurals.fmt_song_count, menu.customValue.songs.size),
+            )
+    }
+
+    override fun onClick(item: MenuItem, menu: Menu.ForCustomValue) {
+        when (item.itemId) {
+            R.id.action_play -> playbackModel.play(menu.customValue)
+            R.id.action_shuffle -> playbackModel.shuffle(menu.customValue)
+            R.id.action_detail -> detailModel.showCustomValue(menu.customValue)
+            R.id.action_play_next -> {
+                playbackModel.playNext(menu.customValue)
+                requireContext().showToast(R.string.lng_play_next)
+            }
+            R.id.action_queue_add -> {
+                playbackModel.addToQueue(menu.customValue)
+                requireContext().showToast(R.string.lng_queue_added)
+            }
+            R.id.action_playlist_add -> musicModel.addToPlaylist(menu.customValue)
+            R.id.action_share -> requireContext().share(menu.customValue)
             else -> error("Unexpected menu item $item")
         }
     }

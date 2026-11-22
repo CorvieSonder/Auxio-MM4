@@ -28,6 +28,7 @@ import org.oxycblt.auxio.playback.PlaybackSettings
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
+import org.oxycblt.musikr.CustomValue
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
@@ -87,6 +88,14 @@ interface PlaybackCommand {
         fun songFromGrouping(song: Song, grouping: Grouping, shuffle: ShuffleMode): PlaybackCommand?
 
         fun grouping(grouping: Grouping, shuffle: ShuffleMode): PlaybackCommand?
+
+        fun songFromCustomValue(
+            song: Song,
+            customValue: CustomValue,
+            shuffle: ShuffleMode,
+        ): PlaybackCommand?
+
+        fun customValue(customValue: CustomValue, shuffle: ShuffleMode): PlaybackCommand?
 
         fun playlist(playlist: Playlist, shuffle: ShuffleMode): PlaybackCommand?
     }
@@ -171,6 +180,12 @@ constructor(
 
     override fun grouping(grouping: Grouping, shuffle: ShuffleMode) =
         newCommand(null, grouping, listSettings.groupingSongSort, shuffle)
+
+    override fun songFromCustomValue(song: Song, customValue: CustomValue, shuffle: ShuffleMode) =
+        newCommand(song, customValue, listSettings.customValueSongSort, shuffle)
+
+    override fun customValue(customValue: CustomValue, shuffle: ShuffleMode) =
+        newCommand(null, customValue, listSettings.customValueSongSort, shuffle)
 
     override fun playlist(playlist: Playlist, shuffle: ShuffleMode) =
         newCommand(

@@ -21,6 +21,7 @@ package org.oxycblt.musikr.model
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
+import org.oxycblt.musikr.CustomValue
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
@@ -41,6 +42,8 @@ internal interface SongCore {
     fun resolveMoods(): List<Mood>
 
     fun resolveGroupings(): List<Grouping>
+
+    fun resolveCustomValues(): List<CustomValue>
 }
 
 /**
@@ -90,6 +93,9 @@ internal class SongImpl(private val handle: SongCore) : Song {
 
     override val groupings: List<Grouping>
         get() = handle.resolveGroupings()
+
+    override val customValues: List<CustomValue>
+        get() = handle.resolveCustomValues()
 
     private val hashCode = 31 * uid.hashCode() + preSong.hashCode()
 

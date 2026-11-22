@@ -35,6 +35,16 @@
         android:id="@+id/sort_groupings"
         app:destination="@id/grouping_sort_dialog" />
 
+    <action
+        android:id="@+id/show_custom_value"
+        app:destination="@id/custom_value_detail_fragment" />
+    <action
+        android:id="@+id/open_custom_value_menu"
+        app:destination="@id/custom_value_menu_dialog" />
+    <action
+        android:id="@+id/sort_custom_values"
+        app:destination="@id/custom_value_sort_dialog" />
+
     <fragment
         android:id="@+id/home_fragment"
         android:name="org.oxycblt.auxio.home.HomeFragment"
@@ -586,6 +596,74 @@
         <argument
             android:name="parcel"
             app:argType="org.oxycblt.auxio.list.menu.Menu$ForGrouping$Parcel" />
+    </dialog>
+
+    <fragment
+        android:id="@+id/custom_value_detail_fragment"
+        android:name="org.oxycblt.auxio.detail.CustomValueDetailFragment"
+        android:label="custom_value_detail_fragment"
+        tools:layout="@layout/fragment_detail">
+        <argument
+            android:name="customValueUid"
+            app:argType="org.oxycblt.musikr.Music$UID" />
+        <action
+            android:id="@+id/sort"
+            app:destination="@+id/custom_value_song_sort_dialog" />
+        <action
+            android:id="@+id/show_song"
+            app:destination="@id/song_detail_dialog" />
+        <action
+            android:id="@+id/show_album"
+            app:destination="@id/album_detail_fragment" />
+        <action
+            android:id="@+id/show_artist"
+            app:destination="@id/artist_detail_fragment" />
+        <action
+            android:id="@+id/show_genre"
+            app:destination="@id/genre_detail_fragment" />
+        <action
+            android:id="@+id/show_artist_choices"
+            app:destination="@id/show_artist_choices_dialog" />
+        <action
+            android:id="@+id/open_song_menu"
+            app:destination="@id/song_menu_dialog" />
+        <action
+            android:id="@+id/open_artist_menu"
+            app:destination="@id/artist_menu_dialog" />
+        <action
+            android:id="@+id/open_selection_menu"
+            app:destination="@id/selection_menu_dialog" />
+        <action
+            android:id="@+id/add_to_playlist"
+            app:destination="@id/add_to_playlist_dialog" />
+        <action
+            android:id="@+id/play_from_artist"
+            app:destination="@id/play_from_artist_dialog" />
+        <action
+            android:id="@+id/play_from_genre"
+            app:destination="@id/play_from_genre_dialog" />
+    </fragment>
+
+    <dialog
+        android:id="@+id/custom_value_song_sort_dialog"
+        android:name="org.oxycblt.auxio.detail.sort.CustomValueSongSortDialog"
+        android:label="custom_value_song_sort_dialog"
+        tools:layout="@layout/dialog_sort" />
+
+    <dialog
+        android:id="@+id/custom_value_sort_dialog"
+        android:name="org.oxycblt.auxio.home.sort.CustomValueSortDialog"
+        android:label="custom_value_sort_dialog"
+        tools:layout="@layout/dialog_sort" />
+
+    <dialog
+        android:id="@+id/custom_value_menu_dialog"
+        android:name="org.oxycblt.auxio.list.menu.CustomValueMenuDialogFragment"
+        android:label="custom_value_menu_dialog"
+        tools:layout="@layout/dialog_menu">
+        <argument
+            android:name="parcel"
+            app:argType="org.oxycblt.auxio.list.menu.Menu$ForCustomValue$Parcel" />
     </dialog>
 
     <fragment

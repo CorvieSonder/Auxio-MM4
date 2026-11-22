@@ -92,6 +92,14 @@
     <string name="fmt_edit_moods_songs">Edit moods of %d songs</string>
     <string name="lbl_mood">Mood</string>
     <string name="lbl_groupings">Groupings</string>
+    <string name="lbl_custom_tags">Custom tags</string>
+    <string name="lbl_custom_value">Custom tag</string>
+    <string name="lbl_occasion">Occasion</string>
+    <!-- Default name of a custom tag, ex. "Custom 4" -->
+    <string name="fmt_custom_tag">Custom %d</string>
+    <string name="lbl_custom_tag_read">Read</string>
+    <string name="lbl_custom_tag_multi">Split values</string>
+    <string name="lbl_custom_tag_tab">Tab</string>
     <string name="lbl_grouping">Grouping</string>
 
     <string name="lbl_playlist">Playlist</string>
@@ -311,6 +319,7 @@
     <string name="lng_empty_composers">Your composers will show up here.</string>
     <string name="lng_empty_moods">Your moods will show up here.</string>
     <string name="lng_empty_groupings">Your groupings will show up here.</string>
+    <string name="lng_empty_custom_values">Values of this custom tag will show up here.</string>
     <string name="lng_empty_playlists">Your playlists will show up here.</string>
     <string name="lng_file_picker">Load music from the folders that you select. Slower, but more reliable. Requires the vanilla file manager app to be installed.</string>
     <string name="lng_system_database">Load music that the Android OS automatically detects. Faster, but less reliable. No support for filesystem-dependent features like cover.jpg.</string>
@@ -372,6 +381,7 @@
     <string name="set_with_hidden_desc">Include audio files that are hidden (ex. .cache)</string>
     <string name="set_separators">Multi-value separators</string>
     <string name="set_separators_desc">Configure characters that denote multiple tag values</string>
+    <string name="set_custom_tags_desc">Read MediaMonkey\'s Custom 1–5 and Occasion fields</string>
     <string name="set_separators_comma">Comma (,)</string>
     <string name="set_separators_semicolon">Semicolon (;)</string>
     <string name="set_separators_slash">Slash (/)</string>
@@ -514,6 +524,7 @@
     <string name="desc_composer_image">Composer image for %s</string>
     <string name="desc_mood_image">Mood image for %s</string>
     <string name="desc_grouping_image">Grouping image for %s</string>
+    <string name="desc_custom_value_image">Custom tag image for %s</string>
     <string name="desc_playlist_image">Playlist image for %s</string>
     <string name="desc_selection_image">Selection image</string>
 

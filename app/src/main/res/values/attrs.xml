@@ -8,6 +8,12 @@
     <item name="home_composer_recycler" type="id" />
     <item name="home_mood_recycler" type="id" />
     <item name="home_grouping_recycler" type="id" />
+    <item name="home_custom_1_recycler" type="id" />
+    <item name="home_custom_2_recycler" type="id" />
+    <item name="home_custom_3_recycler" type="id" />
+    <item name="home_custom_4_recycler" type="id" />
+    <item name="home_custom_5_recycler" type="id" />
+    <item name="home_custom_6_recycler" type="id" />
     <item name="home_playlist_recycler" type="id" />
 
     <integer name="anim_fade_enter_duration">200</integer>

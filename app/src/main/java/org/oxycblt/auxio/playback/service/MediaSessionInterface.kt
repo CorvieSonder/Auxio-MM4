@@ -40,6 +40,7 @@ import org.oxycblt.auxio.playback.state.ShuffleMode
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
+import org.oxycblt.musikr.CustomValue
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Library
@@ -287,6 +288,7 @@ constructor(
             is Composer -> commandFactory.composer(music, ShuffleMode.IMPLICIT)
             is Mood -> commandFactory.mood(music, ShuffleMode.IMPLICIT)
             is Grouping -> commandFactory.grouping(music, ShuffleMode.IMPLICIT)
+            is CustomValue -> commandFactory.customValue(music, ShuffleMode.IMPLICIT)
             is Playlist -> commandFactory.playlist(music, ShuffleMode.IMPLICIT)
         }
 
@@ -303,6 +305,8 @@ constructor(
             is Composer -> commandFactory.songFromComposer(music, parent, ShuffleMode.IMPLICIT)
             is Mood -> commandFactory.songFromMood(music, parent, ShuffleMode.IMPLICIT)
             is Grouping -> commandFactory.songFromGrouping(music, parent, ShuffleMode.IMPLICIT)
+            is CustomValue ->
+                commandFactory.songFromCustomValue(music, parent, ShuffleMode.IMPLICIT)
             null -> commandFactory.songFromAll(music, ShuffleMode.IMPLICIT)
         }
 

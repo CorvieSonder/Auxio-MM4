@@ -33,6 +33,7 @@ interface Library {
     val composers: Collection<Composer>
     val moods: Collection<Mood>
     val groupings: Collection<Grouping>
+    val customValues: Collection<CustomValue>
     val playlists: Collection<Playlist>
 
     /**
@@ -105,6 +106,14 @@ interface Library {
      * @return the grouping if found, null otherwise
      */
     fun findGrouping(uid: Music.UID): Grouping?
+
+    /**
+     * Find a [CustomValue] by it's [Music.UID]
+     *
+     * @param uid the [Music.UID] of the custom value
+     * @return the custom value if found, null otherwise
+     */
+    fun findCustomValue(uid: Music.UID): CustomValue?
 
     /**
      * Find a [Playlist] by it's [Music.UID]

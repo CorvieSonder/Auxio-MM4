@@ -25,6 +25,7 @@ import org.oxycblt.auxio.playback.PlaySong
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
+import org.oxycblt.musikr.CustomValue
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
@@ -57,6 +58,7 @@ sealed interface Menu {
                         is PlaySong.FromComposer -> playWith.which.uid
                         is PlaySong.FromMood -> playWith.which.uid
                         is PlaySong.FromGrouping -> playWith.which.uid
+                        is PlaySong.FromCustomValue -> playWith.which.uid
                         is PlaySong.FromAll,
                         is PlaySong.FromAlbum,
                         is PlaySong.ByItself -> null
@@ -120,6 +122,14 @@ sealed interface Menu {
             get() = Parcel(res, grouping.uid)
 
         @Parcelize data class Parcel(val res: Int, val groupingUid: Music.UID) : Menu.Parcel
+    }
+
+    /** Navigate to a [CustomValue] menu dialog. */
+    class ForCustomValue(@MenuRes override val res: Int, val customValue: CustomValue) : Menu {
+        override val parcel
+            get() = Parcel(res, customValue.uid)
+
+        @Parcelize data class Parcel(val res: Int, val customValueUid: Music.UID) : Menu.Parcel
     }
 
     /** Navigate to a [Playlist] menu dialog. */

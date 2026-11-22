@@ -45,6 +45,7 @@ import org.oxycblt.auxio.detail.Show
 import org.oxycblt.auxio.home.list.AlbumListFragment
 import org.oxycblt.auxio.home.list.ArtistListFragment
 import org.oxycblt.auxio.home.list.ComposerListFragment
+import org.oxycblt.auxio.home.list.CustomValueListFragment
 import org.oxycblt.auxio.home.list.GenreListFragment
 import org.oxycblt.auxio.home.list.GroupingListFragment
 import org.oxycblt.auxio.home.list.MoodListFragment
@@ -68,6 +69,7 @@ import org.oxycblt.auxio.util.collectImmediately
 import org.oxycblt.auxio.util.dampen
 import org.oxycblt.auxio.util.navigateSafe
 import org.oxycblt.auxio.util.showToast
+import org.oxycblt.auxio.util.unlikelyToBeNull
 import org.oxycblt.musikr.IndexingProgress
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Playlist
@@ -114,6 +116,15 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
             MusicType.COMPOSERS -> homeModel.composerList.value
             MusicType.MOODS -> homeModel.moodList.value
             MusicType.GROUPINGS -> homeModel.groupingList.value
+            MusicType.CUSTOM_1,
+            MusicType.CUSTOM_2,
+            MusicType.CUSTOM_3,
+            MusicType.CUSTOM_4,
+            MusicType.CUSTOM_5,
+            MusicType.CUSTOM_6 -> {
+                val slot = unlikelyToBeNull(homeModel.currentTabType.value.customSlot)
+                homeModel.customValueList(slot).value
+            }
         }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -234,6 +245,12 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                         MusicType.COMPOSERS -> HomeFragmentDirections.sortComposers()
                         MusicType.MOODS -> HomeFragmentDirections.sortMoods()
                         MusicType.GROUPINGS -> HomeFragmentDirections.sortGroupings()
+                        MusicType.CUSTOM_1,
+                        MusicType.CUSTOM_2,
+                        MusicType.CUSTOM_3,
+                        MusicType.CUSTOM_4,
+                        MusicType.CUSTOM_5,
+                        MusicType.CUSTOM_6 -> HomeFragmentDirections.sortCustomValues()
                     }
                 findNavController().navigateSafe(directions)
                 true
@@ -289,6 +306,13 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                 MusicType.COMPOSERS -> R.id.home_composer_recycler
                 MusicType.MOODS -> R.id.home_mood_recycler
                 MusicType.GROUPINGS -> R.id.home_grouping_recycler
+                MusicType.CUSTOM_1,
+                MusicType.CUSTOM_2,
+                MusicType.CUSTOM_3,
+                MusicType.CUSTOM_4,
+                MusicType.CUSTOM_5,
+                MusicType.CUSTOM_6 ->
+                    CustomValueListFragment.RECYCLER_IDS[unlikelyToBeNull(tabType.customSlot) - 1]
             }
     }
 
@@ -465,6 +489,11 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                 findNavController()
                     .navigateSafe(HomeFragmentDirections.showGrouping(show.grouping.uid))
             }
+            is Show.CustomValueDetails -> {
+                L.d("Navigating to ${show.customValue}")
+                findNavController()
+                    .navigateSafe(HomeFragmentDirections.showCustomValue(show.customValue.uid))
+            }
             is Show.GenreDetails -> {
                 L.d("Navigating to ${show.genre}")
                 findNavController().navigateSafe(HomeFragmentDirections.showGenre(show.genre.uid))
@@ -488,6 +517,7 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                 is Menu.ForComposer -> HomeFragmentDirections.openComposerMenu(menu.parcel)
                 is Menu.ForMood -> HomeFragmentDirections.openMoodMenu(menu.parcel)
                 is Menu.ForGrouping -> HomeFragmentDirections.openGroupingMenu(menu.parcel)
+                is Menu.ForCustomValue -> HomeFragmentDirections.openCustomValueMenu(menu.parcel)
                 is Menu.ForGenre -> HomeFragmentDirections.openGenreMenu(menu.parcel)
                 is Menu.ForPlaylist -> HomeFragmentDirections.openPlaylistMenu(menu.parcel)
                 is Menu.ForSelection -> HomeFragmentDirections.openSelectionMenu(menu.parcel)
@@ -534,6 +564,13 @@ class HomeFragment : SelectionFragment<FragmentHomeBinding>() {
                 MusicType.COMPOSERS -> ComposerListFragment()
                 MusicType.MOODS -> MoodListFragment()
                 MusicType.GROUPINGS -> GroupingListFragment()
+                MusicType.CUSTOM_1,
+                MusicType.CUSTOM_2,
+                MusicType.CUSTOM_3,
+                MusicType.CUSTOM_4,
+                MusicType.CUSTOM_5,
+                MusicType.CUSTOM_6 ->
+                    CustomValueListFragment.new(unlikelyToBeNull(tabs[position].customSlot))
             }
     }
 }

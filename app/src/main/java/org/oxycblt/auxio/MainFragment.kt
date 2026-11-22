@@ -587,6 +587,7 @@ class MainFragment :
             is Show.ComposerDetails,
             is Show.MoodDetails,
             is Show.GroupingDetails,
+            is Show.CustomValueDetails,
             is Show.PlaylistDetails,
             null -> {}
         }

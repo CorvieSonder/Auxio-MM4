@@ -18,9 +18,11 @@
  
 package org.oxycblt.auxio.search
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -37,6 +39,7 @@ import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.MusicType
 import org.oxycblt.auxio.music.rating.Rating
 import org.oxycblt.auxio.music.rating.RatingRepository
+import org.oxycblt.auxio.music.tags.CustomTag
 import org.oxycblt.auxio.playback.PlaySong
 import org.oxycblt.auxio.playback.PlaybackSettings
 import org.oxycblt.musikr.Library
@@ -52,6 +55,7 @@ import timber.log.Timber as L
 class SearchViewModel
 @Inject
 constructor(
+    @ApplicationContext private val context: Context,
     private val musicRepository: MusicRepository,
     private val searchEngine: SearchEngine,
     private val searchSettings: SearchSettings,
@@ -133,6 +137,10 @@ constructor(
                     composers = if (MusicType.COMPOSERS in filters) library.composers else null,
                     moods = if (MusicType.MOODS in filters) library.moods else null,
                     groupings = if (MusicType.GROUPINGS in filters) library.groupings else null,
+                    customValues =
+                        library.customValues
+                            .filter { MusicType.customOf(it.slot) in filters }
+                            .ifEmpty { null },
                 )
             } else {
                 SearchEngine.Items(
@@ -144,6 +152,7 @@ constructor(
                     composers = library.composers,
                     moods = library.moods,
                     groupings = library.groupings,
+                    customValues = library.customValues,
                 )
             }
 
@@ -215,6 +224,20 @@ constructor(
 
                 add(header)
                 addAll(SORT.groupings(it))
+            }
+            results.customValues?.let { customValues ->
+                // One section per custom tag, in slot order, titled with the tag's name.
+                for ((slot, values) in customValues.groupBy { it.slot }.toSortedMap()) {
+                    L.d("Adding ${values.size} values of custom tag $slot to search results")
+                    val header =
+                        BasicHeader(R.string.lbl_custom_value, CustomTag.nameOf(context, slot))
+                    if (isNotEmpty()) {
+                        add(PlainDivider(header))
+                    }
+
+                    add(header)
+                    addAll(SORT.customValues(values))
+                }
             }
             val minRating = ratingRepository.searchMinRating
             results.songs
