@@ -32,6 +32,7 @@ Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, di
 - Export and import nested playlists as folders of M3U8 files (replace an earlier export; choose what to import)
 - Two-way sync with MediaMonkey 4: linked playlists are updated in place (songs, order, name, nesting); changes made on both sides can be overwritten, kept or merged
 - Autoplaylists: Recently Added, Recently Played, Most Played, Rated and Now Playing
+- Library playlists: a top-level playlist can show every song of the playlists inside it, each once, kept up to date (for example one per person sharing a media library); also in MediaMonkey 4 through the script (PC side untested)
 
 **Tags**
 - Ratings from POPM frames (MediaMonkey, MusicBee, Windows Media Player (only MM tested)), with a choice of source and scale; a rating label in lists, a rating button in Now Playing, filter by rating
@@ -59,7 +60,6 @@ Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, di
 ### Planned
 
 - Phone and PC sync improvements as they come up
-- Library playlist for shared media libraries
 - MediaMonkey-style custom tags (`Songs-DB_Custom1` to `Custom5`, Occasion)
 - Custom theme (we're going skeumorphic babyyyyy)
 - Configurable Now Playing buttons and rating symbol
@@ -67,7 +67,7 @@ Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, di
 
 ## MediaMonkey 4 scripts
 
-The PC side of playlist sync is a VBScript for MediaMonkey 4 (`PlaylistFolders.vbs`): copy it into MediaMonkey's `Scripts\Auto` folder and restart MediaMonkey. It adds right-click items to the playlist tree: export as playlist folder, import playlist folder here, and apply phone changes. *(Link to the scripts repository to be added when it is published.)*
+The PC side of playlist sync is a VBScript for MediaMonkey 4 (`PlaylistFolders.vbs`): copy it into MediaMonkey's `Scripts\Auto` folder and restart MediaMonkey. It adds right-click items to the playlist tree: export as playlist folder, import playlist folder here, and apply phone changes, plus make, stop and refresh library playlists. *(Link to the scripts repository to be added when it is published.)*
 
 ## Permissions
 
