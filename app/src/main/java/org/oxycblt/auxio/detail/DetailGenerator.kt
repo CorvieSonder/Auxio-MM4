@@ -316,10 +316,9 @@ private class DetailGeneratorImpl(
                 )
             )
         }
-        if (playlist.songs.isNotEmpty()) {
-            sections.add(
-                DetailSection.Songs(playlistSortRepository.songs(playlist).filterByRating())
-            )
+        val songs = playlistSortRepository.songs(playlist)
+        if (songs.isNotEmpty()) {
+            sections.add(DetailSection.Songs(songs.filterByRating()))
         }
         return Detail(playlist, sections)
     }

@@ -153,6 +153,7 @@ constructor(
                 auxioParent = state.parentUid?.toString(),
                 mmId = mmId,
                 mmParent = state.parentUid?.let { links[it]?.mmId },
+                library = playlistTreeRepository.isLibrary(playlist),
             )
         PlaylistSyncRepository.appendText(resolver, fileUri, ids.toLines())
         written.add(state.toLink(playlist.uid, mmId))

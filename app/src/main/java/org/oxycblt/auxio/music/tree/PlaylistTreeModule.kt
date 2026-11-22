@@ -46,7 +46,10 @@ class PlaylistTreeRoomModule {
                 PlaylistTreeDatabase::class.java,
                 "playlist_tree.db",
             )
-            .addMigrations(PlaylistTreeDatabase.MIGRATION_1_2)
+            .addMigrations(
+                PlaylistTreeDatabase.MIGRATION_1_2,
+                PlaylistTreeDatabase.MIGRATION_2_3,
+            )
             .build()
 
     @Provides fun playlistTreeDao(database: PlaylistTreeDatabase) = database.playlistTreeDao()

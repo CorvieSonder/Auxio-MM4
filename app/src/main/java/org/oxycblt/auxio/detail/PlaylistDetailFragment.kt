@@ -298,8 +298,9 @@ class PlaylistDetailFragment :
         binding.detailType.text = binding.context.getString(R.string.lbl_playlist)
         binding.detailName.text = playlist.name.resolve(binding.context)
 
-        val songs = editedPlaylist ?: playlist.songs
-        val durationMs = editedPlaylist?.sumOf { it.durationMs } ?: playlist.durationMs
+        val shown = detailModel.songsOf(playlist)
+        val songs = editedPlaylist ?: shown
+        val durationMs = songs.sumOf { it.durationMs }
         // The song count of the playlist maps to the info text.
         binding.detailInfo.text =
             if (songs.isNotEmpty()) {
@@ -312,7 +313,7 @@ class PlaylistDetailFragment :
                 binding.context.getString(R.string.def_song_count)
             }
 
-        val playable = playlist.songs.isNotEmpty() && editedPlaylist == null
+        val playable = shown.isNotEmpty() && editedPlaylist == null
         if (!playable) {
             L.d("Playlist is being edited or is empty, disabling playback options")
         }

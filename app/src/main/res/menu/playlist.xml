@@ -37,6 +37,14 @@
         android:icon="@drawable/ic_pin_off_24"
         android:title="@string/lbl_unpin" />
     <item
+        android:id="@+id/action_library_on"
+        android:icon="@drawable/ic_library_playlist_24"
+        android:title="@string/lbl_library_on" />
+    <item
+        android:id="@+id/action_library_off"
+        android:icon="@drawable/ic_library_playlist_24"
+        android:title="@string/lbl_library_off" />
+    <item
         android:id="@+id/action_move"
         android:icon="@drawable/ic_move_24"
         android:title="@string/lbl_move_to" />

@@ -369,6 +369,8 @@ constructor(
                     child,
                     canOpen = playlistTreeRepository.childrenOf(child).isNotEmpty(),
                     isActive = songs.all(songSet::contains),
+                    // A library playlist gets its songs from its children only.
+                    isSelectable = !playlistTreeRepository.isLibrary(child),
                 )
             )
         }

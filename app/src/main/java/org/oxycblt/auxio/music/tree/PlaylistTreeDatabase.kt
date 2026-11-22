@@ -36,8 +36,8 @@ import org.oxycblt.musikr.Music
  * top-level playlist.
  */
 @Database(
-    entities = [PlaylistNode::class, PinnedPlaylist::class],
-    version = 2,
+    entities = [PlaylistNode::class, PinnedPlaylist::class, LibraryPlaylist::class],
+    version = 3,
     exportSchema = false,
 )
 @TypeConverters(Music.UID.TypeConverters::class)
@@ -56,6 +56,17 @@ abstract class PlaylistTreeDatabase : RoomDatabase() {
                 override fun migrate(db: SupportSQLiteDatabase) {
                     db.execSQL(
                         "CREATE TABLE IF NOT EXISTS `PinnedPlaylist` " +
+                            "(`playlistUid` TEXT NOT NULL, PRIMARY KEY(`playlistUid`))"
+                    )
+                }
+            }
+
+        /** Adds the table of library playlists. */
+        val MIGRATION_2_3 =
+            object : Migration(2, 3) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        "CREATE TABLE IF NOT EXISTS `LibraryPlaylist` " +
                             "(`playlistUid` TEXT NOT NULL, PRIMARY KEY(`playlistUid`))"
                     )
                 }
@@ -110,6 +121,29 @@ interface PlaylistTreeDao {
      */
     @Query("DELETE FROM PinnedPlaylist WHERE playlistUid IN (:playlistUids)")
     suspend fun deletePins(playlistUids: List<Music.UID>)
+
+    /**
+     * Get every persisted [LibraryPlaylist].
+     *
+     * @return A list of every persisted [LibraryPlaylist].
+     */
+    @Query("SELECT * FROM LibraryPlaylist") suspend fun getLibraryPlaylists(): List<LibraryPlaylist>
+
+    /**
+     * Insert or replace [LibraryPlaylist]s.
+     *
+     * @param libraryPlaylists The [LibraryPlaylist]s to insert.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertLibraryPlaylists(libraryPlaylists: List<LibraryPlaylist>)
+
+    /**
+     * Turn the given playlists back into normal playlists.
+     *
+     * @param playlistUids The [Music.UID]s of the playlists to change.
+     */
+    @Query("DELETE FROM LibraryPlaylist WHERE playlistUid IN (:playlistUids)")
+    suspend fun deleteLibraryPlaylists(playlistUids: List<Music.UID>)
 }
 
 /**
@@ -126,3 +160,11 @@ interface PlaylistTreeDao {
  * @param playlistUid The [Music.UID] of the pinned playlist.
  */
 @Entity data class PinnedPlaylist(@PrimaryKey val playlistUid: Music.UID)
+
+/**
+ * A library playlist: it holds no songs of its own and shows every song of its child playlists,
+ * their children, and so on.
+ *
+ * @param playlistUid The [Music.UID] of the library playlist.
+ */
+@Entity data class LibraryPlaylist(@PrimaryKey val playlistUid: Music.UID)

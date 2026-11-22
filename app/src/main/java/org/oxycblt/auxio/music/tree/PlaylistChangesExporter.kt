@@ -43,6 +43,7 @@ constructor(
     @ApplicationContext private val context: Context,
     private val musicRepository: MusicRepository,
     private val playlistSyncRepository: PlaylistSyncRepository,
+    private val playlistTreeRepository: PlaylistTreeRepository,
 ) {
     private val externalPlaylistManager = ExternalPlaylistManager.from(context)
 
@@ -95,7 +96,10 @@ constructor(
             for (playlist in library.playlists) {
                 val state = playlistSyncRepository.stateOf(playlist)
                 val link = links[playlist.uid]
-                if (link != null && PlaylistState.of(link) == state) {
+                // The library flag is not part of the saved state, so library playlists are always
+                // written. They hold no songs, so this costs little.
+                val library = playlistTreeRepository.isLibrary(playlist)
+                if (link != null && PlaylistState.of(link) == state && !library) {
                     continue
                 }
                 val base = link?.let(PlaylistState::of)
@@ -131,6 +135,7 @@ constructor(
                             base?.songs?.map { path ->
                                 songsByPath[path]?.let { EntryInfo.of(it).toBaseLine(path) } ?: path
                             },
+                        library = library,
                     )
                 PlaylistSyncRepository.appendText(resolver, fileUri, ids.toLines())
                 written.add(state.toLink(playlist.uid, link?.mmId))

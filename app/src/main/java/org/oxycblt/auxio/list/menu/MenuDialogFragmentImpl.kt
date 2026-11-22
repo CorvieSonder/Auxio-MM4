@@ -451,7 +451,7 @@ class PlaylistMenuDialogFragment : MenuDialogFragment<Menu.ForPlaylist>() {
         get() = args.parcel
 
     override fun getDisabledItemIds(menu: Menu.ForPlaylist) =
-        if (menu.playlist.songs.isEmpty()) {
+        if (detailModel.songsOf(menu.playlist).isEmpty()) {
             // Disable any operations that require some kind of songs to work with, as there won't
             // be any in an empty playlist.
             setOf(
@@ -480,9 +480,27 @@ class PlaylistMenuDialogFragment : MenuDialogFragment<Menu.ForPlaylist>() {
                 R.id.action_import_folder,
                 R.id.action_export,
                 R.id.action_delete,
+                R.id.action_library_on,
+                R.id.action_library_off,
             )
         } else {
-            setOf(if (treeModel.isPinned(menu.playlist)) R.id.action_pin else R.id.action_unpin)
+            val hidden =
+                mutableSetOf(
+                    if (treeModel.isPinned(menu.playlist)) R.id.action_pin else R.id.action_unpin
+                )
+            when {
+                treeModel.isLibrary(menu.playlist) -> {
+                    // A library playlist gets its songs from its children only.
+                    hidden.add(R.id.action_library_on)
+                    hidden.add(R.id.action_import)
+                }
+                treeModel.canBeLibrary(menu.playlist) -> hidden.add(R.id.action_library_off)
+                else -> {
+                    hidden.add(R.id.action_library_on)
+                    hidden.add(R.id.action_library_off)
+                }
+            }
+            hidden
         }
 
     override fun updateMenu(binding: DialogMenuBinding, menu: Menu.ForPlaylist) {
@@ -490,9 +508,10 @@ class PlaylistMenuDialogFragment : MenuDialogFragment<Menu.ForPlaylist>() {
         binding.menuCover.bind(menu.playlist)
         binding.menuType.text = getString(R.string.lbl_playlist)
         binding.menuName.text = menu.playlist.name.resolve(context)
+        val songs = detailModel.songsOf(menu.playlist)
         binding.menuInfo.text =
-            if (menu.playlist.songs.isNotEmpty()) {
-                context.getPlural(R.plurals.fmt_song_count, menu.playlist.songs.size)
+            if (songs.isNotEmpty()) {
+                context.getPlural(R.plurals.fmt_song_count, songs.size)
             } else {
                 getString(R.string.def_song_count)
             }
@@ -515,6 +534,12 @@ class PlaylistMenuDialogFragment : MenuDialogFragment<Menu.ForPlaylist>() {
             R.id.action_move -> treeModel.requestMove(listOf(menu.playlist))
             R.id.action_pin -> treeModel.setPinned(listOf(menu.playlist), true)
             R.id.action_unpin -> treeModel.setPinned(listOf(menu.playlist), false)
+            R.id.action_library_on ->
+                treeModel.makeLibrary(
+                    menu.playlist,
+                    getString(R.string.fmt_library_own_songs, menu.playlist.name.raw),
+                )
+            R.id.action_library_off -> treeModel.stopLibrary(menu.playlist)
             R.id.action_new_child -> musicModel.createPlaylist(parent = menu.playlist)
             R.id.action_import -> musicModel.importPlaylist(target = menu.playlist)
             R.id.action_import_folder -> folderModel.requestImport(menu.playlist)

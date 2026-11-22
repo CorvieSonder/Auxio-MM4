@@ -33,6 +33,8 @@ import org.oxycblt.musikr.Song
  * extra "#" lines at the end of the file. Other M3U readers skip them.
  *
  * @param base The song paths at the last sync, only in files of an "Export changes" folder.
+ * @param library Whether the playlist is a library playlist. Its file then lists no songs, as its
+ *   songs come from its children on both sides.
  */
 data class PlaylistIds(
     val auxioId: String? = null,
@@ -41,6 +43,7 @@ data class PlaylistIds(
     val mmParent: Long? = null,
     val baseName: String? = null,
     val base: List<String>? = null,
+    val library: Boolean = false,
 ) {
     /** The lines to append to a playlist file. */
     fun toLines(): String = buildString {
@@ -48,6 +51,7 @@ data class PlaylistIds(
         auxioParent?.let { append("$AUXIO_PARENT$it\n") }
         mmId?.let { append("$MM_ID$it\n") }
         mmParent?.let { append("$MM_PARENT$it\n") }
+        if (library) append("$LIBRARY\n")
         if (base != null) {
             append("$BASE_NAME${baseName ?: ""}\n")
             append("$BASE_START\n")
@@ -63,6 +67,7 @@ data class PlaylistIds(
         private const val BASE_NAME = "#BASE-NAME:"
         private const val BASE_START = "#BASE-START"
         private const val BASE = "#BASE:"
+        private const val LIBRARY = "#LIBRARY-PLAYLIST"
 
         /** Read the ID lines of a playlist file's [text]. */
         fun parse(text: String): PlaylistIds {
@@ -80,6 +85,7 @@ data class PlaylistIds(
                         ids = ids.copy(mmParent = line.after(MM_PARENT)?.toLongOrNull())
                     line.startsWith(BASE_NAME) ->
                         ids = ids.copy(baseName = line.removePrefix(BASE_NAME))
+                    line == LIBRARY -> ids = ids.copy(library = true)
                     line == BASE_START -> base = base ?: mutableListOf()
                     line.startsWith(BASE) -> base?.add(line.removePrefix(BASE))
                 }

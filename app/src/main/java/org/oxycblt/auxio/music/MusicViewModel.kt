@@ -310,6 +310,22 @@ constructor(
     }
 
     /**
+     * Remove songs from several playlists, one after another so that no edit is lost.
+     *
+     * @param playlists The [Playlist]s to remove the songs from.
+     * @param songs The [Song]s to remove.
+     */
+    fun removeFromPlaylists(playlists: List<Playlist>, songs: Set<Song>) {
+        L.d("Removing ${songs.size} songs from ${playlists.size} playlists")
+        viewModelScope.launch(Dispatchers.IO) {
+            for (uid in playlists.map { it.uid }) {
+                val playlist = musicRepository.library?.findPlaylist(uid) ?: continue
+                musicRepository.rewritePlaylist(playlist, playlist.songs.filter { it !in songs })
+            }
+        }
+    }
+
+    /**
      * Delete a [Playlist].
      *
      * @param playlist The playlist to delete.

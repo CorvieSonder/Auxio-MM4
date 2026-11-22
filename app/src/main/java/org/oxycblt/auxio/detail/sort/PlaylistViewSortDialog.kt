@@ -64,8 +64,9 @@ class PlaylistViewSortDialog : SortDialog() {
     override val showsRatingFilter = true
 
     override fun getModeChoices() =
-        listOf(
-            Sort.Mode.ByCustom,
+        listOfNotNull(
+            // A library playlist has no saved order.
+            Sort.Mode.ByCustom.takeUnless { detailModel.isLibraryPlaylist },
             Sort.Mode.ByName,
             Sort.Mode.ByArtist,
             Sort.Mode.ByAlbum,

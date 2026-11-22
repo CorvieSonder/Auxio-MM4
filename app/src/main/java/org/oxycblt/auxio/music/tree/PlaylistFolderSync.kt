@@ -334,7 +334,14 @@ constructor(
         }
 
         private suspend fun create(item: Item, parent: Playlist?): Playlist? {
-            val playlist = importer.create(item.name, item.songs, parent) ?: return null
+            // A library playlist's songs come from its children.
+            val songs = if (item.ids.library) listOf() else item.songs
+            val playlist = importer.create(item.name, songs, parent) ?: return null
+            if (item.ids.library && parent == null) {
+                withContext(Dispatchers.Main) {
+                    playlistTreeRepository.setLibrary(listOf(playlist), true)
+                }
+            }
             created++
             return playlist
         }
@@ -344,7 +351,14 @@ constructor(
             val current = item.current ?: playlistSyncRepository.stateOf(target)
             var name = item.name
             var paths = item.incomingPaths
-            if (item.isConflict) {
+            val wasLibrary = playlistTreeRepository.isLibrary(target)
+            if (item.ids.library || wasLibrary) {
+                // Made a library playlist in MediaMonkey: its own songs went into a child there,
+                // which comes as a child item. Stopped in MediaMonkey: it kept its songs there.
+                // Either way the songs are taken as they come.
+                if (item.ids.library) paths = listOf()
+                if (base != null && item.name == base.name) name = current.name
+            } else if (item.isConflict) {
                 conflicts++
                 if (choice != ConflictChoice.OVERWRITE) {
                     report(item, current)
@@ -386,7 +400,17 @@ constructor(
                     }
                 }
             }
-            if (name != current.name || paths != current.songs) {
+            val libraryChanged = item.ids.library != wasLibrary
+            if (libraryChanged) {
+                withContext(Dispatchers.Main) {
+                    if (!item.ids.library) {
+                        playlistTreeRepository.setLibrary(listOf(fresh), false)
+                    } else if (playlistTreeRepository.parentOf(fresh) == null) {
+                        playlistTreeRepository.setLibrary(listOf(fresh), true)
+                    }
+                }
+            }
+            if (name != current.name || paths != current.songs || libraryChanged) {
                 updated++
             }
             return fresh
