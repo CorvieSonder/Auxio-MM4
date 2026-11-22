@@ -50,6 +50,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import org.oxycblt.auxio.image.ImageSettings
 import org.oxycblt.auxio.music.MusicRepository
+import org.oxycblt.auxio.music.listened.ListenedRepository
 import org.oxycblt.auxio.playback.PlaybackSettings
 import org.oxycblt.auxio.playback.crossfade.CrossfadeController
 import org.oxycblt.auxio.playback.crossfade.CrossfadeSettings
@@ -81,6 +82,7 @@ class ExoPlaybackStateHolder(
     private val imageSettings: ImageSettings,
     mediaSourceFactory: MediaSource.Factory,
     crossfadeSettings: CrossfadeSettings,
+    private val listenedRepository: ListenedRepository,
 ) :
     PlaybackStateHolder,
     Player.Listener,
@@ -112,6 +114,7 @@ class ExoPlaybackStateHolder(
         replayGainProcessor.attach()
         playbackSettings.registerListener(this)
         imageSettings.registerListener(this)
+        crossfade.onSongFinished = listenedRepository::recordListened
     }
 
     fun release() {
@@ -525,7 +528,10 @@ class ExoPlaybackStateHolder(
         reason: Int,
     ) {
         super.onPositionDiscontinuity(oldPosition, newPosition, reason)
-        if (reason != Player.DISCONTINUITY_REASON_AUTO_TRANSITION) {
+        if (reason == Player.DISCONTINUITY_REASON_AUTO_TRANSITION) {
+            // The old song played to its end.
+            oldPosition.mediaItem?.song?.let(listenedRepository::recordListened)
+        } else {
             // Seeks and skips that did not go through this class, for example a removed song.
             crossfade.cancel()
         }
@@ -533,6 +539,11 @@ class ExoPlaybackStateHolder(
 
     override fun onPlaybackStateChanged(playbackState: Int) {
         super.onPlaybackStateChanged(playbackState)
+
+        if (playbackState == Player.STATE_ENDED) {
+            // The last song played to its end.
+            player.currentMediaItem?.song?.let(listenedRepository::recordListened)
+        }
 
         if (playbackState == Player.STATE_ENDED && player.repeatMode == Player.REPEAT_MODE_OFF) {
             goto(0)
@@ -718,6 +729,7 @@ class ExoPlaybackStateHolder(
         private val musicRepository: MusicRepository,
         private val imageSettings: ImageSettings,
         private val crossfadeSettings: CrossfadeSettings,
+        private val listenedRepository: ListenedRepository,
     ) {
         fun create(): ExoPlaybackStateHolder {
             // Since Auxio is a music player, only specify an audio renderer to save
@@ -764,6 +776,7 @@ class ExoPlaybackStateHolder(
                 imageSettings,
                 mediaSourceFactory,
                 crossfadeSettings,
+                listenedRepository,
             )
         }
     }
