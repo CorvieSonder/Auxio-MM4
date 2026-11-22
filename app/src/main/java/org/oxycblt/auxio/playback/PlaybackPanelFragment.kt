@@ -44,10 +44,14 @@ import org.oxycblt.auxio.detail.DetailViewModel
 import org.oxycblt.auxio.home.HomeViewModel
 import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.music.MusicViewModel
+import org.oxycblt.auxio.music.PlaylistDecision
+import org.oxycblt.auxio.music.delete.DeleteSongsDialog
+import org.oxycblt.auxio.music.mood.MoodEditDialog
 import org.oxycblt.auxio.music.rating.RatingDialog
 import org.oxycblt.auxio.music.rating.RatingRepository
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
+import org.oxycblt.auxio.music.ringtone.setAsRingtone
 import org.oxycblt.auxio.playback.bar.NowPlayingBar
 import org.oxycblt.auxio.playback.bar.NowPlayingBarRequests
 import org.oxycblt.auxio.playback.bar.NowPlayingBarSettings
@@ -67,10 +71,12 @@ import org.oxycblt.auxio.util.collect
 import org.oxycblt.auxio.util.collectImmediately
 import org.oxycblt.auxio.util.dampen
 import org.oxycblt.auxio.util.recycler
+import org.oxycblt.auxio.util.share
 import org.oxycblt.auxio.util.showToast
 import org.oxycblt.auxio.util.smoothScrollByPageTo
 import org.oxycblt.auxio.util.systemBarInsetsCompat
 import org.oxycblt.musikr.MusicParent
+import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
 import org.oxycblt.musikr.tag.Name
 import timber.log.Timber as L
@@ -133,6 +139,10 @@ class PlaybackPanelFragment :
             setOnMenuItemClickListener(this@PlaybackPanelFragment)
             // The actions sit in their own row below the title.
             setActionsBelow()
+        }
+        binding.playbackToolbar.setOverflowIntoMenu {
+            // The song menu lists the actions that are hidden or do not fit.
+            barRequests.onBar = binding.playbackToolbar.actionItemIds
         }
         applyBarActions()
         barSettings.registerListener(this)
@@ -263,11 +273,13 @@ class PlaybackPanelFragment :
 
     /** Show the bar actions in the order chosen by the user, leaving out the hidden ones. */
     private fun applyBarActions() {
+        val context = requireContext()
         val toolbar = requireBinding().playbackToolbar
-        toolbar.inflateMenu(R.menu.toolbar_playback)
-        toolbar.arrangeMenuItems(
-            NowPlayingBar.shownItemIds(requireContext(), toolbar.menu, barSettings.barActions)
-        )
+        val menu = NowPlayingBar.inflate(context)
+        val itemIds = NowPlayingBar.shownItemIds(context, menu, barSettings.barActions)
+        toolbar.arrangeMenuItems(menu, itemIds)
+        // The last actions give way first when they do not all fit.
+        toolbar.setOverflowPriority(itemIds.filter { it != NowPlayingBar.MORE_ITEM_ID }.reversed())
         // A new menu starts with the default icons.
         updateSleepTimer(sleepTimer.state.value)
         updateRating(playbackModel.song.value)
@@ -298,11 +310,30 @@ class PlaybackPanelFragment :
             R.id.action_artist_details -> navigateToCurrentArtist()
             R.id.action_album_details -> navigateToCurrentAlbum()
             R.id.action_genre_details -> navigateToCurrentGenre()
-            R.id.action_save_queue -> musicModel.createPlaylist(songs = playbackModel.queue)
+            R.id.action_save_queue ->
+                musicModel.createPlaylist(
+                    songs = playbackModel.queue,
+                    reason = PlaylistDecision.New.Reason.SAVE_QUEUE,
+                )
             R.id.action_settings -> homeModel.showSettings()
             R.id.action_rate ->
                 playbackModel.song.value?.let {
                     RatingDialog.from(it).show(childFragmentManager, RatingDialog.TAG)
+                }
+            R.id.action_share -> playbackModel.song.value?.let { requireContext().share(it) }
+            // Song menu actions that the user moved onto the bar.
+            R.id.action_detail -> playbackModel.song.value?.let(detailModel::showSong)
+            R.id.action_open_equalizer -> openEqualizer()
+            R.id.action_edit_moods ->
+                playbackModel.song.value?.let {
+                    MoodEditDialog.from(listOf(it)).show(childFragmentManager, MoodEditDialog.TAG)
+                }
+            R.id.action_ringtone ->
+                playbackModel.song.value?.let { requireContext().setAsRingtone(it) }
+            R.id.action_delete_song ->
+                playbackModel.song.value?.let {
+                    DeleteSongsDialog.from(listOf(it), playbackModel.parent.value as? Playlist)
+                        .show(childFragmentManager, DeleteSongsDialog.TAG)
                 }
             R.id.action_song_menu -> openSongMenu()
             else -> return false

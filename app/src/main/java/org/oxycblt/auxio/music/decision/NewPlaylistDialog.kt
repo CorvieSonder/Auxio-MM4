@@ -58,6 +58,7 @@ class NewPlaylistDialog : ViewBindingMaterialDialogFragment<DialogPlaylistNameBi
                     PlaylistDecision.New.Reason.NEW,
                     PlaylistDecision.New.Reason.ADD -> R.string.lbl_new_playlist
                     PlaylistDecision.New.Reason.IMPORT -> R.string.lbl_import_playlist
+                    PlaylistDecision.New.Reason.SAVE_QUEUE -> R.string.lbl_save_queue_title
                 }
             )
             .setPositiveButton(R.string.lbl_ok) { _, _ ->

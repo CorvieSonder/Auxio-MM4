@@ -73,6 +73,8 @@ constructor(
     private var actionRowShown = true
     private var overflowPriority = listOf<Int>()
     private val actionButtons = mutableMapOf<Int, RippleFixMaterialButton>()
+    private var overflowIntoMenu = false
+    private var onActionsRebuilt: (() -> Unit)? = null
     @SuppressLint("RestrictedApi") private var menuBuilder = MenuBuilder(context)
 
     init {
@@ -213,6 +215,23 @@ constructor(
 
     fun getMenuButton(itemId: Int): RippleFixMaterialButton? = actionButtons[itemId]
 
+    /** The IDs of the menu items that have an action button right now. */
+    val actionItemIds: Set<Int>
+        get() = actionButtons.keys.toSet()
+
+    /**
+     * Leave out the overflow button, for toolbars that list the actions that do not fit in a menu
+     * of their own, such as one opened by one of their actions.
+     *
+     * @param onRebuilt Called whenever the action buttons change, so that [actionItemIds] can be
+     *   read again.
+     */
+    fun setOverflowIntoMenu(onRebuilt: () -> Unit) {
+        overflowIntoMenu = true
+        onActionsRebuilt = onRebuilt
+        rebuildActionButtons()
+    }
+
     /**
      * Show or hide a menu item, along with its action button.
      *
@@ -241,14 +260,15 @@ constructor(
     }
 
     /**
-     * Rearrange the menu items, along with their action buttons. Items that are not listed are
-     * removed until the menu is inflated again.
+     * Replace the menu with some of the items of another menu, in the given order, along with their
+     * action buttons.
      *
-     * @param itemIds The IDs of the top-level menu items to keep, in the order to show them.
+     * @param source The menu to take the items from.
+     * @param itemIds The IDs of the top-level items of [source] to use, in the order to show them.
      */
     @SuppressLint("RestrictedApi")
-    fun arrangeMenuItems(itemIds: List<Int>) {
-        val old = menuBuilder
+    fun arrangeMenuItems(source: Menu, itemIds: List<Int>) {
+        val old = source
         val builder = MenuBuilder(context)
         itemIds.forEachIndexed { order, itemId ->
             val item = old.findItem(itemId) as? MenuItemImpl ?: return@forEachIndexed
@@ -415,11 +435,12 @@ constructor(
             actionButtons[item.itemId] = btn
         }
 
-        if (overflowItems.isNotEmpty()) {
+        if (overflowItems.isNotEmpty() && !overflowIntoMenu) {
             container.addView(createOverflowButton(overflowItems))
         }
 
         container.isVisible = container.isNotEmpty() && (row == null || actionRowShown)
+        onActionsRebuilt?.invoke()
     }
 
     /** Move actions into the overflow menu until the rest fits into the width of this toolbar. */
@@ -436,7 +457,8 @@ constructor(
         val buttonSize = resources.getDimensionPixelSize(R.dimen.size_touchable_small)
         val dividerSize = resources.getDimensionPixelSize(R.dimen.spacing_medium)
         fun needed(): Int {
-            val buttons = actionItems.size + if (overflowItems.isNotEmpty()) 1 else 0
+            val buttons =
+                actionItems.size + if (overflowItems.isNotEmpty() && !overflowIntoMenu) 1 else 0
             val dividers = (actionItems.map { it.groupId }.distinct().size - 1).coerceAtLeast(0)
             return buttons * buttonSize + dividers * dividerSize
         }
