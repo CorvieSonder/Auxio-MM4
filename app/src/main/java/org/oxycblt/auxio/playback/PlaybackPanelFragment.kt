@@ -55,12 +55,14 @@ import org.oxycblt.auxio.playback.quick.QuickSettingsSheet
 import org.oxycblt.auxio.playback.sleep.SleepTimer
 import org.oxycblt.auxio.playback.sleep.SleepTimerDialog
 import org.oxycblt.auxio.playback.state.RepeatMode
+import org.oxycblt.auxio.playback.ui.PlaybackOverlayController
 import org.oxycblt.auxio.playback.ui.StyledSeekBar
 import org.oxycblt.auxio.playback.ui.stepper.Direction
 import org.oxycblt.auxio.playback.ui.stepper.StepperOverlay
 import org.oxycblt.auxio.playback.ui.swiper.CarouselTransformer
 import org.oxycblt.auxio.playback.ui.swiper.CoverPagerAdapter
 import org.oxycblt.auxio.playback.ui.swiper.UserAwarePagerCallback
+import org.oxycblt.auxio.ui.UISettings
 import org.oxycblt.auxio.ui.ViewBindingFragment
 import org.oxycblt.auxio.util.collect
 import org.oxycblt.auxio.util.collectImmediately
@@ -100,8 +102,11 @@ class PlaybackPanelFragment :
     @Inject lateinit var sleepTimer: SleepTimer
     @Inject lateinit var barSettings: NowPlayingBarSettings
     @Inject lateinit var barRequests: NowPlayingBarRequests
+    @Inject lateinit var uiSettings: UISettings
     private var equalizerLauncher: ActivityResultLauncher<Intent>? = null
     private var userAwarePagerCallback: UserAwarePagerCallback? = null
+    // Only set in the landscape layout, where the controls are laid over the cover.
+    private var overlayController: PlaybackOverlayController? = null
 
     override fun onCreateBinding(inflater: LayoutInflater) =
         FragmentPlaybackPanelBinding.inflate(inflater)
@@ -129,8 +134,20 @@ class PlaybackPanelFragment :
         binding.playbackToolbar.apply {
             setNavigationOnClickListener { playbackModel.openMain() }
             setOnMenuItemClickListener(this@PlaybackPanelFragment)
-            // The actions sit in their own row below the title.
-            setActionsBelow()
+            if (binding.playbackOverlayTop == null) {
+                // The actions sit in their own row below the title.
+                setActionsBelow()
+            } else {
+                // Over the cover there is no room for a title: the actions sit beside the handle.
+                title = null
+            }
+        }
+        val overlayTop = binding.playbackOverlayTop
+        val overlayBottom = binding.playbackOverlayBottom
+        if (overlayTop != null && overlayBottom != null) {
+            val cornerRadius =
+                if (uiSettings.roundMode) COVER_CORNER_DP * resources.displayMetrics.density else 0f
+            overlayController = PlaybackOverlayController(overlayTop, overlayBottom, cornerRadius)
         }
         binding.playbackToolbar.setOverflowIntoMenu {
             // The song menu lists the actions that are hidden or do not fit.
@@ -255,6 +272,7 @@ class PlaybackPanelFragment :
         binding.playbackToolbar.setOnMenuItemClickListener(null)
         userAwarePagerCallback?.release()
         binding.playbackPager?.adapter = null
+        overlayController = null
     }
 
     override fun onBarActionsChanged() {
@@ -402,6 +420,10 @@ class PlaybackPanelFragment :
     private fun updateParent(parent: MusicParent?) {
         val binding = requireBinding()
         val context = requireContext()
+        if (overlayController != null) {
+            // The landscape overlay has no title or subtitle.
+            return
+        }
         binding.playbackToolbar.subtitle =
             parent?.run { name.resolve(context) } ?: context.getString(R.string.lbl_all_songs)
     }
@@ -523,5 +545,14 @@ class PlaybackPanelFragment :
             Direction.FORWARDS -> playbackModel.stepForward()
             Direction.BACKWARDS -> playbackModel.stepBackwards()
         }
+    }
+
+    override fun onSingleTap() {
+        overlayController?.toggle()
+    }
+
+    private companion object {
+        // Matches the ExtraLarge corner of the covers in the pager (item_cover.xml).
+        const val COVER_CORNER_DP = 28f
     }
 }
