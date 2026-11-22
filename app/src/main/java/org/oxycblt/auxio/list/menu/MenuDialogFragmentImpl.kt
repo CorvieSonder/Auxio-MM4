@@ -32,6 +32,7 @@ import org.oxycblt.auxio.music.auto.AutoPlaylist
 import org.oxycblt.auxio.music.rating.RatingDialog
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
+import org.oxycblt.auxio.music.tree.PlaylistFolderViewModel
 import org.oxycblt.auxio.music.tree.PlaylistTreeViewModel
 import org.oxycblt.auxio.playback.PlaybackViewModel
 import org.oxycblt.auxio.playback.formatDurationMs
@@ -283,6 +284,7 @@ class PlaylistMenuDialogFragment : MenuDialogFragment<Menu.ForPlaylist>() {
     private val musicModel: MusicViewModel by activityViewModels()
     private val playbackModel: PlaybackViewModel by activityViewModels()
     private val treeModel: PlaylistTreeViewModel by activityViewModels()
+    private val folderModel: PlaylistFolderViewModel by activityViewModels()
     private val args: PlaylistMenuDialogFragmentArgs by navArgs()
 
     override val parcel
@@ -354,6 +356,7 @@ class PlaylistMenuDialogFragment : MenuDialogFragment<Menu.ForPlaylist>() {
             R.id.action_unpin -> treeModel.setPinned(listOf(menu.playlist), false)
             R.id.action_new_child -> musicModel.createPlaylist(parent = menu.playlist)
             R.id.action_import -> musicModel.importPlaylist(target = menu.playlist)
+            R.id.action_import_folder -> folderModel.requestImport(menu.playlist)
             R.id.action_export -> musicModel.exportPlaylist(menu.playlist)
             R.id.action_delete -> musicModel.deletePlaylist(menu.playlist)
             R.id.action_share -> requireContext().share(menu.playlist)
