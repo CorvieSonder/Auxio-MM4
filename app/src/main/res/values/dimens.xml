@@ -10,6 +10,7 @@
 
     <!-- Size Namespace | Width & Heights for UI elements -->
     <dimen name="size_touchable_small">48dp</dimen>
+    <dimen name="size_touchable_min">40dp</dimen>
     <dimen name="size_touchable_medium">56dp</dimen>
     <dimen name="size_touchable_large">64dp</dimen>
     <dimen name="size_touchable_huge">80dp</dimen>
