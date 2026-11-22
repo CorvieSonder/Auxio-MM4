@@ -102,4 +102,13 @@
             app:title="@string/set_export_playlist_changes" />
 
     </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/set_listened">
+
+        <Preference
+            app:key="@string/set_key_export_listened"
+            app:summary="@string/set_export_listened_desc"
+            app:title="@string/set_export_listened" />
+
+    </PreferenceCategory>
 </PreferenceScreen>

@@ -24,13 +24,19 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
 import coil3.ImageLoader
 import dagger.hilt.android.AndroidEntryPoint
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
+import kotlinx.coroutines.launch
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.music.MusicViewModel
+import org.oxycblt.auxio.music.listened.ListenedCsvExporter
 import org.oxycblt.auxio.music.tree.FolderMessage
 import org.oxycblt.auxio.music.tree.PlaylistFolderViewModel
 import org.oxycblt.auxio.settings.BasePreferenceFragment
@@ -49,6 +55,22 @@ class MusicPreferenceFragment : BasePreferenceFragment(R.xml.preferences_music) 
     private val musicModel: MusicViewModel by viewModels()
     private val folderModel: PlaylistFolderViewModel by activityViewModels()
     @Inject lateinit var imageLoader: ImageLoader
+    @Inject lateinit var listenedExporter: ListenedCsvExporter
+    private val listenedFileLauncher =
+        registerForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
+            if (uri == null) return@registerForActivityResult
+            lifecycleScope.launch {
+                val count = listenedExporter.export(uri)
+                val context = context ?: return@launch
+                val text =
+                    if (count != null) {
+                        resources.getQuantityString(R.plurals.fmt_listened_exported, count, count)
+                    } else {
+                        getString(R.string.err_export_listened_failed)
+                    }
+                Toast.makeText(context, text, Toast.LENGTH_LONG).show()
+            }
+        }
     private val changesFolderLauncher =
         registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
             if (uri != null) folderModel.exportChanges(uri)
@@ -85,6 +107,13 @@ class MusicPreferenceFragment : BasePreferenceFragment(R.xml.preferences_music) 
         if (preference.key == getString(R.string.set_key_export_playlist_changes)) {
             preference.onPreferenceClickListener = Preference.OnPreferenceClickListener {
                 changesFolderLauncher.launch(null)
+                true
+            }
+        }
+        if (preference.key == getString(R.string.set_key_export_listened)) {
+            preference.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+                val date = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(Date())
+                listenedFileLauncher.launch("auxio-listened-$date.csv")
                 true
             }
         }

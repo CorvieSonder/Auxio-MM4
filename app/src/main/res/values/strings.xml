@@ -408,7 +408,16 @@
     <string name="set_repeat_pause_desc">Pause when a song repeats</string>
     <string name="set_remember_pause">Remember pause</string>
     <string name="set_remember_pause_desc">Remain playing/paused when skipping or editing queue</string>
+    <string name="set_crossfade">Crossfade</string>
+    <string name="set_crossfade_length">Crossfade length</string>
+    <string name="set_crossfade_length_desc">Seconds that songs overlap when one ends on its own (0 is off)</string>
+    <string name="set_crossfade_skip_album">Gapless within albums</string>
+    <string name="set_crossfade_skip_album_desc">Don\'t crossfade between consecutive tracks of the same album</string>
     <string name="set_replay_gain">Volume normalization</string>
+    <string name="set_listened">Listened status</string>
+    <string name="set_export_listened">Export listened status</string>
+    <string name="set_export_listened_desc">Save a CSV file of which songs were played to the end, and when that first happened</string>
+    <string name="err_export_listened_failed">Unable to export listened status</string>
     <string name="set_replay_gain_mode">ReplayGain strategy</string>
     <string name="set_replay_gain_mode_off">Off</string>
     <string name="set_replay_gain_mode_track">Prefer track</string>
@@ -653,6 +662,10 @@
     <plurals name="fmt_delete_device_warning">
         <item quantity="one">This permanently deletes %d file from this device. This cannot be undone.</item>
         <item quantity="other">This permanently deletes %d files from this device. This cannot be undone.</item>
+    </plurals>
+    <plurals name="fmt_listened_exported">
+        <item quantity="one">Exported %d song</item>
+        <item quantity="other">Exported %d songs</item>
     </plurals>
     <plurals name="fmt_seconds">
         <item quantity="one">%d second</item>
