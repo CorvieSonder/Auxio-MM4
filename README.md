@@ -35,7 +35,7 @@ Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, di
 - Library playlists: a top-level playlist can show every song of the playlists inside it, each once, kept up to date (for example one per person sharing a media library); also in MediaMonkey 4 through the script
 
 **Tags**
-- Ratings from POPM frames (MediaMonkey, MusicBee, Windows Media Player (only MM tested)), with a choice of source and scale; a rating label in lists, a rating button in Now Playing, filter by rating
+- Ratings from POPM frames (MediaMonkey, MusicBee, Windows Media Player (only MM tested)), with a choice of source and scale; a rating label in lists, a rating button in Now Playing, filter by rating; shown as stars, hearts or music notes
 - Composer and Mood: tabs, detail pages, search sections and sort (tabs hidden by default)
 - Grouping (TIT1) tab - in my library, this groups together things like Minecraft music, or 80s music
 - MediaMonkey custom fields (Custom 1–5 and Occasion): name them, and show them in song details, search, sort and their own tabs (off by default)
@@ -48,7 +48,7 @@ Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, di
 - Crossfade between songs (0–12 s), gapless within albums
 - True gapless: trims silence at the start and end of each song (off by default; replaces crossfade while on)
 - Resume long songs: songs of 15 minutes or longer continue where they were left off (off by default; untested)
-- Now Playing top bar with quick buttons (rating, speed, sleep timer)
+- Now Playing top bar with quick buttons (rating, speed, sleep timer); choose which buttons show and in what order, including any song menu action; the rest go into the ⋮ menu
 - Lyrics page next to the queue: synced lyrics (SYLT) follow playback, with a timing offset; plain lyrics (USLT, Vorbis, MP4) and sidecar `.lrc` files are supported but untested
 
 **Other**
@@ -62,7 +62,6 @@ Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, di
 
 - Phone and PC sync improvements as they come up
 - Custom theme (we're going skeumorphic babyyyyy)
-- Configurable Now Playing buttons and rating symbol
 - Faster loading for large libraries (10,000+ songs)
 
 ## MediaMonkey 4 scripts
