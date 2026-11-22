@@ -111,6 +111,9 @@ class CrossfadeController(
             // This is our own move to the next song.
             return
         }
+        if (fadeJob != null) {
+            L.d("Crossfade cancelled")
+        }
         watchJob?.cancel()
         watchJob = null
         fadeJob?.cancel()
