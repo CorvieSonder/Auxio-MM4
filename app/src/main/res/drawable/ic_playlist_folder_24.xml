@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- An empty folder, shown for a playlist that holds other playlists but no songs. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:tint="?attr/colorControlNormal"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@android:color/white"
+        android:fillType="evenOdd"
+        android:pathData="M4,5H9.5L11.5,7H20Q21,7 21,8V18Q21,19 20,19H4Q3,19 3,18V6Q3,5 4,5ZM5,9V17H19V9Z" />
+</vector>
