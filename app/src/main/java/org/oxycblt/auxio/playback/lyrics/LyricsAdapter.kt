@@ -24,8 +24,10 @@ import android.util.TypedValue
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.R as MR
 import org.oxycblt.auxio.databinding.ItemLyricsLineBinding
 import org.oxycblt.auxio.databinding.ItemLyricsPlainBinding
+import org.oxycblt.auxio.util.getAttrColorCompat
 import org.oxycblt.auxio.util.inflater
 import org.oxycblt.musikr.lyrics.SyncedLine
 
@@ -113,7 +115,11 @@ class LyricsAdapter(private val listener: Listener) :
                 text = line.text.ifBlank { "♪" }
                 setSize(sizeSp)
                 setTypeface(null, if (isCurrent) Typeface.BOLD else Typeface.NORMAL)
-                alpha = if (isCurrent) 1f else 0.5f
+                setTextColor(
+                    context
+                        .getAttrColorCompat(MR.attr.colorOnSurface)
+                        .withAlpha(if (isCurrent) 255 else DIMMED_ALPHA)
+                )
                 setOnLongClickListener {
                     onSeek(line)
                     true
@@ -135,6 +141,7 @@ class LyricsAdapter(private val listener: Listener) :
     private companion object {
         const val TYPE_LINE = 0
         const val TYPE_PLAIN = 1
+        const val DIMMED_ALPHA = 128
 
         fun TextView.setSize(sp: Float) = setTextSize(TypedValue.COMPLEX_UNIT_SP, sp)
     }

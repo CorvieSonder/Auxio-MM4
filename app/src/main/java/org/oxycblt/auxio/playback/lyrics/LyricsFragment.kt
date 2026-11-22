@@ -31,6 +31,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.SimpleItemAnimator
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.delay
@@ -58,6 +59,7 @@ class LyricsFragment : ViewBindingFragment<FragmentLyricsBinding>(), LyricsAdapt
     // Auto-scroll pauses for a while after the user scrolls by hand.
     private var autoScrollPausedUntil = 0L
     private var keepingScreenOn = false
+    private var timingOffsetMs = 0
 
     override fun onCreateBinding(inflater: LayoutInflater) = FragmentLyricsBinding.inflate(inflater)
 
@@ -67,6 +69,8 @@ class LyricsFragment : ViewBindingFragment<FragmentLyricsBinding>(), LyricsAdapt
         binding.lyricsRecycler.apply {
             adapter = lyricsAdapter
             layoutManager = LinearLayoutManager(context)
+            // The change animation resets item alpha, which left old lines looking highlighted.
+            (itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
             addOnScrollListener(
                 object : RecyclerView.OnScrollListener() {
                     override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -101,6 +105,7 @@ class LyricsFragment : ViewBindingFragment<FragmentLyricsBinding>(), LyricsAdapt
     override fun onResume() {
         super.onResume()
         lyricsAdapter.setTextSize(lyricsSettings.textSizeSp)
+        timingOffsetMs = lyricsSettings.timingOffsetMs
     }
 
     override fun onPause() {
@@ -139,8 +144,8 @@ class LyricsFragment : ViewBindingFragment<FragmentLyricsBinding>(), LyricsAdapt
         binding.lyricsEmpty.isVisible = lyrics.isEmpty
         binding.lyricsMode.apply {
             isVisible = synced != null && plainBlocks.isNotEmpty()
-            // The button names the mode it switches to.
-            setText(if (useSynced) R.string.lbl_lyrics_plain else R.string.lbl_lyrics_synced)
+            // The button names the mode being shown; tap it to switch.
+            setText(if (useSynced) R.string.lbl_lyrics_synced else R.string.lbl_lyrics_plain)
         }
         binding.lyricsVersion.apply {
             isVisible = !useSynced && plainBlocks.size > 1
@@ -175,7 +180,8 @@ class LyricsFragment : ViewBindingFragment<FragmentLyricsBinding>(), LyricsAdapt
         val lines = syncedLines
         if (!visible || lines == null) return IDLE_TICK_MS
 
-        val positionMs = lyricsModel.positionMs()
+        // A negative offset shows lines sooner (for lyrics that lag behind the song).
+        val positionMs = lyricsModel.positionMs() - timingOffsetMs
         val index = lines.indexOfLastStartedBy(positionMs)
         if (index != lyricsAdapter.currentIndex) {
             lyricsAdapter.setCurrentIndex(index)

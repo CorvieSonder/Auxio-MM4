@@ -39,6 +39,13 @@ class LyricsSettings @Inject constructor(@ApplicationContext context: Context) :
                 else -> 20f
             }
 
+    /**
+     * Shifts synced lyrics, in milliseconds. Negative shows lines sooner (for lyrics that are too
+     * slow), positive shows them later (for lyrics that are too fast).
+     */
+    val timingOffsetMs: Int
+        get() = sharedPreferences.getInt(getString(R.string.set_key_lyrics_timing), 0)
+
     /** Whether to keep the screen on while the lyrics are shown and a song is playing. */
     val keepScreenOn: Boolean
         get() =
