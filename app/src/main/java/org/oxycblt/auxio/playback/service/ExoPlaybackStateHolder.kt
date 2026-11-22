@@ -62,6 +62,9 @@ import org.oxycblt.auxio.playback.gapless.TrueGaplessProcessorChain
 import org.oxycblt.auxio.playback.gapless.TrueGaplessSettings
 import org.oxycblt.auxio.playback.persist.PersistenceRepository
 import org.oxycblt.auxio.playback.replaygain.ReplayGainAudioProcessor
+import org.oxycblt.auxio.playback.resume.ResumeController
+import org.oxycblt.auxio.playback.resume.ResumeRepository
+import org.oxycblt.auxio.playback.resume.ResumeSettings
 import org.oxycblt.auxio.playback.sleep.SleepTimer
 import org.oxycblt.auxio.playback.state.DeferredPlayback
 import org.oxycblt.auxio.playback.state.PlaybackCommand
@@ -91,6 +94,8 @@ class ExoPlaybackStateHolder(
     mediaSourceFactory: MediaSource.Factory,
     crossfadeSettings: CrossfadeSettings,
     private val listenedRepository: ListenedRepository,
+    resumeRepository: ResumeRepository,
+    resumeSettings: ResumeSettings,
 ) :
     PlaybackStateHolder,
     Player.Listener,
@@ -112,6 +117,7 @@ class ExoPlaybackStateHolder(
             { replayGainProcessor.volume },
             ::advanceForCrossfade,
         )
+    private val resume = ResumeController(player, resumeRepository, resumeSettings)
 
     var sessionOngoing = false
         private set
@@ -126,11 +132,13 @@ class ExoPlaybackStateHolder(
         updatePlaybackParameters()
         sleepTimer.setListener(this)
         crossfade.onSongFinished = listenedRepository::recordListened
+        resume.attach()
     }
 
     fun release() {
         saveJob.cancel()
         sleepTimer.setListener(null)
+        resume.release()
         playbackManager.unregisterStateHolder(this)
         musicRepository.removeUpdateListener(this)
         player.removeListener(this)
@@ -283,6 +291,7 @@ class ExoPlaybackStateHolder(
 
     override fun newPlayback(command: PlaybackCommand) {
         crossfade.cancel()
+        resume.saveCurrent()
         parent = command.parent
         player.shuffleModeEnabled = command.shuffled
         player.setMediaItems(command.queue.map { it.buildMediaItem() })
@@ -452,6 +461,7 @@ class ExoPlaybackStateHolder(
             sendNewPlaybackEvent = true
         }
         if (rawQueue != resolveQueue()) {
+            resume.ignoreStarts()
             player.setMediaItems(rawQueue.heap.map { it.buildMediaItem() })
             if (rawQueue.isShuffled) {
                 player.shuffleModeEnabled = true
@@ -499,6 +509,7 @@ class ExoPlaybackStateHolder(
 
     override fun reset(ack: StateAck.NewPlayback) {
         crossfade.cancel()
+        resume.saveCurrent()
         player.setMediaItems(listOf())
         playbackManager.ack(this, ack)
         deferSave()
@@ -775,6 +786,8 @@ class ExoPlaybackStateHolder(
         private val crossfadeSettings: CrossfadeSettings,
         private val listenedRepository: ListenedRepository,
         private val trueGaplessSettings: TrueGaplessSettings,
+        private val resumeRepository: ResumeRepository,
+        private val resumeSettings: ResumeSettings,
     ) {
         fun create(): ExoPlaybackStateHolder {
             // Since Auxio is a music player, only specify an audio renderer to save
@@ -846,6 +859,8 @@ class ExoPlaybackStateHolder(
                 mediaSourceFactory,
                 crossfadeSettings,
                 listenedRepository,
+                resumeRepository,
+                resumeSettings,
             )
         }
     }

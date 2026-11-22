@@ -404,6 +404,8 @@
     <string name="set_headset_autoplay_desc">Always start playing when a headset is connected (may not work on all devices)</string>
     <string name="set_rewind_prev">Rewind before skipping back</string>
     <string name="set_rewind_prev_desc">Rewind before skipping to the previous song</string>
+    <string name="set_resume_long_songs">Resume long songs</string>
+    <string name="set_resume_long_songs_desc">Continue songs of 15 minutes or longer from where they were left off</string>
     <string name="set_repeat_pause">Pause on repeat</string>
     <string name="set_repeat_pause_desc">Pause when a song repeats</string>
     <string name="set_remember_pause">Remember pause</string>
