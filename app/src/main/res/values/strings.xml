@@ -311,6 +311,10 @@
     <string name="set_rating_source_mediamonkey" translatable="false">MediaMonkey</string>
     <string name="set_rating_source_musicbee" translatable="false">MusicBee</string>
     <string name="set_rating_source_wmp" translatable="false">Windows Media Player</string>
+    <string name="set_rating_symbol">Rating symbol</string>
+    <string name="set_rating_symbol_stars">Stars</string>
+    <string name="set_rating_symbol_hearts">Hearts</string>
+    <string name="set_rating_symbol_notes">Music notes</string>
     <string name="set_rating_lists">Show ratings in lists</string>
     <string name="set_rating_lists_desc">Show the rating of rated songs next to their menu button</string>
     <string name="set_hide_collaborators_desc">Only show artists that are directly credited on an album (works best on well-tagged libraries)</string>
@@ -508,8 +512,8 @@
     <string name="fmt_bitrate">%d kbps</string>
     <!-- Use your native country's abbreviation for hertz units. -->
     <string name="fmt_sample_rate">%d Hz</string>
-    <string name="fmt_rating" translatable="false">%s★</string>
-    <string name="fmt_min_rating" translatable="false">≥%s★</string>
+    <string name="fmt_rating" translatable="false">%1$s%2$s</string>
+    <string name="fmt_min_rating" translatable="false">≥%1$s%2$s</string>
     <string name="fmt_header_min_rating">%1$s · %2$s</string>
     <string name="lbl_min_rating">Minimum rating</string>
     <string name="lbl_any_rating">Any rating</string>

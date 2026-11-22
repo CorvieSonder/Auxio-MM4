@@ -92,7 +92,11 @@ value class Rating(val halfStars: Int) : Comparable<Rating> {
  * @param context [android.content.Context] required to obtain the format string.
  */
 fun Rating.format(context: android.content.Context) =
-    context.getString(R.string.fmt_rating, DecimalFormat("0.#").format(stars.toDouble()))
+    context.getString(
+        R.string.fmt_rating,
+        DecimalFormat("0.#").format(stars.toDouble()),
+        currentSymbol.text,
+    )
 
 /**
  * Format this [Rating] as a minimum, such as "≥4.5★".
@@ -100,7 +104,15 @@ fun Rating.format(context: android.content.Context) =
  * @param context [android.content.Context] required to obtain the format string.
  */
 fun Rating.formatMinimum(context: android.content.Context) =
-    context.getString(R.string.fmt_min_rating, DecimalFormat("0.#").format(stars.toDouble()))
+    context.getString(
+        R.string.fmt_min_rating,
+        DecimalFormat("0.#").format(stars.toDouble()),
+        currentSymbol.text,
+    )
+
+/** The symbol chosen to show ratings with. */
+private val currentSymbol: RatingSymbol
+    get() = Ratings.repository?.symbol ?: RatingSymbol.STAR
 
 /**
  * Get a list header title, followed by the minimum rating its songs are filtered by, if any.

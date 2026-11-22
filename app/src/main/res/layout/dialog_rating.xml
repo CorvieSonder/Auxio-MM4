@@ -25,16 +25,11 @@
             android:textAppearance="?attr/textAppearanceBodyLarge"
             tools:text="Song name" />
 
-        <androidx.appcompat.widget.AppCompatRatingBar
+        <org.oxycblt.auxio.music.rating.RatingSymbolBar
             android:id="@+id/rating_bar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_medium"
-            android:numStars="5"
-            android:progressTint="?attr/colorPrimary"
-            android:secondaryProgressTint="?attr/colorPrimary"
-            android:stepSize="0.5"
-            tools:rating="3.5" />
+            android:layout_marginTop="@dimen/spacing_medium" />
 
         <TextView
             android:id="@+id/rating_value"

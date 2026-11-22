@@ -38,6 +38,9 @@ interface RatingRepository {
     /** Whether ratings should be shown in song lists. */
     val showInLists: Boolean
 
+    /** The symbol that ratings are shown with. */
+    val symbol: RatingSymbol
+
     /** The lowest [Rating] of songs shown in search results, or null to show all songs. */
     var searchMinRating: Rating?
 
@@ -126,6 +129,10 @@ constructor(private val ratingDao: RatingDao, private val ratingSettings: Rating
     @Volatile private var sourceKeys = sourceKeys()
     @Volatile
     override var showInLists = ratingSettings.showInLists
+        private set
+
+    @Volatile
+    override var symbol = ratingSettings.symbol
         private set
 
     init {
@@ -227,6 +234,7 @@ constructor(private val ratingDao: RatingDao, private val ratingSettings: Rating
     override fun onRatingSettingsChanged() {
         sourceKeys = sourceKeys()
         showInLists = ratingSettings.showInLists
+        symbol = ratingSettings.symbol
         dispatchChange()
     }
 

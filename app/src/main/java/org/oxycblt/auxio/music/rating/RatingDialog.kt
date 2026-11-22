@@ -25,7 +25,6 @@ import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-import kotlin.math.roundToInt
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.DialogRatingBinding
 import org.oxycblt.auxio.music.MusicRepository
@@ -56,8 +55,10 @@ class RatingDialog : ViewBindingMaterialDialogFragment<DialogRatingBinding>() {
             .setTitle(R.string.lbl_rating)
             .setPositiveButton(R.string.lbl_ok) { _, _ ->
                 val song = song ?: return@setPositiveButton
-                val halfStars = (requireBinding().ratingBar.rating * 2).roundToInt()
-                ratingRepository.rate(song, Rating.fromHalfStars(halfStars))
+                ratingRepository.rate(
+                    song,
+                    Rating.fromHalfStars(requireBinding().ratingBar.halfStars),
+                )
             }
             .setNegativeButton(R.string.lbl_cancel, null)
         val song = song
@@ -77,11 +78,12 @@ class RatingDialog : ViewBindingMaterialDialogFragment<DialogRatingBinding>() {
         }
         val context = requireContext()
         binding.ratingSong.text = song.name.resolve(context)
+        binding.ratingBar.symbol = ratingRepository.symbol
         if (savedInstanceState == null) {
-            binding.ratingBar.rating = ratingRepository.ratingOf(song)?.stars ?: 0f
+            binding.ratingBar.halfStars = ratingRepository.ratingOf(song)?.halfStars ?: 0
         }
-        updateValue(binding.ratingBar.rating)
-        binding.ratingBar.setOnRatingBarChangeListener { _, rating, _ -> updateValue(rating) }
+        updateValue(binding.ratingBar.halfStars)
+        binding.ratingBar.onChange = ::updateValue
 
         val fileRating = ratingRepository.fileRatingOf(song)
         binding.ratingFile.isVisible = fileRating != null
@@ -91,8 +93,8 @@ class RatingDialog : ViewBindingMaterialDialogFragment<DialogRatingBinding>() {
         }
     }
 
-    private fun updateValue(stars: Float) {
-        val rating = Rating.fromHalfStars((stars * 2).roundToInt())
+    private fun updateValue(halfStars: Int) {
+        val rating = Rating.fromHalfStars(halfStars)
         requireBinding().ratingValue.text =
             rating?.format(requireContext()) ?: getString(R.string.lbl_rating_none)
     }
