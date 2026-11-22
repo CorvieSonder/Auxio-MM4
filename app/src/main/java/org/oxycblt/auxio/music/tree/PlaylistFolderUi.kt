@@ -173,11 +173,22 @@ private fun Fragment.askDeletions(
         return
     }
     val context = requireContext()
+    val checked = BooleanArray(plan.missing.size) { true }
     MaterialAlertDialogBuilder(context)
         .setTitle(R.string.lbl_sync_delete_title)
-        .setMessage(plan.missing.joinToString("\n") { it.name.raw })
-        .setPositiveButton(R.string.lbl_delete) { _, _ ->
-            folderModel.answerSync(plan, choice, true)
+        .setMultiChoiceItems(
+            plan.missing.map { it.name.raw }.toTypedArray(),
+            checked,
+        ) { _, which, isChecked ->
+            checked[which] = isChecked
+        }
+        .setPositiveButton(R.string.lbl_ok) { _, _ ->
+            val selected = plan.missing.filterIndexed { i, _ -> checked[i] }
+            folderModel.answerSync(
+                PlaylistFolderSync.Plan(plan.scan, plan.parentUid, plan.items, selected),
+                choice,
+                selected.isNotEmpty(),
+            )
         }
         .setNegativeButton(R.string.lbl_sync_keep) { _, _ ->
             folderModel.answerSync(plan, choice, false)

@@ -218,8 +218,8 @@
     <string name="lbl_sync_merge">Merge both (differences listed in _conflicts.txt)</string>
     <string name="lbl_sync_overwrite">Use MediaMonkey\'s version</string>
     <string name="lbl_sync_skip">Keep the phone\'s version (differences listed in _conflicts.txt)</string>
-    <string name="lbl_sync_delete_title">Deleted in MediaMonkey. Delete them here too?</string>
-    <string name="lbl_sync_keep">Keep</string>
+    <string name="lbl_sync_delete_title">Deleted in MediaMonkey. Select playlists to delete here, deselect to keep</string>
+    <string name="lbl_sync_keep">Keep all</string>
     <string name="lng_playlist_folder_synced">%1$d created, %2$d updated, %3$d changed on both sides, %4$d deleted, %5$d songs not found</string>
     <string name="lng_playlist_changes_exported">%1$d changed playlists and %2$d deletions exported</string>
     <string name="set_playlist_sync">Playlists</string>
