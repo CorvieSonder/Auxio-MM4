@@ -147,7 +147,8 @@ class PlaybackPanelFragment :
             insets
         }
 
-        binding.playbackToolbar.apply {
+        // Each of these changes would rebuild the action buttons, so only do that once.
+        binding.playbackToolbar.batchUpdate {
             setNavigationOnClickListener { playbackModel.openMain() }
             setOnMenuItemClickListener(this@PlaybackPanelFragment)
             if (binding.playbackOverlayTop == null) {
@@ -158,6 +159,11 @@ class PlaybackPanelFragment :
                 title = null
                 setActionsFitInline()
             }
+            setOverflowIntoMenu {
+                // The song menu lists the actions that are hidden or do not fit.
+                barRequests.onBar = binding.playbackToolbar.actionItemIds
+            }
+            applyBarActions()
         }
         val overlayTop = binding.playbackOverlayTop
         val overlayBottom = binding.playbackOverlayBottom
@@ -166,11 +172,6 @@ class PlaybackPanelFragment :
                 if (uiSettings.roundMode) COVER_CORNER_DP * resources.displayMetrics.density else 0f
             overlayController = PlaybackOverlayController(overlayTop, overlayBottom, cornerRadius)
         }
-        binding.playbackToolbar.setOverflowIntoMenu {
-            // The song menu lists the actions that are hidden or do not fit.
-            barRequests.onBar = binding.playbackToolbar.actionItemIds
-        }
-        applyBarActions()
         barSettings.registerListener(this)
 
         binding.playbackPager?.apply {
@@ -304,9 +305,11 @@ class PlaybackPanelFragment :
         val toolbar = requireBinding().playbackToolbar
         val menu = NowPlayingBar.inflate(context)
         val itemIds = NowPlayingBar.shownItemIds(context, menu, barSettings.barActions)
-        toolbar.arrangeMenuItems(menu, itemIds)
-        // The last actions give way first when they do not all fit.
-        toolbar.setOverflowPriority(itemIds.filter { it != NowPlayingBar.MORE_ITEM_ID }.reversed())
+        toolbar.batchUpdate {
+            arrangeMenuItems(menu, itemIds)
+            // The last actions give way first when they do not all fit.
+            setOverflowPriority(itemIds.filter { it != NowPlayingBar.MORE_ITEM_ID }.reversed())
+        }
         // A new menu starts with the default icons.
         updateSleepTimer(sleepTimer.state.value)
         updateRating(playbackModel.song.value)

@@ -76,6 +76,8 @@ constructor(
     private val actionButtons = mutableMapOf<Int, RippleFixMaterialButton>()
     private var overflowIntoMenu = false
     private var onActionsRebuilt: (() -> Unit)? = null
+    private var batchDepth = 0
+    private var rebuildPending = false
     @SuppressLint("RestrictedApi") private var menuBuilder = MenuBuilder(context)
 
     init {
@@ -208,6 +210,25 @@ constructor(
         SupportMenuInflater(context).inflate(resId, builder)
         menuBuilder = builder
         rebuildActionButtons()
+    }
+
+    /**
+     * Apply several changes to the menu or its layout, rebuilding the action buttons only once at
+     * the end instead of after every change. Calls can be nested.
+     *
+     * @param block The changes to apply.
+     */
+    fun batchUpdate(block: AuxioToolbar.() -> Unit) {
+        batchDepth++
+        try {
+            block()
+        } finally {
+            batchDepth--
+            if (batchDepth == 0 && rebuildPending) {
+                rebuildPending = false
+                rebuildActionButtons()
+            }
+        }
     }
 
     fun setOnMenuItemClickListener(listener: Toolbar.OnMenuItemClickListener?) {
@@ -412,6 +433,11 @@ constructor(
 
     @SuppressLint("RestrictedApi")
     private fun rebuildActionButtons() {
+        if (batchDepth > 0) {
+            // Rebuilt once the batch ends.
+            rebuildPending = true
+            return
+        }
         val row = actionRow
         val container: ViewGroup = row ?: binding.toolbarActionGroup
         actionButtons.clear()

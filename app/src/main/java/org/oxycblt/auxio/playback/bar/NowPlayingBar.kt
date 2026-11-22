@@ -115,11 +115,16 @@ object NowPlayingBar {
      * @param menuRes The menu resource.
      */
     @SuppressLint("RestrictedApi")
-    fun itemIds(context: Context, @MenuRes menuRes: Int) =
-        MenuBuilder(context)
-            .also { SupportMenuInflater(context).inflate(menuRes, it) }
-            .children
-            .mapTo(mutableSetOf()) { it.itemId }
+    fun itemIds(context: Context, @MenuRes menuRes: Int): Set<Int> =
+        // Item IDs never change while the app runs, so each menu only has to be inflated once.
+        itemIdCache.getOrPut(menuRes) {
+            MenuBuilder(context)
+                .also { SupportMenuInflater(context).inflate(menuRes, it) }
+                .children
+                .mapTo(mutableSetOf()) { it.itemId }
+        }
+
+    private val itemIdCache = mutableMapOf<Int, Set<Int>>()
 
     /**
      * Arrange the configurable actions as chosen by the user.
