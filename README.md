@@ -57,6 +57,7 @@ Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, di
 - Delete songs from a playlist or from the device
 - Use a song as the ringtone
 - Search bar in Settings
+- Back up and restore settings and app data (playlists, moods, ratings, listened status) as a zip file; music folders are picked again after a restore
 - Listened status: export which songs were played to the end, and when, as a CSV file
 
 ### Planned
