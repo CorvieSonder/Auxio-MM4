@@ -43,7 +43,7 @@ class PlaybackOverlayController(
     init {
         val surface = MaterialColors.getColor(top, com.google.android.material.R.attr.colorSurface)
         top.background =
-            scrim(surface, GradientDrawable.Orientation.TOP_BOTTOM).apply {
+            scrim(surface, GradientDrawable.Orientation.TOP_BOTTOM, TOP_ALPHAS).apply {
                 cornerRadii =
                     floatArrayOf(
                         cornerRadius,
@@ -57,7 +57,7 @@ class PlaybackOverlayController(
                     )
             }
         bottom.background =
-            scrim(surface, GradientDrawable.Orientation.BOTTOM_TOP).apply {
+            scrim(surface, GradientDrawable.Orientation.BOTTOM_TOP, BOTTOM_ALPHAS).apply {
                 cornerRadii =
                     floatArrayOf(
                         0f,
@@ -79,14 +79,10 @@ class PlaybackOverlayController(
         fade(bottom, isShown)
     }
 
-    private fun scrim(color: Int, orientation: GradientDrawable.Orientation) =
+    private fun scrim(color: Int, orientation: GradientDrawable.Orientation, alphas: IntArray) =
         GradientDrawable(
             orientation,
-            intArrayOf(
-                ColorUtils.setAlphaComponent(color, SCRIM_ALPHA),
-                ColorUtils.setAlphaComponent(color, SCRIM_ALPHA / 2),
-                ColorUtils.setAlphaComponent(color, 0),
-            ),
+            alphas.map { ColorUtils.setAlphaComponent(color, it) }.toIntArray(),
         )
 
     private fun fade(view: View, show: Boolean) {
@@ -106,7 +102,11 @@ class PlaybackOverlayController(
     }
 
     private companion object {
-        const val SCRIM_ALPHA = 0xE0
+        // Alphas from the cover's edge inwards, spread evenly over each overlay.
+        val TOP_ALPHAS = intArrayOf(0xE0, 0x70, 0x00)
+        // The bottom overlay keeps its full strength up to the title and artist, then fades out
+        // above them, so the text stays readable on light covers.
+        val BOTTOM_ALPHAS = intArrayOf(0xE8, 0xE8, 0xD0, 0xA0, 0x00)
         const val FADE_MS = 150L
     }
 }

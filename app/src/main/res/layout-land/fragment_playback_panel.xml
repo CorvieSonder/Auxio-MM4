@@ -44,7 +44,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingTop="@dimen/spacing_large"
+        android:paddingTop="@dimen/playback_overlay_fade"
         android:paddingBottom="@dimen/spacing_small"
         app:layout_constraintBottom_toBottomOf="@+id/playback_pager"
         app:layout_constraintEnd_toEndOf="@+id/playback_pager"
