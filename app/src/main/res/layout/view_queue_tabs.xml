@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+    <LinearLayout
+        android:id="@+id/queue_tab_queue"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="?attr/selectableItemBackground"
+        android:contentDescription="@string/desc_queue_bar"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <View
+            android:id="@+id/queue_tab_queue_pill"
+            android:layout_width="32dp"
+            android:layout_height="4dp"
+            android:layout_marginBottom="@dimen/spacing_small"
+            android:background="@drawable/ui_queue_tab_pill" />
+
+        <TextView
+            android:id="@+id/queue_tab_queue_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/lbl_queue"
+            android:textAppearance="?attr/textAppearanceLabelLargeEmphasized"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/queue_tab_lyrics"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="?attr/selectableItemBackground"
+        android:contentDescription="@string/desc_lyrics_bar"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <View
+            android:id="@+id/queue_tab_lyrics_pill"
+            android:layout_width="32dp"
+            android:layout_height="4dp"
+            android:layout_marginBottom="@dimen/spacing_small"
+            android:background="@drawable/ui_queue_tab_pill" />
+
+        <TextView
+            android:id="@+id/queue_tab_lyrics_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/lbl_lyrics"
+            android:textAppearance="?attr/textAppearanceLabelLargeEmphasized"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+    </LinearLayout>
+
+</LinearLayout>
