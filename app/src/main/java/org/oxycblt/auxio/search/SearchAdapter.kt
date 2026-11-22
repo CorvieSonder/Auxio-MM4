@@ -29,13 +29,17 @@ import org.oxycblt.auxio.list.adapter.SimpleDiffCallback
 import org.oxycblt.auxio.list.recycler.AlbumViewHolder
 import org.oxycblt.auxio.list.recycler.ArtistViewHolder
 import org.oxycblt.auxio.list.recycler.BasicHeaderViewHolder
+import org.oxycblt.auxio.list.recycler.ComposerViewHolder
 import org.oxycblt.auxio.list.recycler.DividerViewHolder
 import org.oxycblt.auxio.list.recycler.GenreViewHolder
+import org.oxycblt.auxio.list.recycler.MoodViewHolder
 import org.oxycblt.auxio.list.recycler.PlaylistViewHolder
 import org.oxycblt.auxio.list.recycler.SongViewHolder
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
+import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
@@ -55,6 +59,8 @@ class SearchAdapter(private val listener: SelectableListListener<Music>) :
             is Album -> AlbumViewHolder.VIEW_TYPE
             is Artist -> ArtistViewHolder.VIEW_TYPE
             is Genre -> GenreViewHolder.VIEW_TYPE
+            is Composer -> ComposerViewHolder.VIEW_TYPE
+            is Mood -> MoodViewHolder.VIEW_TYPE
             is Playlist -> PlaylistViewHolder.VIEW_TYPE
             is PlainDivider -> DividerViewHolder.VIEW_TYPE
             is BasicHeader -> BasicHeaderViewHolder.VIEW_TYPE
@@ -67,6 +73,8 @@ class SearchAdapter(private val listener: SelectableListListener<Music>) :
             AlbumViewHolder.VIEW_TYPE -> AlbumViewHolder.from(parent)
             ArtistViewHolder.VIEW_TYPE -> ArtistViewHolder.from(parent)
             GenreViewHolder.VIEW_TYPE -> GenreViewHolder.from(parent)
+            ComposerViewHolder.VIEW_TYPE -> ComposerViewHolder.from(parent)
+            MoodViewHolder.VIEW_TYPE -> MoodViewHolder.from(parent)
             PlaylistViewHolder.VIEW_TYPE -> PlaylistViewHolder.from(parent)
             DividerViewHolder.VIEW_TYPE -> DividerViewHolder.from(parent)
             BasicHeaderViewHolder.VIEW_TYPE -> BasicHeaderViewHolder.from(parent)
@@ -79,6 +87,8 @@ class SearchAdapter(private val listener: SelectableListListener<Music>) :
             is Album -> (holder as AlbumViewHolder).bind(item, listener)
             is Artist -> (holder as ArtistViewHolder).bind(item, listener)
             is Genre -> (holder as GenreViewHolder).bind(item, listener)
+            is Composer -> (holder as ComposerViewHolder).bind(item, listener)
+            is Mood -> (holder as MoodViewHolder).bind(item, listener)
             is Playlist -> (holder as PlaylistViewHolder).bind(item, listener)
             is BasicHeader -> (holder as BasicHeaderViewHolder).bind(item)
         }
@@ -101,6 +111,10 @@ class SearchAdapter(private val listener: SelectableListListener<Music>) :
 
                         is Genre if newItem is Genre ->
                             GenreViewHolder.DIFF_CALLBACK.areContentsTheSame(oldItem, newItem)
+                        is Composer if newItem is Composer ->
+                            ComposerViewHolder.DIFF_CALLBACK.areContentsTheSame(oldItem, newItem)
+                        is Mood if newItem is Mood ->
+                            MoodViewHolder.DIFF_CALLBACK.areContentsTheSame(oldItem, newItem)
 
                         is Playlist if newItem is Playlist ->
                             PlaylistViewHolder.DIFF_CALLBACK.areContentsTheSame(oldItem, newItem)

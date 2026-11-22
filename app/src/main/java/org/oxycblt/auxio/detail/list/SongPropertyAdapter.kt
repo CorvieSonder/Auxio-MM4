@@ -32,6 +32,7 @@ import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
 import org.oxycblt.auxio.playback.formatDurationMs
 import org.oxycblt.auxio.playback.replaygain.formatDb
+import org.oxycblt.auxio.util.concatLocalized
 import org.oxycblt.auxio.util.context
 import org.oxycblt.auxio.util.inflater
 import org.oxycblt.musikr.Music
@@ -68,6 +69,8 @@ data class SongProperty(@StringRes val name: Int, val value: Value) {
         data class MusicName(val music: Music) : Value
 
         data class MusicNames(val name: List<Music>) : Value
+
+        data class Text(val values: List<String>) : Value
 
         data class Number(val value: Int, val subtitle: String?) : Value
 
@@ -109,6 +112,10 @@ class SongPropertyViewHolder private constructor(private val binding: ItemSongPr
             is SongProperty.Value.MusicNames -> {
                 val names = property.value.name.resolveNames(context)
                 binding.propertyValue.setText(names)
+            }
+            is SongProperty.Value.Text -> {
+                val values = property.value.values.concatLocalized(context) { it }
+                binding.propertyValue.setText(values)
             }
             is SongProperty.Value.Number -> {
                 val value = context.getString(R.string.fmt_number, property.value.value)

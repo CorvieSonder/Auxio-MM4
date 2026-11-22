@@ -70,7 +70,9 @@ import org.oxycblt.auxio.util.getDimenPixels
 import org.oxycblt.auxio.util.getDrawableCompat
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
+import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
 import org.oxycblt.musikr.covers.CoverCollection
@@ -419,6 +421,46 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
             },
             context.getString(R.string.desc_genre_image, genre.name),
             R.drawable.ic_genre_24,
+            squareishShapeAppearance,
+        )
+
+    /**
+     * Bind a [Composer]'s image to this view.
+     *
+     * @param composer The [Composer] to bind to the view.
+     */
+    fun bind(composer: Composer) =
+        bindImpl(
+            { size ->
+                GalleryCoverCollection(
+                    composer.covers,
+                    composer.uid.toString().hashCode(),
+                    responsiveCornerRatio(size),
+                    backgroundColor(),
+                )
+            },
+            context.getString(R.string.desc_composer_image, composer.name),
+            R.drawable.ic_composer_24,
+            squareishShapeAppearance,
+        )
+
+    /**
+     * Bind a [Mood]'s image to this view.
+     *
+     * @param mood The [Mood] to bind to the view.
+     */
+    fun bind(mood: Mood) =
+        bindImpl(
+            { size ->
+                GalleryCoverCollection(
+                    mood.covers,
+                    mood.uid.toString().hashCode(),
+                    responsiveCornerRatio(size),
+                    backgroundColor(),
+                )
+            },
+            context.getString(R.string.desc_mood_image, mood.name),
+            R.drawable.ic_mood_24,
             squareishShapeAppearance,
         )
 

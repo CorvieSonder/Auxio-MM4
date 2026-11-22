@@ -40,8 +40,12 @@ import org.oxycblt.auxio.list.PlainHeader
 import org.oxycblt.auxio.list.adapter.UpdateInstructions
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.MusicRepository
+import org.oxycblt.auxio.music.MusicSettings
 import org.oxycblt.auxio.music.MusicType
+import org.oxycblt.auxio.music.rating.Ratings
 import org.oxycblt.auxio.music.rating.rating
+import org.oxycblt.auxio.music.tags.composers
+import org.oxycblt.auxio.music.tags.moods
 import org.oxycblt.auxio.playback.PlaySong
 import org.oxycblt.auxio.playback.PlaybackSettings
 import org.oxycblt.auxio.util.Event
@@ -49,11 +53,14 @@ import org.oxycblt.auxio.util.MutableEvent
 import org.oxycblt.auxio.util.unlikelyToBeNull
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
+import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.MusicParent
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
+import org.oxycblt.musikr.tag.interpret.Separators
 import timber.log.Timber as L
 
 /**
@@ -68,6 +75,7 @@ class DetailViewModel
 constructor(
     private val listSettings: ListSettings,
     private val musicRepository: MusicRepository,
+    private val musicSettings: MusicSettings,
     private val playbackSettings: PlaybackSettings,
     detailGeneratorFactory: DetailGenerator.Factory,
 ) : ViewModel(), DetailGenerator.Invalidator {
@@ -155,6 +163,56 @@ constructor(
     val playInGenreWith
         get() = playbackSettings.inParentPlaybackMode ?: PlaySong.FromGenre(currentGenre.value)
 
+    // --- COMPOSER ---
+
+    /** The current [Composer] to display. Null if there is nothing to show. */
+    val currentComposer: StateFlow<Composer?>
+        field = MutableStateFlow<Composer?>(null)
+
+    private val _composerSongList = MutableStateFlow(listOf<Item>())
+
+    /** The current list data derived from [currentComposer]. */
+    val composerSongList: StateFlow<List<Item>> = _composerSongList
+
+    /** Instructions for updating [composerSongList] in the UI. */
+    val composerSongInstructions: Event<UpdateInstructions>
+        field = MutableEvent<UpdateInstructions>()
+
+    /** The current [Sort] used for [Song]s in [composerSongList]. */
+    val composerSongSort: Sort
+        get() = listSettings.composerSongSort
+
+    /** The [PlaySong] instructions to use when playing a [Song] from [Composer] details. */
+    val playInComposerWith
+        get() =
+            playbackSettings.inParentPlaybackMode
+                ?: PlaySong.FromComposer(unlikelyToBeNull(currentComposer.value))
+
+    // --- MOOD ---
+
+    /** The current [Mood] to display. Null if there is nothing to show. */
+    val currentMood: StateFlow<Mood?>
+        field = MutableStateFlow<Mood?>(null)
+
+    private val _moodSongList = MutableStateFlow(listOf<Item>())
+
+    /** The current list data derived from [currentMood]. */
+    val moodSongList: StateFlow<List<Item>> = _moodSongList
+
+    /** Instructions for updating [moodSongList] in the UI. */
+    val moodSongInstructions: Event<UpdateInstructions>
+        field = MutableEvent<UpdateInstructions>()
+
+    /** The current [Sort] used for [Song]s in [moodSongList]. */
+    val moodSongSort: Sort
+        get() = listSettings.moodSongSort
+
+    /** The [PlaySong] instructions to use when playing a [Song] from [Mood] details. */
+    val playInMoodWith
+        get() =
+            playbackSettings.inParentPlaybackMode
+                ?: PlaySong.FromMood(unlikelyToBeNull(currentMood.value))
+
     // --- PLAYLIST ---
 
     /** The current [Playlist] to display. Null if there is nothing to do. */
@@ -215,6 +273,26 @@ constructor(
             }
             MusicType.PLAYLISTS -> {
                 refreshPlaylist(currentPlaylist.value?.uid ?: return)
+            }
+            MusicType.COMPOSERS -> {
+                val composer = detailGenerator.composer(currentComposer.value?.uid ?: return)
+                refreshDetail(
+                    composer,
+                    currentComposer,
+                    _composerSongList,
+                    composerSongInstructions,
+                    replace,
+                )
+            }
+            MusicType.MOODS -> {
+                val mood = detailGenerator.mood(currentMood.value?.uid ?: return)
+                refreshDetail(
+                    mood,
+                    currentMood,
+                    _moodSongList,
+                    moodSongInstructions,
+                    replace,
+                )
             }
             else -> error("Unexpected music type $type")
         }
@@ -284,6 +362,20 @@ constructor(
      * @param genre The [Genre] to navigate with.
      */
     fun showGenre(genre: Genre) = showImpl(Show.GenreDetails(genre))
+
+    /**
+     * Navigate to the details of a [Composer].
+     *
+     * @param composer The [Composer] to navigate with.
+     */
+    fun showComposer(composer: Composer) = showImpl(Show.ComposerDetails(composer))
+
+    /**
+     * Navigate to the details of a [Mood].
+     *
+     * @param mood The [Mood] to navigate with.
+     */
+    fun showMood(mood: Mood) = showImpl(Show.MoodDetails(mood))
 
     /**
      * Navigate to the details of a [Playlist].
@@ -388,6 +480,52 @@ constructor(
      */
     fun applyGenreSongSort(sort: Sort) {
         listSettings.genreSongSort = sort
+    }
+
+    /**
+     * Set a new [currentComposer] from it's [Music.UID].
+     *
+     * @param uid The [Music.UID] of the [Composer] to update [currentComposer] to. Must be valid.
+     */
+    fun setComposer(uid: Music.UID) {
+        L.d("Opening composer $uid")
+        if (uid === currentComposer.value?.uid) {
+            return
+        }
+        val composer = detailGenerator.composer(uid)
+        refreshDetail(composer, currentComposer, _composerSongList, composerSongInstructions, null)
+    }
+
+    /**
+     * Apply a new [Sort] to [composerSongList].
+     *
+     * @param sort The [Sort] to apply.
+     */
+    fun applyComposerSongSort(sort: Sort) {
+        listSettings.composerSongSort = sort
+    }
+
+    /**
+     * Set a new [currentMood] from it's [Music.UID].
+     *
+     * @param uid The [Music.UID] of the [Mood] to update [currentMood] to. Must be valid.
+     */
+    fun setMood(uid: Music.UID) {
+        L.d("Opening mood $uid")
+        if (uid === currentMood.value?.uid) {
+            return
+        }
+        val mood = detailGenerator.mood(uid)
+        refreshDetail(mood, currentMood, _moodSongList, moodSongInstructions, null)
+    }
+
+    /**
+     * Apply a new [Sort] to [moodSongList].
+     *
+     * @param sort The [Sort] to apply.
+     */
+    fun applyMoodSongSort(sort: Sort) {
+        listSettings.moodSongSort = sort
     }
 
     /**
@@ -506,11 +644,20 @@ constructor(
     }
 
     private fun refreshAudioInfo(song: Song) {
+        val separators = Separators.from(musicSettings.separators)
         currentSongProperties.value = buildList {
             add(SongProperty(R.string.lbl_name, SongProperty.Value.MusicName(song)))
             add(SongProperty(R.string.lbl_album, SongProperty.Value.MusicName(song.album)))
             add(SongProperty(R.string.lbl_artists, SongProperty.Value.MusicNames(song.artists)))
             add(SongProperty(R.string.lbl_genres, SongProperty.Value.MusicNames(song.genres)))
+            song
+                .composers(separators)
+                .takeIf { it.isNotEmpty() }
+                ?.let { add(SongProperty(R.string.lbl_composer, SongProperty.Value.Text(it))) }
+            song
+                .moods(separators)
+                .takeIf { it.isNotEmpty() }
+                ?.let { add(SongProperty(R.string.lbl_mood, SongProperty.Value.Text(it))) }
             song.date?.let { add(SongProperty(R.string.lbl_date, SongProperty.Value.ItemDate(it))) }
             song.rating?.let {
                 add(SongProperty(R.string.lbl_rating, SongProperty.Value.ItemRating(it)))
@@ -547,7 +694,7 @@ constructor(
         list: MutableStateFlow<List<Item>>,
         instructions: MutableEvent<UpdateInstructions>,
         replace: Int?,
-        songHeader: (Int) -> PlainHeader = { SortHeader(it) },
+        songHeader: (Int) -> PlainHeader = { SortHeader(it, Ratings.repository?.detailMinRating) },
     ) {
         if (detail == null) {
             parent.value = null
@@ -569,7 +716,8 @@ constructor(
                         section.items
                     }
                     is DetailSection.Discs -> {
-                        val header = SortHeader(section.stringRes)
+                        val header =
+                            SortHeader(section.stringRes, Ratings.repository?.detailMinRating)
                         if (newList.isNotEmpty()) {
                             newList.add(PlainDivider(header))
                         }
@@ -614,7 +762,7 @@ constructor(
                 playlistSongInstructions,
                 null,
             ) {
-                EditHeader(it)
+                EditHeader(it, Ratings.repository?.detailMinRating)
             }
             return
         }
@@ -686,6 +834,20 @@ sealed interface Show {
      * @param genre The [Genre] to navigate with.
      */
     data class GenreDetails(val genre: Genre) : Show
+
+    /**
+     * Navigate to the details of a [Composer].
+     *
+     * @param composer The [Composer] to navigate with.
+     */
+    data class ComposerDetails(val composer: Composer) : Show
+
+    /**
+     * Navigate to the details of a [Mood].
+     *
+     * @param mood The [Mood] to navigate with.
+     */
+    data class MoodDetails(val mood: Mood) : Show
 
     /**
      * Navigate to the details of a [Playlist].

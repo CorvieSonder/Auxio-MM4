@@ -66,6 +66,10 @@
     <string name="set_key_album_songs_sort" translatable="false">auxio_album_sort</string>
     <string name="set_key_artist_songs_sort" translatable="false">auxio_artist_sort</string>
     <string name="set_key_genre_songs_sort" translatable="false">auxio_genre_sort</string>
+    <string name="set_key_composers_sort" translatable="false">auxio_composers_sort</string>
+    <string name="set_key_composer_songs_sort" translatable="false">auxio_composer_songs_sort</string>
+    <string name="set_key_moods_sort" translatable="false">auxio_moods_sort</string>
+    <string name="set_key_mood_songs_sort" translatable="false">auxio_mood_songs_sort</string>
 
     <string name="set_key_library_revision" translatable="false">auxio_library_revision</string>
 
@@ -73,6 +77,8 @@
 
     <string name="set_key_rating_source" translatable="false">auxio_rating_source</string>
     <string name="set_key_rating_lists" translatable="false">auxio_rating_lists</string>
+    <string name="set_key_search_min_rating" translatable="false">auxio_search_min_rating</string>
+    <string name="set_key_detail_min_rating" translatable="false">auxio_detail_min_rating</string>
 
     <string-array name="entries_rating_source">
         <item>@string/set_rating_source_mediamonkey</item>

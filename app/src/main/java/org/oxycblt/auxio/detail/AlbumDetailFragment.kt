@@ -218,6 +218,16 @@ class AlbumDetailFragment : DetailFragment<Album, Song>() {
                 findNavController()
                     .navigateSafe(AlbumDetailFragmentDirections.showArtistChoices(show.album.uid))
             }
+            is Show.ComposerDetails -> {
+                L.d("Navigating to ${show.composer}")
+                findNavController()
+                    .navigateSafe(AlbumDetailFragmentDirections.showComposer(show.composer.uid))
+            }
+            is Show.MoodDetails -> {
+                L.d("Navigating to ${show.mood}")
+                findNavController()
+                    .navigateSafe(AlbumDetailFragmentDirections.showMood(show.mood.uid))
+            }
             is Show.GenreDetails,
             is Show.PlaylistDetails -> {
                 error("Unexpected show command $show")
@@ -234,6 +244,8 @@ class AlbumDetailFragment : DetailFragment<Album, Song>() {
                 is Menu.ForAlbum -> AlbumDetailFragmentDirections.openAlbumMenu(menu.parcel)
                 is Menu.ForSelection -> AlbumDetailFragmentDirections.openSelectionMenu(menu.parcel)
                 is Menu.ForArtist,
+                is Menu.ForComposer,
+                is Menu.ForMood,
                 is Menu.ForGenre,
                 is Menu.ForPlaylist -> error("Unexpected menu $menu")
             }

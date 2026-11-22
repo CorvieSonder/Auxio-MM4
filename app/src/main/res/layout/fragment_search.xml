@@ -115,6 +115,36 @@
                     android:checkable="true"
                     android:text="@string/lbl_playlists" />
 
+                <com.google.android.material.chip.Chip
+                    style="@style/Widget.Auxio.Chip.Filter"
+                    android:id="@+id/search_filter_composers"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:checkable="true"
+                    android:text="@string/lbl_composers" />
+
+                <com.google.android.material.chip.Chip
+                    style="@style/Widget.Auxio.Chip.Filter"
+                    android:id="@+id/search_filter_moods"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:checkable="true"
+                    android:text="@string/lbl_moods" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/search_filter_rating"
+                    style="@style/Widget.Auxio.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="false"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:text="@string/lbl_rating" />
+
             </com.google.android.material.chip.ChipGroup>
 
         </HorizontalScrollView>

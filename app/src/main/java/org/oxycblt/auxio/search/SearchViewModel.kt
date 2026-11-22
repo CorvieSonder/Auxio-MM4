@@ -35,6 +35,8 @@ import org.oxycblt.auxio.list.PlainDivider
 import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.MusicType
+import org.oxycblt.auxio.music.rating.Rating
+import org.oxycblt.auxio.music.rating.RatingRepository
 import org.oxycblt.auxio.playback.PlaySong
 import org.oxycblt.auxio.playback.PlaybackSettings
 import org.oxycblt.musikr.Library
@@ -54,7 +56,8 @@ constructor(
     private val searchEngine: SearchEngine,
     private val searchSettings: SearchSettings,
     private val playbackSettings: PlaybackSettings,
-) : ViewModel(), MusicRepository.UpdateListener {
+    private val ratingRepository: RatingRepository,
+) : ViewModel(), MusicRepository.UpdateListener, RatingRepository.Listener {
     private var lastQuery: String? = null
     private var currentSearchJob: Job? = null
 
@@ -68,10 +71,19 @@ constructor(
 
     init {
         musicRepository.addUpdateListener(this)
+        ratingRepository.addListener(this)
     }
 
     override fun onCleared() {
         musicRepository.removeUpdateListener(this)
+        ratingRepository.removeListener(this)
+    }
+
+    override fun onRatingsChanged() {
+        if (ratingRepository.searchMinRating != null) {
+            L.d("Ratings changed, re-searching library")
+            search(lastQuery)
+        }
     }
 
     override fun onMusicChanges(changes: MusicRepository.Changes) {
@@ -118,6 +130,8 @@ constructor(
                     artists = if (MusicType.ARTISTS in filters) library.artists else null,
                     genres = if (MusicType.GENRES in filters) library.genres else null,
                     playlists = if (MusicType.PLAYLISTS in filters) library.playlists else null,
+                    composers = if (MusicType.COMPOSERS in filters) library.composers else null,
+                    moods = if (MusicType.MOODS in filters) library.moods else null,
                 )
             } else {
                 SearchEngine.Items(
@@ -126,6 +140,8 @@ constructor(
                     artists = library.artists,
                     genres = library.genres,
                     playlists = library.playlists,
+                    composers = library.composers,
+                    moods = library.moods,
                 )
             }
 
@@ -168,16 +184,40 @@ constructor(
                 add(header)
                 addAll(SORT.genres(it))
             }
-            results.songs?.let {
-                L.d("Adding ${it.size} songs to search results")
-                val header = BasicHeader(R.string.lbl_songs)
+            results.composers?.let {
+                L.d("Adding ${it.size} composers to search results")
+                val header = BasicHeader(R.string.lbl_composers)
                 if (isNotEmpty()) {
                     add(PlainDivider(header))
                 }
 
                 add(header)
-                addAll(SORT.songs(it))
+                addAll(SORT.composers(it))
             }
+            results.moods?.let {
+                L.d("Adding ${it.size} moods to search results")
+                val header = BasicHeader(R.string.lbl_moods)
+                if (isNotEmpty()) {
+                    add(PlainDivider(header))
+                }
+
+                add(header)
+                addAll(SORT.moods(it))
+            }
+            val minRating = ratingRepository.searchMinRating
+            results.songs
+                ?.let { ratingRepository.filterSongs(it, minRating) }
+                ?.takeIf { it.isNotEmpty() }
+                ?.let {
+                    L.d("Adding ${it.size} songs to search results")
+                    val header = BasicHeader(R.string.lbl_songs)
+                    if (isNotEmpty()) {
+                        add(PlainDivider(header))
+                    }
+
+                    add(header)
+                    addAll(SORT.songs(it))
+                }
         }
     }
 
@@ -192,6 +232,21 @@ constructor(
      */
     fun updateFilters(filters: Set<MusicType>) {
         searchSettings.filters = filters
+        search(lastQuery)
+    }
+
+    /** The lowest [Rating] of songs shown in the results, or null to show all songs. */
+    val minRating: Rating?
+        get() = ratingRepository.searchMinRating
+
+    /**
+     * Update the lowest [Rating] of songs shown in the results. Will trigger a research.
+     *
+     * @param minRating The new lowest [Rating], or null to show all songs.
+     */
+    fun updateMinRating(minRating: Rating?) {
+        // Re-searching happens through the rating listener.
+        ratingRepository.searchMinRating = minRating
         search(lastQuery)
     }
 

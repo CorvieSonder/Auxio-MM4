@@ -104,6 +104,8 @@ sealed interface Music {
             ARTIST(0xA109, 'r'),
             GENRE(0xA108, 'g'),
             PLAYLIST(0xA107, 'p'),
+            COMPOSER(0xA106, 'c'),
+            MOOD(0xA105, 'm'),
         }
 
         /**
@@ -327,6 +329,16 @@ interface Song : Music {
      * [Genre] name was specified in the metadata.
      */
     val genres: List<Genre>
+    /**
+     * The parent [Composer]s of this [Song]. Empty if no composer was specified in the metadata,
+     * otherwise often one, but there can be multiple if more than one composer name was specified.
+     */
+    val composers: List<Composer>
+    /**
+     * The parent [Mood]s of this [Song]. Empty if no mood was specified in the metadata, otherwise
+     * often one, but there can be multiple if more than one mood name was specified.
+     */
+    val moods: List<Mood>
 }
 
 /**
@@ -390,6 +402,36 @@ interface Genre : MusicParent {
     /** The total duration of the songs in this genre, in milliseconds. */
     val durationMs: Long
     /** Useful information to quickly obtain a (single) cover for a Genre. */
+    val covers: CoverCollection
+}
+
+/**
+ * A composer.
+ *
+ * Unlike [Artist], songs without a composer are not grouped into an "unknown" composer.
+ */
+interface Composer : MusicParent {
+    override val name: Name.Known
+    /** The artists of the [Song]s in this [Composer]. */
+    val artists: Collection<Artist>
+    /** The total duration of the songs by this composer, in milliseconds. */
+    val durationMs: Long
+    /** Useful information to quickly obtain a (single) cover for a Composer. */
+    val covers: CoverCollection
+}
+
+/**
+ * A mood.
+ *
+ * Unlike [Artist], songs without a mood are not grouped into an "unknown" mood.
+ */
+interface Mood : MusicParent {
+    override val name: Name.Known
+    /** The artists of the [Song]s in this [Mood]. */
+    val artists: Collection<Artist>
+    /** The total duration of the songs by this mood, in milliseconds. */
+    val durationMs: Long
+    /** Useful information to quickly obtain a (single) cover for a Mood. */
     val covers: CoverCollection
 }
 

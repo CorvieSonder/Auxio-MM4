@@ -20,11 +20,17 @@ package org.oxycblt.auxio.list.sort
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.RecyclerView
+import kotlin.math.roundToInt
+import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.DialogSortBinding
 import org.oxycblt.auxio.list.ClickableListListener
 import org.oxycblt.auxio.list.adapter.UpdateInstructions
+import org.oxycblt.auxio.music.rating.Rating
+import org.oxycblt.auxio.music.rating.Ratings
+import org.oxycblt.auxio.music.rating.formatMinimum
 import org.oxycblt.auxio.ui.ViewBindingBottomSheetDialogFragment
 import org.oxycblt.auxio.util.systemBarInsetsCompat
 
@@ -37,6 +43,11 @@ abstract class SortDialog :
     abstract fun applyChosenSort(sort: Sort)
 
     abstract fun getModeChoices(): List<Sort.Mode>
+
+    /** Whether to also offer a minimum rating for the songs shown on detail pages. */
+    open val showsRatingFilter = false
+
+    private var initialMinRating: Rating? = null
 
     override fun onCreateBinding(inflater: LayoutInflater) = DialogSortBinding.inflate(inflater)
 
@@ -51,8 +62,27 @@ abstract class SortDialog :
         binding.sortModeRecycler.adapter = modeAdapter
         binding.sortCancel.setOnClickListener { dismiss() }
         binding.sortSave.setOnClickListener {
-            applyChosenSort(requireNotNull(getCurrentSort()))
+            val sort = getCurrentSort()
+            if (sort != null && sort != getInitialSort()) {
+                applyChosenSort(sort)
+            }
+            if (showsRatingFilter) {
+                Ratings.repository?.detailMinRating = getCurrentMinRating()
+            }
             dismiss()
+        }
+        if (showsRatingFilter) {
+            initialMinRating = Ratings.repository?.detailMinRating
+            binding.sortRatingHeader.isVisible = true
+            binding.sortRatingSlider.apply {
+                isVisible = true
+                value = (initialMinRating?.stars ?: 0f)
+                setLabelFormatter { stars ->
+                    Rating.fromHalfStars((stars * 2).roundToInt())?.formatMinimum(context)
+                        ?: context.getString(R.string.lbl_any_rating)
+                }
+                addOnChangeListener { _, _, _ -> updateButtons() }
+            }
         }
         binding.sortDirectionAsc.setOnClickListener { updateDirection(Sort.Direction.ASCENDING) }
         binding.sortDirectionDsc.setOnClickListener { updateDirection(Sort.Direction.DESCENDING) }
@@ -82,8 +112,13 @@ abstract class SortDialog :
 
     private fun updateButtons() {
         val binding = requireBinding()
-        binding.sortSave.isEnabled = getCurrentSort().let { it != null && it != getInitialSort() }
+        val sortChanged = getCurrentSort().let { it != null && it != getInitialSort() }
+        val ratingChanged = showsRatingFilter && getCurrentMinRating() != initialMinRating
+        binding.sortSave.isEnabled = sortChanged || ratingChanged
     }
+
+    private fun getCurrentMinRating() =
+        Rating.fromHalfStars((requireBinding().sortRatingSlider.value * 2).roundToInt())
 
     private fun getCurrentSort(): Sort? {
         val binding = requireBinding()

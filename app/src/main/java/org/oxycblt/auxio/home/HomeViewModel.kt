@@ -34,7 +34,9 @@ import org.oxycblt.auxio.util.Event
 import org.oxycblt.auxio.util.MutableEvent
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
+import org.oxycblt.musikr.Composer
 import org.oxycblt.musikr.Genre
+import org.oxycblt.musikr.Mood
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
 import timber.log.Timber as L
@@ -107,6 +109,30 @@ constructor(
     /** The current [Sort] used for [genreList]. */
     val genreSort: Sort
         get() = listSettings.genreSort
+
+    /** A list of [Composer]s, sorted by the preferred [Sort], to be shown in the home view. */
+    val composerList: StateFlow<List<Composer>>
+        field = MutableStateFlow(listOf<Composer>())
+
+    /** Instructions for how to update [composerList] in the UI. */
+    val composerInstructions: Event<UpdateInstructions>
+        field = MutableEvent<UpdateInstructions>()
+
+    /** The current [Sort] used for [composerList]. */
+    val composerSort: Sort
+        get() = listSettings.composerSort
+
+    /** A list of [Mood]s, sorted by the preferred [Sort], to be shown in the home view. */
+    val moodList: StateFlow<List<Mood>>
+        field = MutableStateFlow(listOf<Mood>())
+
+    /** Instructions for how to update [moodList] in the UI. */
+    val moodInstructions: Event<UpdateInstructions>
+        field = MutableEvent<UpdateInstructions>()
+
+    /** The current [Sort] used for [moodList]. */
+    val moodSort: Sort
+        get() = listSettings.moodSort
 
     /** A list of [Playlist]s, sorted by the preferred [Sort], to be shown in the home view. */
     val playlistList: StateFlow<List<Playlist>>
@@ -188,6 +214,14 @@ constructor(
                 playlistInstructions.put(instructions)
                 playlistList.value = homeGenerator.playlists()
             }
+            MusicType.COMPOSERS -> {
+                composerInstructions.put(instructions)
+                composerList.value = homeGenerator.composers()
+            }
+            MusicType.MOODS -> {
+                moodInstructions.put(instructions)
+                moodList.value = homeGenerator.moods()
+            }
         }
     }
 
@@ -230,6 +264,24 @@ constructor(
      */
     fun applyGenreSort(sort: Sort) {
         listSettings.genreSort = sort
+    }
+
+    /**
+     * Apply a new [Sort] to [composerList].
+     *
+     * @param sort The [Sort] to apply.
+     */
+    fun applyComposerSort(sort: Sort) {
+        listSettings.composerSort = sort
+    }
+
+    /**
+     * Apply a new [Sort] to [moodList].
+     *
+     * @param sort The [Sort] to apply.
+     */
+    fun applyMoodSort(sort: Sort) {
+        listSettings.moodSort = sort
     }
 
     /**

@@ -38,6 +38,21 @@ interface RatingRepository {
     /** Whether ratings should be shown in song lists. */
     val showInLists: Boolean
 
+    /** The lowest [Rating] of songs shown in search results, or null to show all songs. */
+    var searchMinRating: Rating?
+
+    /** The lowest [Rating] of songs shown on detail pages, or null to show all songs. */
+    var detailMinRating: Rating?
+
+    /**
+     * Keep only the songs rated at least [minRating].
+     *
+     * @param songs The songs to filter.
+     * @param minRating The lowest [Rating] to keep, or null to keep every song.
+     * @return The filtered songs, in the same order.
+     */
+    fun filterSongs(songs: Collection<Song>, minRating: Rating?): List<Song>
+
     /**
      * Get the current [Rating] of a [Song].
      *
@@ -159,6 +174,25 @@ constructor(private val ratingDao: RatingDao, private val ratingSettings: Rating
     }
 
     override fun isRatedInApp(song: Song) = appRatings.containsKey(song.uid)
+
+    override var searchMinRating: Rating?
+        get() = Rating.fromHalfStars(ratingSettings.searchMinRating)
+        set(value) {
+            ratingSettings.searchMinRating = value?.halfStars ?: 0
+        }
+
+    override var detailMinRating: Rating?
+        get() = Rating.fromHalfStars(ratingSettings.detailMinRating)
+        set(value) {
+            ratingSettings.detailMinRating = value?.halfStars ?: 0
+        }
+
+    override fun filterSongs(songs: Collection<Song>, minRating: Rating?): List<Song> {
+        if (minRating == null) {
+            return songs as? List<Song> ?: songs.toList()
+        }
+        return songs.filter { song -> ratingOf(song)?.let { it >= minRating } == true }
+    }
 
     override fun rate(song: Song, rating: Rating?) {
         val halfStars = rating?.halfStars ?: 0
