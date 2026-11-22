@@ -544,8 +544,14 @@ class ExoPlaybackStateHolder(
         if (reason == Player.DISCONTINUITY_REASON_AUTO_TRANSITION) {
             // The old song played to its end.
             oldPosition.mediaItem?.song?.let(listenedRepository::recordListened)
-        } else {
+        } else if (
+            reason == Player.DISCONTINUITY_REASON_SEEK ||
+                reason == Player.DISCONTINUITY_REASON_SKIP ||
+                reason == Player.DISCONTINUITY_REASON_REMOVE
+        ) {
             // Seeks and skips that did not go through this class, for example a removed song.
+            // Seek adjustments are left alone, as the move to the next song in a crossfade
+            // causes one.
             crossfade.cancel()
         }
     }
