@@ -241,6 +241,46 @@ constructor(
     }
 
     /**
+     * Rearrange the menu items, along with their action buttons. Items that are not listed are
+     * removed until the menu is inflated again.
+     *
+     * @param itemIds The IDs of the top-level menu items to keep, in the order to show them.
+     */
+    @SuppressLint("RestrictedApi")
+    fun arrangeMenuItems(itemIds: List<Int>) {
+        val old = menuBuilder
+        val builder = MenuBuilder(context)
+        itemIds.forEachIndexed { order, itemId ->
+            val item = old.findItem(itemId) as? MenuItemImpl ?: return@forEachIndexed
+            val subMenu = item.subMenu
+            val copy =
+                if (subMenu != null) {
+                    val newSubMenu = builder.addSubMenu(item.groupId, itemId, order, item.title)
+                    for (child in subMenu.children) {
+                        newSubMenu
+                            .add(child.groupId, child.itemId, child.order, child.title)
+                            .setIcon(child.icon)
+                    }
+                    newSubMenu.item
+                } else {
+                    builder.add(item.groupId, itemId, order, item.title)
+                }
+            copy.icon = item.icon
+            copy.isEnabled = item.isEnabled
+            copy.isVisible = item.isVisible
+            copy.setShowAsAction(
+                when {
+                    item.requiresActionButton() -> MenuItem.SHOW_AS_ACTION_ALWAYS
+                    item.requestsActionButton() -> MenuItem.SHOW_AS_ACTION_IF_ROOM
+                    else -> MenuItem.SHOW_AS_ACTION_NEVER
+                }
+            )
+        }
+        menuBuilder = builder
+        rebuildActionButtons()
+    }
+
+    /**
      * Move the action buttons out of the title row into a row of their own below it, for toolbars
      * with more actions than fit beside the title. Menu items in different menu groups are set
      * apart by dividers, the first group at the start of the row and the last one at its end.

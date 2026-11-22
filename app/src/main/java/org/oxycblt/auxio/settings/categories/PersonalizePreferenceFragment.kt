@@ -35,6 +35,10 @@ class PersonalizePreferenceFragment : BasePreferenceFragment(R.xml.preferences_p
         if (preference.key == getString(R.string.set_key_home_tabs)) {
             L.d("Navigating to home tab dialog")
             findNavController().navigateSafe(PersonalizePreferenceFragmentDirections.tabSettings())
+        } else if (preference.key == getString(R.string.set_key_now_playing_bar)) {
+            L.d("Navigating to now playing bar dialog")
+            findNavController()
+                .navigateSafe(PersonalizePreferenceFragmentDirections.nowPlayingBarSettings())
         }
     }
 }

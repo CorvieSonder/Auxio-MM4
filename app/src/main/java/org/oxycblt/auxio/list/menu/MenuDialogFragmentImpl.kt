@@ -23,6 +23,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.DialogMenuBinding
 import org.oxycblt.auxio.detail.DetailViewModel
@@ -40,6 +41,9 @@ import org.oxycblt.auxio.music.tree.PlaylistFolderViewModel
 import org.oxycblt.auxio.music.tree.PlaylistTreeViewModel
 import org.oxycblt.auxio.playback.PlaySong
 import org.oxycblt.auxio.playback.PlaybackViewModel
+import org.oxycblt.auxio.playback.bar.NowPlayingBar
+import org.oxycblt.auxio.playback.bar.NowPlayingBarRequests
+import org.oxycblt.auxio.playback.bar.NowPlayingBarSettings
 import org.oxycblt.auxio.playback.formatDurationMs
 import org.oxycblt.auxio.util.getPlural
 import org.oxycblt.auxio.util.share
@@ -66,9 +70,30 @@ class SongMenuDialogFragment : MenuDialogFragment<Menu.ForSong>() {
     private val musicModel: MusicViewModel by activityViewModels()
     private val playbackModel: PlaybackViewModel by activityViewModels()
     private val args: SongMenuDialogFragmentArgs by navArgs()
+    @Inject lateinit var barSettings: NowPlayingBarSettings
+    @Inject lateinit var barRequests: NowPlayingBarRequests
+    private var barItemIds = setOf<Int>()
 
     override val parcel
         get() = args.parcel
+
+    override fun addLeadingItems(menu: Menu.ForSong, builder: android.view.Menu) {
+        if (menu.res != R.menu.playback_song) {
+            return
+        }
+        // Actions hidden from the playback panel bar are shown here instead, unless the menu
+        // already has them.
+        val context = requireContext()
+        val ownIds = NowPlayingBar.itemIds(context, R.menu.playback_song)
+        val entries =
+            NowPlayingBar.hiddenEntries(context, barSettings.barActions).filter {
+                it.first !in ownIds
+            }
+        for ((itemId, title, parent) in entries) {
+            builder.add(parent.groupId, itemId, android.view.Menu.NONE, title).icon = parent.icon
+        }
+        barItemIds = entries.mapTo(mutableSetOf()) { it.first }
+    }
 
     // Nothing to disable in song menus.
     override fun getDisabledItemIds(menu: Menu.ForSong) = setOf<Int>()
@@ -125,6 +150,7 @@ class SongMenuDialogFragment : MenuDialogFragment<Menu.ForSong>() {
                         (menu.playWith as? PlaySong.FromPlaylist)?.which,
                     )
                     .show(parentFragmentManager, DeleteSongsDialog.TAG)
+            in barItemIds -> barRequests.run(item.itemId)
             else -> error("Unexpected menu item selected $item")
         }
     }
