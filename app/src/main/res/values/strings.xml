@@ -141,6 +141,7 @@
 
     <string name="lbl_artist_details">Go to artist</string>
     <string name="lbl_album_details">Go to album</string>
+    <string name="lbl_genre_details">Go to genre</string>
     <string name="lbl_song_detail">View properties</string>
     <string name="lbl_parent_detail">View</string>
     <string name="lbl_share">Share</string>
@@ -255,6 +256,8 @@
     <string name="set_personalize_desc">Customize UI controls and behavior</string>
     <string name="set_display">Display</string>
     <string name="set_lib_tabs">Library tabs</string>
+    <string name="set_now_playing_bar">Now Playing bar icons</string>
+    <string name="set_now_playing_bar_desc">Choose and order the icons above the playing song. Hidden icons move into the song menu</string>
     <string name="set_lib_tabs_desc">Change visibility and order of library tabs</string>
     <!-- Skip to next (song) -->
     <string name="set_bar_action">Custom playback bar action</string>

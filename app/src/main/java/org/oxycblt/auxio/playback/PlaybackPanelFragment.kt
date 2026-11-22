@@ -46,6 +46,9 @@ import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
+import org.oxycblt.auxio.playback.bar.NowPlayingBar
+import org.oxycblt.auxio.playback.bar.NowPlayingBarRequests
+import org.oxycblt.auxio.playback.bar.NowPlayingBarSettings
 import org.oxycblt.auxio.playback.queue.QueueViewModel
 import org.oxycblt.auxio.playback.quick.QuickSettingsSheet
 import org.oxycblt.auxio.playback.sleep.SleepTimer
@@ -84,7 +87,8 @@ class PlaybackPanelFragment :
     ViewBindingFragment<FragmentPlaybackPanelBinding>(),
     Toolbar.OnMenuItemClickListener,
     StyledSeekBar.Listener,
-    StepperOverlay.Listener {
+    StepperOverlay.Listener,
+    NowPlayingBarSettings.Listener {
     private val coverPagerAdapter = CoverPagerAdapter(this)
     private val playbackModel: PlaybackViewModel by activityViewModels()
     private val detailModel: DetailViewModel by activityViewModels()
@@ -93,6 +97,8 @@ class PlaybackPanelFragment :
     private val musicModel: MusicViewModel by activityViewModels()
     private val homeModel: HomeViewModel by activityViewModels()
     @Inject lateinit var sleepTimer: SleepTimer
+    @Inject lateinit var barSettings: NowPlayingBarSettings
+    @Inject lateinit var barRequests: NowPlayingBarRequests
     private var equalizerLauncher: ActivityResultLauncher<Intent>? = null
     private var userAwarePagerCallback: UserAwarePagerCallback? = null
 
@@ -125,6 +131,8 @@ class PlaybackPanelFragment :
             // The actions sit in their own row below the title.
             setActionsBelow()
         }
+        applyBarActions()
+        barSettings.registerListener(this)
 
         binding.playbackPager?.apply {
             // intentional LTR override since thepager is a chronological element
@@ -194,6 +202,7 @@ class PlaybackPanelFragment :
         collectImmediately(playbackModel.pagerQueue, ::updatePager)
         collectImmediately(sleepTimer.state, ::updateSleepTimer)
         collect(playbackModel.equalizerRequest.flow, ::handleEqualizerRequest)
+        collect(barRequests.request.flow, ::handleBarRequest)
     }
 
     // FIXME: Old code!! Maybe not necessary anymore?
@@ -232,6 +241,7 @@ class PlaybackPanelFragment :
     //    }
 
     override fun onDestroyBinding(binding: FragmentPlaybackPanelBinding) {
+        barSettings.unregisterListener(this)
         equalizerLauncher = null
         binding.playbackRepeat.clearPendingIcon()
         binding.playbackSong.isSelected = false
@@ -242,8 +252,38 @@ class PlaybackPanelFragment :
         binding.playbackPager?.adapter = null
     }
 
-    override fun onMenuItemClick(item: MenuItem): Boolean {
-        when (item.itemId) {
+    override fun onBarActionsChanged() {
+        applyBarActions()
+    }
+
+    /** Show the bar actions in the order chosen by the user, leaving out the hidden ones. */
+    private fun applyBarActions() {
+        val toolbar = requireBinding().playbackToolbar
+        toolbar.inflateMenu(R.menu.toolbar_playback)
+        toolbar.arrangeMenuItems(
+            NowPlayingBar.shownItemIds(requireContext(), toolbar.menu, barSettings.barActions)
+        )
+        // A new menu starts with the default icons.
+        updateSleepTimer(sleepTimer.state.value)
+    }
+
+    private fun handleBarRequest(itemId: Int?) {
+        if (itemId != null) {
+            barRequests.request.consume()
+            runAction(itemId)
+        }
+    }
+
+    override fun onMenuItemClick(item: MenuItem) = runAction(item.itemId)
+
+    /**
+     * Run a bar action, from the bar or from the song menu it was moved into.
+     *
+     * @param itemId The menu item ID of the action.
+     * @return Whether the action was known.
+     */
+    private fun runAction(itemId: Int): Boolean {
+        when (itemId) {
             R.id.action_quick_settings ->
                 QuickSettingsSheet().show(childFragmentManager, QuickSettingsSheet.TAG)
             R.id.action_sleep_timer ->

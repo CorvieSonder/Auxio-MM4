@@ -54,6 +54,9 @@
         <action
             android:id="@+id/tab_settings"
             app:destination="@id/tab_dialog" />
+        <action
+            android:id="@+id/now_playing_bar_settings"
+            app:destination="@id/now_playing_bar_dialog" />
     </fragment>
 
     <fragment
@@ -83,6 +86,11 @@
         android:id="@+id/tab_dialog"
         android:name="org.oxycblt.auxio.home.tabs.TabCustomizeDialog"
         android:label="tab_dialog"
+        tools:layout="@layout/dialog_tabs" />
+    <dialog
+        android:id="@+id/now_playing_bar_dialog"
+        android:name="org.oxycblt.auxio.playback.bar.NowPlayingBarDialog"
+        android:label="now_playing_bar_dialog"
         tools:layout="@layout/dialog_tabs" />
     <dialog
         android:id="@+id/pre_amp_dialog"

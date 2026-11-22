@@ -74,6 +74,14 @@ abstract class MenuDialogFragment<M : Menu> :
      */
     abstract fun onClick(item: MenuItem, menu: M)
 
+    /**
+     * Add menu options that come before the ones of the menu resource.
+     *
+     * @param menu The [Menu] being shown.
+     * @param builder The menu to add the options to. The menu resource is inflated into it after.
+     */
+    protected open fun addLeadingItems(menu: M, builder: android.view.Menu) {}
+
     override fun onCreateBinding(inflater: LayoutInflater) = DialogMenuBinding.inflate(inflater)
 
     override fun onBindingCreated(binding: DialogMenuBinding, savedInstanceState: Bundle?) {
@@ -116,6 +124,7 @@ abstract class MenuDialogFragment<M : Menu> :
         // Since we don't have (and don't want) a dummy view to inflate this menu, just
         // depend on the AndroidX Toolbar internal API and hope for the best.
         @SuppressLint("RestrictedApi") val builder = MenuBuilder(requireContext())
+        addLeadingItems(casted, builder)
         SupportMenuInflater(requireContext()).inflate(casted.res, builder)
 
         // Disable any menu options as specified by the impl
