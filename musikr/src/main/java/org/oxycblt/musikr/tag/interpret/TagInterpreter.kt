@@ -156,6 +156,7 @@ private class TagInterpreterImpl(private val interpretation: Interpretation) : T
             preComposers = makePreComposers(song.tags, interpretation),
             preMoods = makePreMoods(song.tags, interpretation),
             preGroupings = makePreGroupings(song.tags, interpretation),
+            preCustomValues = makePreCustomValues(song.tags, interpretation),
             cover = song.cover,
             extras = song.tags.extras,
         )
@@ -268,6 +269,25 @@ private class TagInterpreterImpl(private val interpretation: Interpretation) : T
                 parsedTags.extras[key]?.firstNotNullOfOrNull { it.trim().ifEmpty { null } }
             } ?: return emptyList()
         return listOf(rawName).map { PreGrouping(interpretation.naming.name(it, null), it) }
+    }
+
+    private fun makePreCustomValues(
+        parsedTags: ParsedTags,
+        interpretation: Interpretation,
+    ): List<PreCustomValue> {
+        if (parsedTags.extras.isEmpty()) {
+            return emptyList()
+        }
+        return interpretation.customTags.flatMap { spec ->
+            val rawValues = spec.keys.flatMap { parsedTags.extras[it].orEmpty() }
+            val values =
+                if (spec.multiValue) interpretation.separators.split(rawValues) else rawValues
+            values
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .distinct()
+                .map { PreCustomValue(spec.slot, interpretation.naming.name(it, null), it) }
+        }
     }
 
     private companion object {

@@ -57,4 +57,17 @@ data class Interpretation(
 
     /** What separators delimit multi-value audio tags. */
     val separators: Separators,
+
+    /** The user-defined tags to read as [CustomValue]s. Empty if none are enabled. */
+    val customTags: List<CustomTagSpec> = listOf(),
 )
+
+/**
+ * A user-defined tag whose values become [CustomValue]s.
+ *
+ * @param slot A stable number identifying this tag, kept in [CustomValue.slot].
+ * @param keys The extra tag keys to read, in the form used by [Song.extras] (ex.
+ *   `COMM:SONGS-DB_CUSTOM1`). Values of every key are combined.
+ * @param multiValue Whether values are split with the [Interpretation.separators].
+ */
+data class CustomTagSpec(val slot: Int, val keys: List<String>, val multiValue: Boolean)

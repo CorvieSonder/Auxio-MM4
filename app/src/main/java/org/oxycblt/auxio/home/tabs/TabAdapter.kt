@@ -118,6 +118,13 @@ class TabViewHolder private constructor(private val binding: ItemTabBinding) :
                     MusicType.COMPOSERS -> R.string.lbl_composers
                     MusicType.MOODS -> R.string.lbl_moods
                     MusicType.GROUPINGS -> R.string.lbl_groupings
+                    // Custom tag tabs are set in the custom tag settings, not here.
+                    MusicType.CUSTOM_1,
+                    MusicType.CUSTOM_2,
+                    MusicType.CUSTOM_3,
+                    MusicType.CUSTOM_4,
+                    MusicType.CUSTOM_5,
+                    MusicType.CUSTOM_6 -> R.string.lbl_custom_tags
                 }
             )
 

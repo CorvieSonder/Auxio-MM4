@@ -27,6 +27,7 @@ import javax.inject.Inject
 import org.oxycblt.auxio.IntegerTable
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.music.locations.LocationMode
+import org.oxycblt.auxio.music.tags.CustomTag
 import org.oxycblt.auxio.settings.Settings
 import org.oxycblt.auxio.util.unlikelyToBeNull
 import org.oxycblt.musikr.fs.Location
@@ -57,6 +58,9 @@ interface MusicSettings : Settings<MusicSettings.Listener> {
 
     /** A [String] of characters representing the desired characters to denote multi-value tags. */
     var separators: String
+
+    /** The custom tags to read, one per slot. */
+    var customTags: List<CustomTag>
 
     /** Whether to enable more advanced sorting by articles and numbers. */
     val intelligentSorting: Boolean
@@ -103,6 +107,18 @@ class MusicSettingsImpl @Inject constructor(@ApplicationContext private val cont
         set(value) {
             sharedPreferences.edit {
                 putString(getString(R.string.set_key_separators), value)
+                apply()
+            }
+        }
+
+    override var customTags: List<CustomTag>
+        get() =
+            CustomTag.parse(
+                sharedPreferences.getString(getString(R.string.set_key_custom_tags), null)
+            )
+        set(value) {
+            sharedPreferences.edit {
+                putString(getString(R.string.set_key_custom_tags), CustomTag.stringify(value))
                 apply()
             }
         }
@@ -236,6 +252,7 @@ class MusicSettingsImpl @Inject constructor(@ApplicationContext private val cont
             getString(R.string.set_key_filtered_locations),
             getString(R.string.set_key_exclude_non_music),
             getString(R.string.set_key_separators),
+            getString(R.string.set_key_custom_tags),
             getString(R.string.set_key_auto_sort_names) -> {
                 L.d("Dispatching indexing setting change for $key")
                 listener.onIndexingSettingChanged()

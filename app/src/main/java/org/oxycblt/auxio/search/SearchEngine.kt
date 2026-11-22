@@ -29,6 +29,7 @@ import org.oxycblt.auxio.music.tags.rawMoods
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
+import org.oxycblt.musikr.CustomValue
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
@@ -64,6 +65,7 @@ interface SearchEngine {
      * @param composers A list of [Composer]s, null if empty.
      * @param moods A list of [Mood]s, null if empty.
      * @param groupings A list of [Grouping]s, null if empty.
+     * @param custom values A list of [CustomValue]s of any custom tag, null if empty.
      */
     data class Items(
         val songs: Collection<Song>? = null,
@@ -74,6 +76,7 @@ interface SearchEngine {
         val composers: Collection<Composer>? = null,
         val moods: Collection<Mood>? = null,
         val groupings: Collection<Grouping>? = null,
+        val customValues: Collection<CustomValue>? = null,
     )
 }
 
@@ -87,7 +90,8 @@ class SearchEngineImpl @Inject constructor(@ApplicationContext private val conte
                     song.path.name?.contains(q, ignoreCase = true) == true ||
                         song.rawComposers.any { it.contains(q, ignoreCase = true) } ||
                         song.rawMoods.any { it.contains(q, ignoreCase = true) } ||
-                        song.rawGroupings.any { it.contains(q, ignoreCase = true) }
+                        song.rawGroupings.any { it.contains(q, ignoreCase = true) } ||
+                        song.customValues.any { it.name.raw.contains(q, ignoreCase = true) }
                 },
             albums = items.albums?.searchListImpl(query),
             artists = items.artists?.searchListImpl(query),
@@ -96,6 +100,7 @@ class SearchEngineImpl @Inject constructor(@ApplicationContext private val conte
             composers = items.composers?.searchListImpl(query),
             moods = items.moods?.searchListImpl(query),
             groupings = items.groupings?.searchListImpl(query),
+            customValues = items.customValues?.searchListImpl(query),
         )
     }
 

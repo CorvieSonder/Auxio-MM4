@@ -24,6 +24,6 @@ import org.oxycblt.auxio.music.MusicType
 
 class NamedTabStrategy(private val homeTabs: List<MusicType>) : TabConfigurationStrategy {
     override fun onConfigureTab(tab: TabLayout.Tab, position: Int) {
-        tab.setText(homeTabs[position].nameRes)
+        tab.text = homeTabs[position].label(tab.view.context)
     }
 }

@@ -21,6 +21,7 @@ package org.oxycblt.musikr.model
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
+import org.oxycblt.musikr.CustomValue
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
@@ -30,6 +31,7 @@ import org.oxycblt.musikr.Song
 import org.oxycblt.musikr.graph.AlbumVertex
 import org.oxycblt.musikr.graph.ArtistVertex
 import org.oxycblt.musikr.graph.ComposerVertex
+import org.oxycblt.musikr.graph.CustomValueVertex
 import org.oxycblt.musikr.graph.GenreVertex
 import org.oxycblt.musikr.graph.GroupingVertex
 import org.oxycblt.musikr.graph.MoodVertex
@@ -86,6 +88,10 @@ private class LibraryFactoryImpl : LibraryFactory {
             graph.groupingVertex.mapTo(mutableSetOf()) { vertex ->
                 GroupingImpl(GroupingVertexCore(vertex)).also { vertex.tag = it }
             }
+        val customValues =
+            graph.customValueVertex.mapTo(mutableSetOf()) { vertex ->
+                CustomValueImpl(CustomValueVertexCore(vertex)).also { vertex.tag = it }
+            }
         val playlists =
             graph.playlistVertex.mapTo(mutableSetOf()) { vertex ->
                 PlaylistImpl(PlaylistVertexCore(vertex))
@@ -98,6 +104,7 @@ private class LibraryFactoryImpl : LibraryFactory {
             composers,
             moods,
             groupings,
+            customValues,
             playlists,
             storedPlaylists,
             playlistInterpreter,
@@ -118,6 +125,9 @@ private class LibraryFactoryImpl : LibraryFactory {
         override fun resolveMoods(): List<Mood> = vertex.moodVertices.map { tag(it) }
 
         override fun resolveGroupings(): List<Grouping> = vertex.groupingVertices.map { tag(it) }
+
+        override fun resolveCustomValues(): List<CustomValue> =
+            vertex.customValueVertices.map { tag(it) }
     }
 
     private class AlbumVertexCore(private val vertex: AlbumVertex) : AlbumCore {
@@ -171,6 +181,17 @@ private class LibraryFactoryImpl : LibraryFactory {
 
     private class GroupingVertexCore(vertex: GroupingVertex) : GroupingCore {
         override val preGrouping = vertex.preGrouping
+
+        override val songs: Set<Song> = vertex.songVertices.mapTo(mutableSetOf()) { tag(it) }
+
+        override val artists: Set<Artist> =
+            vertex.songVertices.flatMapTo(mutableSetOf()) { song ->
+                song.artistVertices.map { tag<Artist>(it) }
+            }
+    }
+
+    private class CustomValueVertexCore(vertex: CustomValueVertex) : CustomValueCore {
+        override val preCustomValue = vertex.preCustomValue
 
         override val songs: Set<Song> = vertex.songVertices.mapTo(mutableSetOf()) { tag(it) }
 

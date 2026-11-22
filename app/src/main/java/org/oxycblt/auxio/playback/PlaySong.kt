@@ -21,6 +21,7 @@ package org.oxycblt.auxio.playback
 import org.oxycblt.auxio.IntegerTable
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
+import org.oxycblt.musikr.CustomValue
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
@@ -112,6 +113,15 @@ sealed interface PlaySong {
         override val intCode = IntegerTable.PLAY_SONG_FROM_GROUPING
     }
 
+    /**
+     * Play a song from one of it's [CustomValue]s.
+     *
+     * @param which The [CustomValue] to specifically play from. This must be provided.
+     */
+    data class FromCustomValue(val which: CustomValue) : PlaySong {
+        override val intCode = IntegerTable.PLAY_SONG_FROM_CUSTOM_VALUE
+    }
+
     /** Only play the given song, include nothing else in the queue. */
     data object ByItself : PlaySong {
         override val intCode = IntegerTable.PLAY_SONG_BY_ITSELF
@@ -166,6 +176,12 @@ sealed interface PlaySong {
                 IntegerTable.PLAY_SONG_FROM_GROUPING ->
                     if (which is Grouping) {
                         FromGrouping(which)
+                    } else {
+                        null
+                    }
+                IntegerTable.PLAY_SONG_FROM_CUSTOM_VALUE ->
+                    if (which is CustomValue) {
+                        FromCustomValue(which)
                     } else {
                         null
                     }

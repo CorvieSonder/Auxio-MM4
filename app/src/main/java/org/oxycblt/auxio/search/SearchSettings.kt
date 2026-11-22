@@ -49,6 +49,9 @@ class SearchSettingsImpl @Inject constructor(@ApplicationContext context: Contex
             if (intCode and BIT_COMPOSERS == BIT_COMPOSERS) add(MusicType.COMPOSERS)
             if (intCode and BIT_MOODS == BIT_MOODS) add(MusicType.MOODS)
             if (intCode and BIT_GROUPINGS == BIT_GROUPINGS) add(MusicType.GROUPINGS)
+            MusicType.CUSTOM_TYPES.forEachIndexed { i, type ->
+                if (intCode and (BIT_CUSTOM_1 shl i) != 0) add(type)
+            }
         }
         set(value) {
             var intCode = 0
@@ -60,6 +63,9 @@ class SearchSettingsImpl @Inject constructor(@ApplicationContext context: Contex
             if (MusicType.COMPOSERS in value) intCode = intCode or BIT_COMPOSERS
             if (MusicType.MOODS in value) intCode = intCode or BIT_MOODS
             if (MusicType.GROUPINGS in value) intCode = intCode or BIT_GROUPINGS
+            MusicType.CUSTOM_TYPES.forEachIndexed { i, type ->
+                if (type in value) intCode = intCode or (BIT_CUSTOM_1 shl i)
+            }
             sharedPreferences.edit { putInt(getString(R.string.set_key_search_filters), intCode) }
         }
 
@@ -86,6 +92,8 @@ class SearchSettingsImpl @Inject constructor(@ApplicationContext context: Contex
         const val BIT_PLAYLISTS = 0b10000
         const val BIT_COMPOSERS = 0b100000
         const val BIT_MOODS = 0b1000000
-        const val BIT_GROUPINGS = 0b1000000
+        const val BIT_GROUPINGS = 0b10000000
+        /** Custom tag slot n uses this bit shifted left by n - 1. */
+        const val BIT_CUSTOM_1 = 0b100000000
     }
 }

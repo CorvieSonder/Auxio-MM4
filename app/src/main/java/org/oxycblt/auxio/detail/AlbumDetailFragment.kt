@@ -233,6 +233,13 @@ class AlbumDetailFragment : DetailFragment<Album, Song>() {
                 findNavController()
                     .navigateSafe(AlbumDetailFragmentDirections.showGrouping(show.grouping.uid))
             }
+            is Show.CustomValueDetails -> {
+                L.d("Navigating to ${show.customValue}")
+                findNavController()
+                    .navigateSafe(
+                        AlbumDetailFragmentDirections.showCustomValue(show.customValue.uid)
+                    )
+            }
             is Show.GenreDetails,
             is Show.PlaylistDetails -> {
                 error("Unexpected show command $show")
@@ -252,6 +259,7 @@ class AlbumDetailFragment : DetailFragment<Album, Song>() {
                 is Menu.ForComposer,
                 is Menu.ForMood,
                 is Menu.ForGrouping,
+                is Menu.ForCustomValue,
                 is Menu.ForGenre,
                 is Menu.ForPlaylist -> error("Unexpected menu $menu")
             }

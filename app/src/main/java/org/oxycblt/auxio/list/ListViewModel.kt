@@ -32,6 +32,7 @@ import org.oxycblt.auxio.util.MutableEvent
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
+import org.oxycblt.musikr.CustomValue
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
@@ -79,6 +80,7 @@ constructor(private val listSettings: ListSettings, private val musicRepository:
                     is Composer -> library.findComposer(it.uid)
                     is Mood -> library.findMood(it.uid)
                     is Grouping -> library.findGrouping(it.uid)
+                    is CustomValue -> library.findCustomValue(it.uid)
                     is Playlist -> library.findPlaylist(it.uid)
                 }
             }
@@ -126,6 +128,7 @@ constructor(private val listSettings: ListSettings, private val musicRepository:
                 is Composer -> listSettings.composerSongSort.songs(it.songs)
                 is Mood -> listSettings.moodSongSort.songs(it.songs)
                 is Grouping -> listSettings.groupingSongSort.songs(it.songs)
+                is CustomValue -> listSettings.customValueSongSort.songs(it.songs)
                 is Playlist -> it.songs
             }
         }
@@ -234,6 +237,18 @@ constructor(private val listSettings: ListSettings, private val musicRepository:
     fun openMenu(@MenuRes menuRes: Int, grouping: Grouping) {
         L.d("Opening menu for $grouping")
         openImpl(Menu.ForGrouping(menuRes, grouping))
+    }
+
+    /**
+     * Open a menu for a [CustomValue]. This is not a popup menu, instead actually a dialog of menu
+     * options with additional information.
+     *
+     * @param menuRes The resource of the menu to use.
+     * @param custom value The [CustomValue] to show.
+     */
+    fun openMenu(@MenuRes menuRes: Int, customValue: CustomValue) {
+        L.d("Opening menu for $customValue")
+        openImpl(Menu.ForCustomValue(menuRes, customValue))
     }
 
     /**

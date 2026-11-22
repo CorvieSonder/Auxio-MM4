@@ -317,6 +317,7 @@ constructor(
                 ?: findComposer(uid)
                 ?: findMood(uid)
                 ?: findGrouping(uid)
+                ?: findCustomValue(uid)
                 ?: findPlaylist(uid)
         })
 
@@ -408,7 +409,9 @@ constructor(
             }
         L.d("FS: $fs")
         val storage = Storage(cache, covers, storedPlaylists)
-        val interpretation = Interpretation(nameFactory, separators)
+        val customTags = musicSettings.customTags.filter { it.enabled }.map { it.toSpec() }
+        L.d("Custom tags: $customTags")
+        val interpretation = Interpretation(nameFactory, separators, customTags)
         val config = Config(fs, storage, interpretation)
         L.d("Running index...")
         val start = System.currentTimeMillis()

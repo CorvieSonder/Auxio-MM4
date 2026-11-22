@@ -43,6 +43,7 @@ import org.oxycblt.auxio.util.MutableEvent
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
+import org.oxycblt.musikr.CustomValue
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
@@ -262,6 +263,7 @@ constructor(
             is PlaySong.FromComposer -> playFromComposerImpl(song, with.which, shuffle)
             is PlaySong.FromMood -> playFromMoodImpl(song, with.which, shuffle)
             is PlaySong.FromGrouping -> playFromGroupingImpl(song, with.which, shuffle)
+            is PlaySong.FromCustomValue -> playFromCustomValueImpl(song, with.which, shuffle)
             is PlaySong.ByItself -> playItselfImpl(song, shuffle)
         }
     }
@@ -332,6 +334,15 @@ constructor(
     private fun playFromGroupingImpl(song: Song, grouping: Grouping, shuffle: ShuffleMode) {
         L.d("Playing $song from $grouping")
         playImpl(commandFactory.songFromGrouping(song, grouping, shuffle))
+    }
+
+    private fun playFromCustomValueImpl(
+        song: Song,
+        customValue: CustomValue,
+        shuffle: ShuffleMode,
+    ) {
+        L.d("Playing $song from $customValue")
+        playImpl(commandFactory.songFromCustomValue(song, customValue, shuffle))
     }
 
     private fun startPlaybackDecision(decision: PlaybackDecision) {
@@ -501,6 +512,46 @@ constructor(
     fun addToQueue(grouping: Grouping) {
         L.d("Adding $grouping to queue")
         playbackManager.addToQueue(listSettings.groupingSongSort.songs(grouping.songs))
+    }
+
+    /**
+     * Play a [CustomValue].
+     *
+     * @param custom value The [CustomValue] to play.
+     */
+    fun play(customValue: CustomValue) {
+        L.d("Playing $customValue")
+        playImpl(commandFactory.customValue(customValue, ShuffleMode.OFF))
+    }
+
+    /**
+     * Shuffle a [CustomValue].
+     *
+     * @param custom value The [CustomValue] to shuffle.
+     */
+    fun shuffle(customValue: CustomValue) {
+        L.d("Shuffling $customValue")
+        playImpl(commandFactory.customValue(customValue, ShuffleMode.ON))
+    }
+
+    /**
+     * Add a [CustomValue] to the top of the queue.
+     *
+     * @param custom value The [CustomValue] to add.
+     */
+    fun playNext(customValue: CustomValue) {
+        L.d("Playing $customValue next")
+        playbackManager.playNext(listSettings.customValueSongSort.songs(customValue.songs))
+    }
+
+    /**
+     * Add a [CustomValue] to the end of the queue.
+     *
+     * @param custom value The [CustomValue] to add.
+     */
+    fun addToQueue(customValue: CustomValue) {
+        L.d("Adding $customValue to queue")
+        playbackManager.addToQueue(listSettings.customValueSongSort.songs(customValue.songs))
     }
 
     /**

@@ -32,9 +32,11 @@ import org.oxycblt.auxio.playback.PlaySong
 import org.oxycblt.auxio.playback.PlaybackSettings
 import org.oxycblt.auxio.util.Event
 import org.oxycblt.auxio.util.MutableEvent
+import org.oxycblt.auxio.util.unlikelyToBeNull
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
+import org.oxycblt.musikr.CustomValue
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
@@ -147,6 +149,21 @@ constructor(
     val groupingSort: Sort
         get() = listSettings.groupingSort
 
+    private val customValueLists =
+        MusicType.CUSTOM_TYPES.map { MutableStateFlow(listOf<CustomValue>()) }
+    private val customValueEvents =
+        MusicType.CUSTOM_TYPES.map { MutableEvent<UpdateInstructions>() }
+
+    /** The values of the custom tag in [slot], sorted by the preferred [Sort]. */
+    fun customValueList(slot: Int): StateFlow<List<CustomValue>> = customValueLists[slot - 1]
+
+    /** Instructions for how to update [customValueList] of [slot] in the UI. */
+    fun customValueInstructions(slot: Int): Event<UpdateInstructions> = customValueEvents[slot - 1]
+
+    /** The current [Sort] used for every [customValueList]. */
+    val customValueSort: Sort
+        get() = listSettings.customValueSort
+
     /** A list of [Playlist]s, sorted by the preferred [Sort], to be shown in the home view. */
     val playlistList: StateFlow<List<Playlist>>
         field = MutableStateFlow(listOf<Playlist>())
@@ -239,6 +256,16 @@ constructor(
                 groupingInstructions.put(instructions)
                 groupingList.value = homeGenerator.groupings()
             }
+            MusicType.CUSTOM_1,
+            MusicType.CUSTOM_2,
+            MusicType.CUSTOM_3,
+            MusicType.CUSTOM_4,
+            MusicType.CUSTOM_5,
+            MusicType.CUSTOM_6 -> {
+                val slot = unlikelyToBeNull(type.customSlot)
+                customValueEvents[slot - 1].put(instructions)
+                customValueLists[slot - 1].value = homeGenerator.customValues(slot)
+            }
         }
     }
 
@@ -308,6 +335,15 @@ constructor(
      */
     fun applyGroupingSort(sort: Sort) {
         listSettings.groupingSort = sort
+    }
+
+    /**
+     * Apply a new [Sort] to every [customValueList].
+     *
+     * @param sort The [Sort] to apply.
+     */
+    fun applyCustomValueSort(sort: Sort) {
+        listSettings.customValueSort = sort
     }
 
     /**

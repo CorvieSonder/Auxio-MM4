@@ -18,9 +18,11 @@
  
 package org.oxycblt.auxio.detail
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,6 +44,7 @@ import org.oxycblt.auxio.list.sort.Sort
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.music.MusicSettings
 import org.oxycblt.auxio.music.MusicType
+import org.oxycblt.auxio.music.tags.CustomTag
 import org.oxycblt.auxio.music.tags.composers
 import org.oxycblt.auxio.music.tags.grouping
 import org.oxycblt.auxio.music.tags.moods
@@ -53,6 +56,7 @@ import org.oxycblt.auxio.util.unlikelyToBeNull
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
+import org.oxycblt.musikr.CustomValue
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
@@ -73,6 +77,7 @@ import timber.log.Timber as L
 class DetailViewModel
 @Inject
 constructor(
+    @ApplicationContext private val context: Context,
     private val listSettings: ListSettings,
     private val musicRepository: MusicRepository,
     private val musicSettings: MusicSettings,
@@ -238,6 +243,31 @@ constructor(
             playbackSettings.inParentPlaybackMode
                 ?: PlaySong.FromGrouping(unlikelyToBeNull(currentGrouping.value))
 
+    // --- CUSTOM_VALUE ---
+
+    /** The current [CustomValue] to display. Null if there is nothing to show. */
+    val currentCustomValue: StateFlow<CustomValue?>
+        field = MutableStateFlow<CustomValue?>(null)
+
+    private val _customValueSongList = MutableStateFlow(listOf<Item>())
+
+    /** The current list data derived from [currentCustomValue]. */
+    val customValueSongList: StateFlow<List<Item>> = _customValueSongList
+
+    /** Instructions for updating [customValueSongList] in the UI. */
+    val customValueSongInstructions: Event<UpdateInstructions>
+        field = MutableEvent<UpdateInstructions>()
+
+    /** The current [Sort] used for [Song]s in [customValueSongList]. */
+    val customValueSongSort: Sort
+        get() = listSettings.customValueSongSort
+
+    /** The [PlaySong] instructions to use when playing a [Song] from [CustomValue] details. */
+    val playInCustomValueWith
+        get() =
+            playbackSettings.inParentPlaybackMode
+                ?: PlaySong.FromCustomValue(unlikelyToBeNull(currentCustomValue.value))
+
     // --- PLAYLIST ---
 
     /** The current [Playlist] to display. Null if there is nothing to do. */
@@ -326,6 +356,22 @@ constructor(
                     currentGrouping,
                     _groupingSongList,
                     groupingSongInstructions,
+                    replace,
+                )
+            }
+            MusicType.CUSTOM_1,
+            MusicType.CUSTOM_2,
+            MusicType.CUSTOM_3,
+            MusicType.CUSTOM_4,
+            MusicType.CUSTOM_5,
+            MusicType.CUSTOM_6 -> {
+                val customValue =
+                    detailGenerator.customValue(currentCustomValue.value?.uid ?: return)
+                refreshDetail(
+                    customValue,
+                    currentCustomValue,
+                    _customValueSongList,
+                    customValueSongInstructions,
                     replace,
                 )
             }
@@ -418,6 +464,13 @@ constructor(
      * @param grouping The [Grouping] to navigate with.
      */
     fun showGrouping(grouping: Grouping) = showImpl(Show.GroupingDetails(grouping))
+
+    /**
+     * Navigate to the details of a [CustomValue].
+     *
+     * @param custom value The [CustomValue] to navigate with.
+     */
+    fun showCustomValue(customValue: CustomValue) = showImpl(Show.CustomValueDetails(customValue))
 
     /**
      * Navigate to the details of a [Playlist].
@@ -594,6 +647,36 @@ constructor(
     }
 
     /**
+     * Set a new [currentCustomValue] from it's [Music.UID].
+     *
+     * @param uid The [Music.UID] of the [CustomValue] to update [currentCustomValue] to. Must be
+     *   valid.
+     */
+    fun setCustomValue(uid: Music.UID) {
+        L.d("Opening customValue $uid")
+        if (uid === currentCustomValue.value?.uid) {
+            return
+        }
+        val customValue = detailGenerator.customValue(uid)
+        refreshDetail(
+            customValue,
+            currentCustomValue,
+            _customValueSongList,
+            customValueSongInstructions,
+            null,
+        )
+    }
+
+    /**
+     * Apply a new [Sort] to [customValueSongList].
+     *
+     * @param sort The [Sort] to apply.
+     */
+    fun applyCustomValueSongSort(sort: Sort) {
+        listSettings.customValueSongSort = sort
+    }
+
+    /**
      * Set a new [currentPlaylist] from it's [Music.UID]. If the [Music.UID] differs,
      * [currentPlaylist] and [currentPlaylist] will be updated to align with the new album.
      *
@@ -725,6 +808,15 @@ constructor(
                 ?.let { add(SongProperty(R.string.lbl_mood, SongProperty.Value.Text(it))) }
             song.grouping?.let {
                 add(SongProperty(R.string.lbl_grouping, SongProperty.Value.Text(listOf(it))))
+            }
+            for ((slot, values) in song.customValues.groupBy { it.slot }.toSortedMap()) {
+                add(
+                    SongProperty(
+                        R.string.lbl_custom_value,
+                        SongProperty.Value.Text(values.map { it.name.raw }),
+                        CustomTag.nameOf(context, slot),
+                    )
+                )
             }
             song.date?.let { add(SongProperty(R.string.lbl_date, SongProperty.Value.ItemDate(it))) }
             song.track?.let {
@@ -919,6 +1011,13 @@ sealed interface Show {
      * @param grouping The [Grouping] to navigate with.
      */
     data class GroupingDetails(val grouping: Grouping) : Show
+
+    /**
+     * Navigate to the details of a [CustomValue].
+     *
+     * @param custom value The [CustomValue] to navigate with.
+     */
+    data class CustomValueDetails(val customValue: CustomValue) : Show
 
     /**
      * Navigate to the details of a [Playlist].

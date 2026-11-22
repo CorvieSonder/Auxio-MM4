@@ -23,10 +23,12 @@ import org.oxycblt.auxio.home.tabs.Tab
 import org.oxycblt.auxio.list.ListSettings
 import org.oxycblt.auxio.list.adapter.UpdateInstructions
 import org.oxycblt.auxio.music.MusicRepository
+import org.oxycblt.auxio.music.MusicSettings
 import org.oxycblt.auxio.music.MusicType
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
+import org.oxycblt.musikr.CustomValue
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
@@ -55,6 +57,8 @@ interface HomeGenerator {
 
     fun groupings(): List<Grouping>
 
+    fun customValues(slot: Int): List<CustomValue>
+
     fun playlists(): List<Playlist>
 
     fun tabs(): List<MusicType>
@@ -77,16 +81,18 @@ class HomeGeneratorFactoryImpl
 constructor(
     private val homeSettings: HomeSettings,
     private val listSettings: ListSettings,
+    private val musicSettings: MusicSettings,
     private val musicRepository: MusicRepository,
 ) : HomeGenerator.Factory {
     override fun create(invalidator: HomeGenerator.Invalidator): HomeGenerator =
-        HomeGeneratorImpl(invalidator, homeSettings, listSettings, musicRepository)
+        HomeGeneratorImpl(invalidator, homeSettings, listSettings, musicSettings, musicRepository)
 }
 
 private class HomeGeneratorImpl(
     private val invalidator: HomeGenerator.Invalidator,
     private val homeSettings: HomeSettings,
     private val listSettings: ListSettings,
+    private val musicSettings: MusicSettings,
     private val musicRepository: MusicRepository,
 ) : HomeGenerator, HomeSettings.Listener, ListSettings.Listener, MusicRepository.UpdateListener {
     override fun attach() {
@@ -141,6 +147,13 @@ private class HomeGeneratorImpl(
         invalidator.invalidateMusic(MusicType.GROUPINGS, UpdateInstructions.Replace(0))
     }
 
+    override fun onCustomValueSortChanged() {
+        super.onCustomValueSortChanged()
+        for (type in MusicType.CUSTOM_TYPES) {
+            invalidator.invalidateMusic(type, UpdateInstructions.Replace(0))
+        }
+    }
+
     override fun onPlaylistSortChanged() {
         super.onPlaylistSortChanged()
         invalidator.invalidateMusic(MusicType.PLAYLISTS, UpdateInstructions.Replace(0))
@@ -161,6 +174,13 @@ private class HomeGeneratorImpl(
             invalidator.invalidateMusic(MusicType.COMPOSERS, UpdateInstructions.Diff)
             invalidator.invalidateMusic(MusicType.MOODS, UpdateInstructions.Diff)
             invalidator.invalidateMusic(MusicType.GROUPINGS, UpdateInstructions.Diff)
+            for (type in MusicType.CUSTOM_TYPES) {
+                invalidator.invalidateMusic(type, UpdateInstructions.Diff)
+            }
+            // The custom tag settings only apply after a reload, so their tabs change here.
+            if (customTabs() != shownCustomTabs) {
+                invalidator.invalidateTabs()
+            }
         }
 
         if (changes.userLibrary && library != null) {
@@ -204,6 +224,13 @@ private class HomeGeneratorImpl(
         musicRepository.library?.let { listSettings.groupingSort.groupings(it.groupings) }
             ?: emptyList()
 
+    override fun customValues(slot: Int) =
+        musicRepository.library?.let { library ->
+            listSettings.customValueSort.customValues(
+                library.customValues.filter { it.slot == slot }
+            )
+        } ?: emptyList()
+
     override fun genres() =
         musicRepository.library?.let { listSettings.genreSort.genres(it.genres) } ?: emptyList()
 
@@ -211,5 +238,24 @@ private class HomeGeneratorImpl(
         musicRepository.library?.let { listSettings.playlistSort.playlists(it.playlists) }
             ?: emptyList()
 
-    override fun tabs() = homeSettings.homeTabs.filterIsInstance<Tab.Visible>().map { it.type }
+    /** The custom tag tabs last given by [tabs]. */
+    private var shownCustomTabs = listOf<MusicType>()
+
+    override fun tabs(): List<MusicType> {
+        shownCustomTabs = customTabs()
+        return homeSettings.homeTabs.filterIsInstance<Tab.Visible>().map { it.type } +
+            shownCustomTabs
+    }
+
+    /**
+     * The tabs of the custom tags that are shown as tabs, in slot order, after the other tabs. Only
+     * tags read by the loaded library are included, as the others have no values yet.
+     */
+    private fun customTabs(): List<MusicType> {
+        val library = musicRepository.library ?: return listOf()
+        val readSlots = library.customValues.mapTo(mutableSetOf()) { it.slot }
+        return musicSettings.customTags
+            .filter { it.enabled && it.showTab && it.slot in readSlots }
+            .map { it.musicType }
+    }
 }

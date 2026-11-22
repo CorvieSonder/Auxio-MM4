@@ -46,6 +46,10 @@ class MusicPreferenceFragment : BasePreferenceFragment(R.xml.preferences_music) 
             L.d("Navigating to separator dialog")
             findNavController().navigateSafe(MusicPreferenceFragmentDirections.separatorsSettings())
         }
+        if (preference.key == getString(R.string.set_key_custom_tags)) {
+            L.d("Navigating to custom tags dialog")
+            findNavController().navigateSafe(MusicPreferenceFragmentDirections.customTagsSettings())
+        }
     }
 
     override fun onSetupPreference(preference: Preference) {

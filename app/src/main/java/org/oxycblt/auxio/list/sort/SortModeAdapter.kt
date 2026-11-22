@@ -91,7 +91,7 @@ class SortModeViewHolder private constructor(private val binding: ItemSortModeBi
      */
     fun bind(mode: Sort.Mode, listener: ClickableListListener<Sort.Mode>) {
         listener.bind(mode, this)
-        binding.sortRadio.text = binding.context.getString(mode.stringRes)
+        binding.sortRadio.text = mode.label(binding.context)
     }
 
     /**

@@ -55,6 +55,10 @@ interface ListSettings : Settings<ListSettings.Listener> {
     var groupingSort: Sort
     /** The [Sort] mode used in a Grouping's Song list. */
     var groupingSongSort: Sort
+    /** The [Sort] mode used in CustomValue lists. */
+    var customValueSort: Sort
+    /** The [Sort] mode used in a CustomValue's Song list. */
+    var customValueSongSort: Sort
 
     interface Listener {
         fun onSongSortChanged() {}
@@ -82,6 +86,10 @@ interface ListSettings : Settings<ListSettings.Listener> {
         fun onGroupingSortChanged() {}
 
         fun onGroupingSongSortChanged() {}
+
+        fun onCustomValueSortChanged() {}
+
+        fun onCustomValueSongSortChanged() {}
 
         fun onPlaylistSortChanged() {}
     }
@@ -275,6 +283,36 @@ class ListSettingsImpl @Inject constructor(@ApplicationContext val context: Cont
             }
         }
 
+    override var customValueSort: Sort
+        get() =
+            Sort.fromIntCode(
+                sharedPreferences.getInt(
+                    getString(R.string.set_key_custom_values_sort),
+                    Int.MIN_VALUE,
+                )
+            ) ?: Sort(Sort.Mode.ByName, Sort.Direction.ASCENDING)
+        set(value) {
+            sharedPreferences.edit {
+                putInt(getString(R.string.set_key_custom_values_sort), value.intCode)
+                apply()
+            }
+        }
+
+    override var customValueSongSort: Sort
+        get() =
+            Sort.fromIntCode(
+                sharedPreferences.getInt(
+                    getString(R.string.set_key_custom_value_songs_sort),
+                    Int.MIN_VALUE,
+                )
+            ) ?: Sort(Sort.Mode.ByName, Sort.Direction.ASCENDING)
+        set(value) {
+            sharedPreferences.edit {
+                putInt(getString(R.string.set_key_custom_value_songs_sort), value.intCode)
+                apply()
+            }
+        }
+
     override fun onSettingChanged(key: String, listener: ListSettings.Listener) {
         when (key) {
             getString(R.string.set_key_songs_sort) -> listener.onSongSortChanged()
@@ -291,6 +329,9 @@ class ListSettingsImpl @Inject constructor(@ApplicationContext val context: Cont
             getString(R.string.set_key_mood_songs_sort) -> listener.onMoodSongSortChanged()
             getString(R.string.set_key_groupings_sort) -> listener.onGroupingSortChanged()
             getString(R.string.set_key_grouping_songs_sort) -> listener.onGroupingSongSortChanged()
+            getString(R.string.set_key_custom_values_sort) -> listener.onCustomValueSortChanged()
+            getString(R.string.set_key_custom_value_songs_sort) ->
+                listener.onCustomValueSongSortChanged()
         }
     }
 }

@@ -36,6 +36,7 @@ import org.oxycblt.auxio.util.MutableEvent
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Composer
+import org.oxycblt.musikr.CustomValue
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Grouping
 import org.oxycblt.musikr.Mood
@@ -355,6 +356,17 @@ constructor(
     fun addToPlaylist(grouping: Grouping, playlist: Playlist? = null) {
         L.d("Adding $grouping to playlist")
         addToPlaylist(listSettings.groupingSongSort.songs(grouping.songs), playlist)
+    }
+
+    /**
+     * Add a [CustomValue] to a [Playlist].
+     *
+     * @param custom value The [CustomValue] to add to the [Playlist].
+     * @param playlist The [Playlist] to add to. If null, the user will be prompted for one.
+     */
+    fun addToPlaylist(customValue: CustomValue, playlist: Playlist? = null) {
+        L.d("Adding $customValue to playlist")
+        addToPlaylist(listSettings.customValueSongSort.songs(customValue.songs), playlist)
     }
 
     /**

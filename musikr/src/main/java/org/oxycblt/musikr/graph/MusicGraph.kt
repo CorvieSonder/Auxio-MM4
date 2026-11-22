@@ -27,6 +27,7 @@ import org.oxycblt.musikr.tag.interpret.PreAlbum
 import org.oxycblt.musikr.tag.interpret.PreArtist
 import org.oxycblt.musikr.tag.interpret.PreArtistsFrom
 import org.oxycblt.musikr.tag.interpret.PreComposer
+import org.oxycblt.musikr.tag.interpret.PreCustomValue
 import org.oxycblt.musikr.tag.interpret.PreGenre
 import org.oxycblt.musikr.tag.interpret.PreGrouping
 import org.oxycblt.musikr.tag.interpret.PreMood
@@ -41,6 +42,7 @@ internal data class MusicGraph(
     val composerVertex: List<ComposerVertex>,
     val moodVertex: List<MoodVertex>,
     val groupingVertex: List<GroupingVertex>,
+    val customValueVertex: List<CustomValueVertex>,
     val playlistVertex: Set<PlaylistVertex>,
 ) {
     interface Builder {
@@ -192,6 +194,7 @@ private class MusicGraphBuilderImpl : MusicGraph.Builder {
     private val composerVertices = mutableMapOf<PreComposer, ComposerVertex>()
     private val moodVertices = mutableMapOf<PreMood, MoodVertex>()
     private val groupingVertices = mutableMapOf<PreGrouping, GroupingVertex>()
+    private val customValueVertices = mutableMapOf<PreCustomValue, CustomValueVertex>()
     private val playlistVertices = mutableSetOf<PlaylistVertex>()
 
     override fun add(preSong: PreSong) {
@@ -266,6 +269,13 @@ private class MusicGraphBuilderImpl : MusicGraph.Builder {
             groupingVertex.songVertices.add(songVertex)
         }
 
+        preSong.preCustomValues.forEach { preCustomValue ->
+            val customValueVertex =
+                customValueVertices.getOrPut(preCustomValue) { CustomValueVertex(preCustomValue) }
+            songVertex.customValueVertices.add(customValueVertex)
+            customValueVertex.songVertices.add(songVertex)
+        }
+
         songVertices[uid] = songVertex
     }
 
@@ -294,6 +304,14 @@ private class MusicGraphBuilderImpl : MusicGraph.Builder {
             groupingVertices.values.groupBy { it.preGrouping.rawName.lowercase() }
         for (cluster in groupingClusters.values) {
             simplifyGroupingCluster(cluster)
+        }
+
+        val customValueClusters =
+            customValueVertices.values.groupBy {
+                it.preCustomValue.slot to it.preCustomValue.rawName.lowercase()
+            }
+        for (cluster in customValueClusters.values) {
+            simplifyCustomValueCluster(cluster)
         }
 
         // first pass: cluster artists by name and process MBIDs where valid
@@ -355,6 +373,7 @@ private class MusicGraphBuilderImpl : MusicGraph.Builder {
             vertex.composerVertices = vertex.composerVertices.distinct().toMutableList()
             vertex.moodVertices = vertex.moodVertices.distinct().toMutableList()
             vertex.groupingVertices = vertex.groupingVertices.distinct().toMutableList()
+            vertex.customValueVertices = vertex.customValueVertices.distinct().toMutableList()
 
             playlistVertices.forEach {
                 val v363Pointer = SongPointer.UID(entry.key)
@@ -375,6 +394,7 @@ private class MusicGraphBuilderImpl : MusicGraph.Builder {
                 composerVertices.values.toList(),
                 moodVertices.values.toList(),
                 groupingVertices.values.toList(),
+                customValueVertices.values.toList(),
                 playlistVertices,
             )
 
@@ -472,6 +492,25 @@ private class MusicGraphBuilderImpl : MusicGraph.Builder {
                 it.groupingVertices[index] = dst
             }
             groupingVertices.remove(src.preGrouping)
+        }
+    }
+
+    private fun simplifyCustomValueCluster(cluster: Collection<CustomValueVertex>) {
+        if (cluster.size == 1) {
+            return
+        }
+        // Same custom value written with different casing. Keep the most popular spelling.
+        val clusterSet = cluster.toMutableSet()
+        val dst = clusterSet.maxBy { it.songVertices.size }
+        clusterSet.remove(dst)
+        for (src in clusterSet) {
+            dst.songVertices.addAll(src.songVertices)
+            src.songVertices.forEach {
+                val index = it.customValueVertices.indexOf(src)
+                check(index >= 0) { "Illegal state: directed edge between customValue and song" }
+                it.customValueVertices[index] = dst
+            }
+            customValueVertices.remove(src.preCustomValue)
         }
     }
 
@@ -655,6 +694,8 @@ internal class SongVertex(
 
     var groupingVertices = mutableListOf<GroupingVertex>()
 
+    var customValueVertices = mutableListOf<CustomValueVertex>()
+
     override fun toString() = "SongVertex(preSong=$preSong)"
 }
 
@@ -712,4 +753,11 @@ internal class GroupingVertex(val preGrouping: PreGrouping) : Vertex {
     override var tag: Any? = null
 
     override fun toString() = "GroupingVertex(preGrouping=$preGrouping)"
+}
+
+internal class CustomValueVertex(val preCustomValue: PreCustomValue) : Vertex {
+    val songVertices = mutableSetOf<SongVertex>()
+    override var tag: Any? = null
+
+    override fun toString() = "CustomValueVertex(preCustomValue=$preCustomValue)"
 }
