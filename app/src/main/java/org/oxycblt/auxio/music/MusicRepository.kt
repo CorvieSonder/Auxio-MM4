@@ -50,6 +50,7 @@ import org.oxycblt.musikr.fs.saf.SAF
 import org.oxycblt.musikr.playlist.db.StoredPlaylists
 import org.oxycblt.musikr.tag.interpret.Naming
 import org.oxycblt.musikr.tag.interpret.Separators
+import org.oxycblt.musikr.util.Perf
 import timber.log.Timber as L
 
 /**
@@ -431,6 +432,8 @@ constructor(
 
     private suspend fun indexImpl(withCache: Boolean) {
         L.d("Index requested, initializing")
+        val perfStart = Perf.now()
+        Perf.log("index start [cache=$withCache]")
         // Obtain configuration information
         val separators = Separators.from(musicSettings.separators)
         L.d("Separators: $separators")
@@ -477,10 +480,11 @@ constructor(
         // This will more or less block until all required item translation and
         // cleanup finishes.
         L.d("Emitting new library")
-        emitLibrary(result.library)
+        Perf.time("emit library (incl. main-thread dispatch)") { emitLibrary(result.library) }
         // Clean up old data that is now impossible for the app to be using.
         L.d("Cleanup")
-        result.cleanup()
+        Perf.time("cleanup") { result.cleanup() }
+        Perf.since("index total", perfStart)
         // Finish up loading.
         L.d("Indexing complete")
         emitIndexingCompletion(null)
@@ -525,7 +529,9 @@ constructor(
         // Consumers expect their updates to be on the main thread (notably PlaybackService),
         // so switch to it.
         withContext(Dispatchers.Main) {
-            dispatchLibraryChange(deviceLibraryChanged, userLibraryChanged)
+            Perf.time("main-thread library dispatch") {
+                dispatchLibraryChange(deviceLibraryChanged, userLibraryChanged)
+            }
         }
     }
 

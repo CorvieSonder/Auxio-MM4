@@ -27,6 +27,8 @@ import org.oxycblt.musikr.pipeline.ExploreStep
 import org.oxycblt.musikr.pipeline.Explored
 import org.oxycblt.musikr.pipeline.ExtractStep
 import org.oxycblt.musikr.pipeline.Extracted
+import org.oxycblt.musikr.pipeline.RawSong
+import org.oxycblt.musikr.util.Perf
 import org.oxycblt.musikr.util.merge
 import org.oxycblt.musikr.util.tryAsyncWith
 
@@ -114,6 +116,8 @@ private class MusikrImpl(
 ) : Musikr {
     override suspend fun run(onProgress: suspend (IndexingProgress) -> Unit) = coroutineScope {
         onProgress(IndexingProgress.Songs(0, 0))
+        val start = Perf.now()
+        var cached = 0
         var explored = 0
         var loaded = 0
         val exploredChannel = Channel<Explored>(Channel.UNLIMITED)
@@ -123,9 +127,11 @@ private class MusikrImpl(
             tryAsyncWith(trackedExploredChannel, Dispatchers.Main) {
                 for (item in exploredChannel) {
                     explored++
+                    if (item is RawSong) cached++
                     onProgress(IndexingProgress.Songs(loaded, explored))
                     trackedExploredChannel.send(item)
                 }
+                Perf.since("explore done ($explored files, $cached from cache)", start)
             }
         val extractedChannel = Channel<Extracted>(Channel.UNLIMITED)
         val extractedTask = extractStep.extract(this, trackedExploredChannel, extractedChannel)
@@ -137,10 +143,12 @@ private class MusikrImpl(
                     onProgress(IndexingProgress.Songs(loaded, explored))
                     trackedExtractedChannel.send(item)
                 }
+                Perf.since("extract done ($loaded files)", start)
                 onProgress(IndexingProgress.Indeterminate)
             }
         val library = evaluateStep.evaluate(trackedExtractedChannel)
         merge(exploredTask, extractedTask, trackedExploredTask, trackedExtractedTask).await()
+        Perf.since("musikr run total", start)
         LibraryResultImpl(config, library)
     }
 }
