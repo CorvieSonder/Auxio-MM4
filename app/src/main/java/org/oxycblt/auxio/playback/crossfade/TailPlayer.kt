@@ -41,8 +41,8 @@ import timber.log.Timber as L
 /**
  * A short-lived player that plays the end of a song while the main player has already moved on to
  * the next one, so the two can overlap. It does not handle audio focus, as the main player does
- * that for both. It has its own audio session: sharing the main player's can make the song stutter when
- * the main player moves on, as that may reset the effects on the session.
+ * that for both. It has its own audio session: sharing the main player's can make the song stutter
+ * when the main player moves on, as that may reset the effects on the session.
  *
  * @param song The song whose end to play.
  * @param positionMs Where in the song to start.
