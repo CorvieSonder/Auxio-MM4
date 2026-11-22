@@ -107,6 +107,7 @@ class PlaybackPanelFragment :
     private var userAwarePagerCallback: UserAwarePagerCallback? = null
     // Only set in the landscape layout, where the controls are laid over the cover.
     private var overlayController: PlaybackOverlayController? = null
+    private var overlayBottomPadding = 0
 
     override fun onCreateBinding(inflater: LayoutInflater) =
         FragmentPlaybackPanelBinding.inflate(inflater)
@@ -125,9 +126,16 @@ class PlaybackPanelFragment :
             }
 
         // --- UI SETUP ---
+        overlayBottomPadding = binding.playbackOverlayBottom?.paddingBottom ?: 0
         binding.root.setOnApplyWindowInsetsListener { view, insets ->
             val bars = insets.systemBarInsetsCompat
-            view.updatePadding(bottom = bars.bottom)
+            val overlayBottom = binding.playbackOverlayBottom
+            if (overlayBottom != null) {
+                // Let the cover use the full height; only the controls stay clear of the bars.
+                overlayBottom.updatePadding(bottom = bars.bottom + overlayBottomPadding)
+            } else {
+                view.updatePadding(bottom = bars.bottom)
+            }
             insets
         }
 
@@ -140,6 +148,7 @@ class PlaybackPanelFragment :
             } else {
                 // Over the cover there is no room for a title: the actions sit beside the handle.
                 title = null
+                setActionsFitInline()
             }
         }
         val overlayTop = binding.playbackOverlayTop
