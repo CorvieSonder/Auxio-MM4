@@ -39,6 +39,7 @@ import org.oxycblt.auxio.settings.ui.PreferenceHeaderItemDecoration
 import org.oxycblt.auxio.settings.ui.WrappedDialogPreference
 import org.oxycblt.auxio.ui.AuxioToolbar
 import org.oxycblt.auxio.util.systemBarInsetsCompat
+import org.oxycblt.musikr.util.Perf
 import timber.log.Timber as L
 
 /**
@@ -90,6 +91,11 @@ abstract class BasePreferenceFragment(@XmlRes private val screen: Int) :
         }
 
         L.d("Fragment created")
+    }
+
+    override fun onDestroyView() {
+        Perf.log("settings closed: ${javaClass.simpleName}")
+        super.onDestroyView()
     }
 
     override fun onCreateRecyclerView(

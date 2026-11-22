@@ -22,9 +22,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.doOnPreDraw
 import androidx.fragment.app.Fragment
 import androidx.viewbinding.ViewBinding
 import org.oxycblt.auxio.util.unlikelyToBeNull
+import org.oxycblt.musikr.util.Perf
 import timber.log.Timber as L
 
 /**
@@ -81,12 +83,27 @@ abstract class ViewBindingFragment<VB : ViewBinding> : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ) = onCreateBinding(inflater).also { _binding = it }.root
+    ): View {
+        perfCreateStart = Perf.now()
+        val root =
+            Perf.time("${javaClass.simpleName} inflate") {
+                onCreateBinding(inflater).also { _binding = it }.root
+            }
+        return root
+    }
+
+    private var perfCreateStart = 0L
 
     final override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Configure binding
-        onBindingCreated(requireBinding(), savedInstanceState)
+        Perf.time("${javaClass.simpleName} bind") {
+            onBindingCreated(requireBinding(), savedInstanceState)
+        }
+        val start = perfCreateStart
+        view.doOnPreDraw {
+            Perf.since("${javaClass.simpleName} first frame (since inflate)", start)
+        }
         L.d("Fragment created")
     }
 
