@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Labels -->
+    <string name="lbl_lyrics">Lyrics</string>
+    <string name="lbl_no_lyrics">No lyrics</string>
+    <string name="lbl_lyrics_synced">Synced</string>
+    <string name="lbl_lyrics_plain">Plain</string>
+    <string name="lbl_lyrics_language">Lyrics version</string>
+    <string name="lbl_lyrics_unknown_language">Unknown</string>
+    <string name="desc_lyrics_bar">Open the lyrics</string>
+
+    <!-- Settings -->
+    <string name="set_lyrics">Lyrics</string>
+    <string name="set_lyrics_text_size">Lyrics text size</string>
+    <string name="set_lyrics_text_size_small">Small</string>
+    <string name="set_lyrics_text_size_medium">Medium</string>
+    <string name="set_lyrics_text_size_large">Large</string>
+    <string name="set_lyrics_keep_screen_on">Keep screen on</string>
+    <string name="set_lyrics_keep_screen_on_desc">Keep the screen awake while the lyrics are shown and a song is playing</string>
+
+    <string name="set_key_lyrics_text_size" translatable="false">auxio_lyrics_text_size</string>
+    <string name="set_key_lyrics_keep_screen_on" translatable="false">auxio_lyrics_keep_screen_on</string>
+
+    <integer name="lyrics_text_size_small">0</integer>
+    <integer name="lyrics_text_size_medium">1</integer>
+    <integer name="lyrics_text_size_large">2</integer>
+
+    <string-array name="entries_lyrics_text_size">
+        <item>@string/set_lyrics_text_size_small</item>
+        <item>@string/set_lyrics_text_size_medium</item>
+        <item>@string/set_lyrics_text_size_large</item>
+    </string-array>
+
+    <integer-array name="values_lyrics_text_size">
+        <item>@integer/lyrics_text_size_small</item>
+        <item>@integer/lyrics_text_size_medium</item>
+        <item>@integer/lyrics_text_size_large</item>
+    </integer-array>
+</resources>

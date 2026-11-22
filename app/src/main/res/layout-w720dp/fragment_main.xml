@@ -108,20 +108,15 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/playback_panel_fragment">
 
-                <TextView
+                <include
+                    android:id="@+id/queue_tabs"
+                    layout="@layout/view_queue_tabs"
                     android:layout_width="match_parent"
-                    android:layout_height="64dp"
-                    android:gravity="center"
-                    android:text="@string/lbl_queue"
-                    android:textAppearance="?attr/textAppearanceLabelLargeEmphasized"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    app:layout_constraintBottom_toBottomOf="@+id/handle"
-                    app:layout_constraintEnd_toEndOf="@+id/handle"
-                    app:layout_constraintStart_toStartOf="parent" />
+                    android:layout_height="64dp" />
 
                 <androidx.fragment.app.FragmentContainerView
                     android:id="@+id/queue_fragment"
-                    android:name="org.oxycblt.auxio.playback.queue.QueueFragment"
+                    android:name="org.oxycblt.auxio.playback.lyrics.QueueSheetFragment"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1" />

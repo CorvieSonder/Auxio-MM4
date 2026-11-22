@@ -29,6 +29,9 @@ import org.oxycblt.auxio.list.recycler.MaterialDragCallback
  * @author Alexander Capehart (OxygenCobalt)
  */
 class QueueDragCallback(private val queueModel: QueueViewModel) : MaterialDragCallback() {
+    // Swiping towards the start switches to the lyrics page, so remove items towards the end.
+    override val swipeDirection = ItemTouchHelper.END
+
     override fun onMove(
         recyclerView: RecyclerView,
         viewHolder: RecyclerView.ViewHolder,

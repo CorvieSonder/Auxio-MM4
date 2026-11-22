@@ -56,6 +56,8 @@ import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.playback.OpenPanel
 import org.oxycblt.auxio.playback.PlaybackBottomSheetBehavior
 import org.oxycblt.auxio.playback.PlaybackViewModel
+import org.oxycblt.auxio.playback.lyrics.LyricsViewModel
+import org.oxycblt.auxio.playback.lyrics.QueueTabsController
 import org.oxycblt.auxio.playback.queue.QueueBottomSheetBehavior
 import org.oxycblt.auxio.ui.DialogAwareNavigationListener
 import org.oxycblt.auxio.ui.UISettings
@@ -88,6 +90,7 @@ class MainFragment :
     private val homeModel: HomeViewModel by activityViewModels()
     private val listModel: ListViewModel by activityViewModels()
     private val playbackModel: PlaybackViewModel by activityViewModels()
+    private val lyricsModel: LyricsViewModel by activityViewModels()
     private var sheetBackCallback: SheetBackPressedCallback? = null
     private var detailBackCallback: DetailBackPressedCallback? = null
     private var selectionBackCallback: SelectionBackPressedCallback? = null
@@ -156,6 +159,15 @@ class MainFragment :
             binding.queueSheet,
             context.getString(R.string.lbl_queue),
         )
+
+        QueueTabsController(
+            binding.queueTabs,
+            this,
+            lyricsModel,
+            showPills = queueSheetBehavior != null,
+        ) {
+            playbackModel.openQueue()
+        }
 
         if (queueSheetBehavior != null) {
             // In portrait mode, set up click listeners on the stacked sheets.

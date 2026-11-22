@@ -72,6 +72,9 @@ abstract class MaterialDragCallback : ItemTouchHelper.Callback() {
     private val itemTranslateZString = Spatial.DEFAULT
     private val itemAnims = mutableMapOf<View, AnimBundle>()
 
+    /** The direction an item is swiped to remove it. */
+    protected open val swipeDirection: Int = ItemTouchHelper.START
+
     final override fun getMovementFlags(
         recyclerView: RecyclerView,
         viewHolder: RecyclerView.ViewHolder,
@@ -80,7 +83,7 @@ abstract class MaterialDragCallback : ItemTouchHelper.Callback() {
             makeFlag(
                 ItemTouchHelper.ACTION_STATE_DRAG,
                 ItemTouchHelper.UP or ItemTouchHelper.DOWN,
-            ) or makeFlag(ItemTouchHelper.ACTION_STATE_SWIPE, ItemTouchHelper.START)
+            ) or makeFlag(ItemTouchHelper.ACTION_STATE_SWIPE, swipeDirection)
         } else {
             0
         }
@@ -155,6 +158,11 @@ abstract class MaterialDragCallback : ItemTouchHelper.Callback() {
         // the FrameLayout within the item.
         if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
             holder.delete.isInvisible = dX == 0f
+            // The delete icon sits at the end; move it to the start when swiping towards the end.
+            holder.root.findViewById<View>(R.id.delete_icon)?.let { icon ->
+                icon.translationX =
+                    if (dX > 0) (holder.root.width - icon.right - icon.left).toFloat() else 0f
+            }
         }
 
         // Update other translations. We do not call the default implementation, so we must do

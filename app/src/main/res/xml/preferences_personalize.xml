@@ -52,4 +52,18 @@
     </PreferenceCategory>
 
 
+    <PreferenceCategory android:title="@string/set_lyrics">
+        <org.oxycblt.auxio.settings.ui.IntListPreference
+            app:defaultValue="@integer/lyrics_text_size_medium"
+            app:entries="@array/entries_lyrics_text_size"
+            app:entryValues="@array/values_lyrics_text_size"
+            app:key="@string/set_key_lyrics_text_size"
+            app:title="@string/set_lyrics_text_size"
+            app:useSimpleSummaryProvider="true" />
+        <SwitchPreferenceCompat
+            app:defaultValue="false"
+            app:key="@string/set_key_lyrics_keep_screen_on"
+            app:summary="@string/set_lyrics_keep_screen_on_desc"
+            app:title="@string/set_lyrics_keep_screen_on" />
+    </PreferenceCategory>
 </PreferenceScreen>
