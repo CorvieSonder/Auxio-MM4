@@ -211,7 +211,6 @@ class CrossfadeController(
                 song,
                 startAt,
                 currentGain(),
-                player.audioSessionId,
                 player.playbackParameters,
             )
     }

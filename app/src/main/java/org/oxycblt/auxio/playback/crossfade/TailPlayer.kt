@@ -41,13 +41,12 @@ import timber.log.Timber as L
 /**
  * A short-lived player that plays the end of a song while the main player has already moved on to
  * the next one, so the two can overlap. It does not handle audio focus, as the main player does
- * that for both.
+ * that for both. It has its own audio session: sharing the main player's can make the song stutter when
+ * the main player moves on, as that may reset the effects on the session.
  *
  * @param song The song whose end to play.
  * @param positionMs Where in the song to start.
  * @param gain The ReplayGain adjustment of the song, as a linear volume factor.
- * @param audioSessionId The main player's audio session, shared so that audio effects apply to
- *   both.
  * @param playbackParameters The main player's speed and pitch.
  */
 @OptIn(UnstableApi::class)
@@ -57,7 +56,6 @@ class TailPlayer(
     song: Song,
     positionMs: Long,
     gain: Float,
-    audioSessionId: Int,
     playbackParameters: PlaybackParameters,
 ) : Player.Listener {
     private val player: ExoPlayer
@@ -90,7 +88,6 @@ class TailPlayer(
                 )
                 .build()
         player.addListener(this)
-        player.setAudioSessionId(audioSessionId)
         player.playbackParameters = playbackParameters
         player.volume = 0f
         player.setMediaItem(MediaItem.Builder().setUri(song.uri).build(), positionMs)
