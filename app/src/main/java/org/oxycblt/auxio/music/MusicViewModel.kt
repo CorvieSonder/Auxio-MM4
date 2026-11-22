@@ -285,6 +285,17 @@ constructor(
     }
 
     /**
+     * Replace the songs of a [Playlist].
+     *
+     * @param playlist The [Playlist] to change.
+     * @param songs The [Song]s the playlist should hold from now on.
+     */
+    fun rewritePlaylist(playlist: Playlist, songs: List<Song>) {
+        L.d("Rewriting $playlist to ${songs.size} songs")
+        viewModelScope.launch(Dispatchers.IO) { musicRepository.rewritePlaylist(playlist, songs) }
+    }
+
+    /**
      * Delete a [Playlist].
      *
      * @param playlist The playlist to delete.

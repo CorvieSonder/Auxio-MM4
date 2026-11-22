@@ -93,6 +93,8 @@
     <string name="lbl_rename">Rename</string>
     <string name="lbl_rename_playlist">Rename playlist</string>
     <string name="lbl_delete">Delete</string>
+    <string name="lbl_delete_song">Delete song…</string>
+    <string name="lbl_delete_from_device">Delete from device</string>
     <string name="lbl_confirm_delete_playlist">Delete playlist?</string>
     <string name="lbl_edit">Edit</string>
 
@@ -212,6 +214,8 @@
     <string name="lng_playlist_renamed">Playlist renamed</string>
     <string name="lng_playlist_exported">Playlist exported</string>
     <string name="lng_playlist_deleted">Playlist deleted</string>
+    <string name="lng_deleted_from_playlist">Removed from playlist</string>
+    <string name="err_delete_failed">Some files could not be deleted</string>
     <string name="lng_playlist_added">Added to playlist</string>
     <string name="lng_playlist_moved">Playlist moved</string>
     <string name="lng_playlist_name_taken">A playlist with the same name is already there</string>
@@ -569,6 +573,16 @@
         <item quantity="other">%d artists</item>
     </plurals>
 
+    <!-- The name of a playlist -->
+    <string name="fmt_delete_from_playlist">Remove from %s</string>
+    <plurals name="fmt_delete_songs">
+        <item quantity="one">Delete %d song</item>
+        <item quantity="other">Delete %d songs</item>
+    </plurals>
+    <plurals name="fmt_delete_device_warning">
+        <item quantity="one">This permanently deletes %d file from this device. This cannot be undone.</item>
+        <item quantity="other">This permanently deletes %d files from this device. This cannot be undone.</item>
+    </plurals>
     <plurals name="fmt_seconds">
         <item quantity="one">%d second</item>
         <item quantity="other">%d seconds</item>

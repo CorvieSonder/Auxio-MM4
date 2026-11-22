@@ -30,6 +30,7 @@ import org.oxycblt.auxio.list.ListViewModel
 import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.music.auto.AutoPlaylist
 import org.oxycblt.auxio.music.rating.RatingDialog
+import org.oxycblt.auxio.music.delete.DeleteSongsDialog
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.resolveNames
 import org.oxycblt.auxio.music.tree.PlaylistFolderViewModel
@@ -91,6 +92,11 @@ class SongMenuDialogFragment : MenuDialogFragment<Menu.ForSong>() {
             R.id.action_rate ->
                 RatingDialog.from(menu.song).show(parentFragmentManager, RatingDialog.TAG)
             R.id.action_detail -> detailModel.showSong(menu.song)
+            R.id.action_delete_song ->
+                // Only the playback panel has this item, so a playlist being played is the
+                // one the song can be removed from.
+                DeleteSongsDialog.from(listOf(menu.song), playbackModel.parent.value as? Playlist)
+                    .show(parentFragmentManager, DeleteSongsDialog.TAG)
             else -> error("Unexpected menu item selected $item")
         }
     }
