@@ -80,8 +80,12 @@ object NowPlayingBar {
         val fromBar: Boolean,
     )
 
-    /** The menu item that always stays at the end of the bar and opens the song menu. */
-    const val MORE_ITEM_ID = R.id.action_song_menu
+    /**
+     * The menu item that always stays at the end of the bar and opens the song menu. Not a const,
+     * as a const copy of a resource ID can go stale in incremental builds.
+     */
+    val MORE_ITEM_ID: Int
+        get() = R.id.action_song_menu
 
     /**
      * Inflate every action that can go on the bar: the bar menu, followed by the song menu items
