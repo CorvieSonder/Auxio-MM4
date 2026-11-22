@@ -57,7 +57,7 @@ Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, di
 - Phone and PC sync improvements as they come up
 - Crossfade
 - Resume position on long tracks
-- Library playlist and per-listener labels for shared media libraries
+- Library playlist for shared media libraries
 - MediaMonkey-style custom tags (`Songs-DB_Custom1` to `Custom5`, Occasion)
 - Custom theme (we're going skeumorphic babyyyyy)
 - Configurable Now Playing buttons and rating symbol
