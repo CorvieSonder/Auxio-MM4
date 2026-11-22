@@ -90,6 +90,7 @@
 
     <string name="set_key_rating_source" translatable="false">auxio_rating_source</string>
     <string name="set_key_rating_lists" translatable="false">auxio_rating_lists</string>
+    <string name="set_key_rating_symbol" translatable="false">auxio_rating_symbol</string>
     <string name="set_key_search_min_rating" translatable="false">auxio_search_min_rating</string>
     <string name="set_key_detail_min_rating" translatable="false">auxio_detail_min_rating</string>
 
@@ -156,6 +157,18 @@
     </string-array>
 
     <integer-array name="values_rating_source">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </integer-array>
+
+    <string-array name="entries_rating_symbol">
+        <item>@string/set_rating_symbol_stars</item>
+        <item>@string/set_rating_symbol_hearts</item>
+        <item>@string/set_rating_symbol_notes</item>
+    </string-array>
+
+    <integer-array name="values_rating_symbol">
         <item>0</item>
         <item>1</item>
         <item>2</item>

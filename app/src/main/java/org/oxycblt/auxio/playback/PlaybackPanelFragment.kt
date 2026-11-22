@@ -331,9 +331,9 @@ class PlaybackPanelFragment :
             .setMenuItemIcon(
                 R.id.action_rate,
                 if (song?.let(ratingRepository::ratingOf) != null) {
-                    R.drawable.ic_star_24
+                    ratingRepository.symbol.icon
                 } else {
-                    R.drawable.ic_star_outline_24
+                    ratingRepository.symbol.outlineIcon
                 },
             )
     }

@@ -54,6 +54,14 @@
             app:summary="@string/set_rating_lists_desc"
             app:title="@string/set_rating_lists" />
 
+        <org.oxycblt.auxio.settings.ui.IntListPreference
+            app:defaultValue="0"
+            app:entries="@array/entries_rating_symbol"
+            app:entryValues="@array/values_rating_symbol"
+            app:key="@string/set_key_rating_symbol"
+            app:title="@string/set_rating_symbol"
+            app:useSimpleSummaryProvider="true" />
+
     </PreferenceCategory>
 
     <PreferenceCategory app:title="@string/set_auto_playlists">
