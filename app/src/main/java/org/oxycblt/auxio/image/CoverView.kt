@@ -39,6 +39,7 @@ import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.children
 import androidx.core.view.doOnLayout
 import androidx.core.view.isEmpty
+import androidx.core.view.isVisible
 import androidx.core.view.updateMarginsRelative
 import androidx.core.widget.ImageViewCompat
 import androidx.dynamicanimation.animation.SpringAnimation
@@ -106,6 +107,8 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
 
     private val playbackIndicator: PlaybackIndicator?
     private val selectionBadge: ImageView?
+    // Created on first use, as only pinned playlists show it.
+    private var pinBadge: ImageView? = null
     private val iconSize: Int?
 
     private val checkScaleSpring = Spatial.FAST
@@ -202,7 +205,7 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
         playbackIndicator?.run { addView(view) }
 
         for (child in children) {
-            if (child == selectionBadge) {
+            if (child == selectionBadge || child == pinBadge) {
                 continue
             }
             // configure child views to share the same exact background in all cases
@@ -290,6 +293,41 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
     override fun setActivated(activated: Boolean) {
         super.setActivated(activated)
         invalidateSelectionIndicatorAlpha(selectionBadge ?: return)
+    }
+
+    /**
+     * Show or hide a pin in the bottom left corner, for playlists pinned to the top.
+     *
+     * @param isPinned Whether to show the pin.
+     */
+    fun setPinned(isPinned: Boolean) {
+        val badge =
+            pinBadge
+                ?: if (!isPinned) {
+                    return
+                } else {
+                    ImageView(context)
+                        .apply {
+                            imageTintList =
+                                context.getAttrColorCompat(androidx.appcompat.R.attr.colorPrimary)
+                            setImageResource(R.drawable.ic_pin_16)
+                            setBackgroundResource(R.drawable.ui_pin_badge_bg)
+                            scaleType = ImageView.ScaleType.CENTER
+                        }
+                        .also {
+                            pinBadge = it
+                            val size = context.getDimenPixels(R.dimen.size_pin_badge)
+                            addView(
+                                it,
+                                LayoutParams(size, size).apply {
+                                    gravity = Gravity.BOTTOM or Gravity.START
+                                    val spacing = context.getDimenPixels(R.dimen.spacing_tiny)
+                                    updateMarginsRelative(bottom = spacing, start = spacing)
+                                },
+                            )
+                        }
+                }
+        badge.isVisible = isPinned
     }
 
     /**
@@ -635,7 +673,7 @@ constructor(context: Context, attrs: AttributeSet? = null, @AttrRes defStyleAttr
             return
         }
         for (child in children) {
-            if (child == selectionBadge) {
+            if (child == selectionBadge || child == pinBadge) {
                 continue
             }
             child.background =

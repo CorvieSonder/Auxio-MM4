@@ -260,6 +260,9 @@
     <string name="lbl_unpin">Unpin</string>
     <string name="lbl_library_on">Make library playlist</string>
     <string name="lbl_library_off">Stop library playlist</string>
+    <string name="lbl_playlist_remove">Remove from playlist…</string>
+    <!-- Header above the songs of a library playlist, which come from its child playlists -->
+    <string name="lbl_songs_in_playlists">Songs within Playlists</string>
     <!-- Name of the child playlist that gets a playlist's own songs when it becomes a library playlist -->
     <string name="fmt_library_own_songs">%s (songs)</string>
     <string name="lbl_move_to">Move to…</string>

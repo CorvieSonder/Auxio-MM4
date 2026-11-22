@@ -37,6 +37,7 @@ import org.oxycblt.auxio.music.resolveNames
 import org.oxycblt.auxio.music.ringtone.setAsRingtone
 import org.oxycblt.auxio.music.tree.PlaylistFolderViewModel
 import org.oxycblt.auxio.music.tree.PlaylistTreeViewModel
+import org.oxycblt.auxio.playback.PlaySong
 import org.oxycblt.auxio.playback.PlaybackViewModel
 import org.oxycblt.auxio.playback.formatDurationMs
 import org.oxycblt.auxio.util.getPlural
@@ -69,6 +70,14 @@ class SongMenuDialogFragment : MenuDialogFragment<Menu.ForSong>() {
 
     // Nothing to disable in song menus.
     override fun getDisabledItemIds(menu: Menu.ForSong) = setOf<Int>()
+
+    // Automatic playlists cannot be edited.
+    override fun getHiddenItemIds(menu: Menu.ForSong) =
+        if ((menu.playWith as? PlaySong.FromPlaylist)?.which is AutoPlaylist) {
+            setOf(R.id.action_playlist_remove)
+        } else {
+            setOf()
+        }
 
     override fun updateMenu(binding: DialogMenuBinding, menu: Menu.ForSong) {
         val context = requireContext()
@@ -107,6 +116,13 @@ class SongMenuDialogFragment : MenuDialogFragment<Menu.ForSong>() {
                 DeleteSongsDialog.from(listOf(menu.song), playbackModel.parent.value as? Playlist)
                     .show(parentFragmentManager, DeleteSongsDialog.TAG)
             R.id.action_ringtone -> requireContext().setAsRingtone(menu.song)
+            R.id.action_playlist_remove ->
+                // Only playlist pages have this item.
+                DeleteSongsDialog.from(
+                        listOf(menu.song),
+                        (menu.playWith as? PlaySong.FromPlaylist)?.which,
+                    )
+                    .show(parentFragmentManager, DeleteSongsDialog.TAG)
             else -> error("Unexpected menu item selected $item")
         }
     }
@@ -450,22 +466,29 @@ class PlaylistMenuDialogFragment : MenuDialogFragment<Menu.ForPlaylist>() {
     override val parcel
         get() = args.parcel
 
-    override fun getDisabledItemIds(menu: Menu.ForPlaylist) =
+    override fun getDisabledItemIds(menu: Menu.ForPlaylist): Set<Int> {
+        val disabled = mutableSetOf<Int>()
+        if (treeModel.isLibrary(menu.playlist)) {
+            // Library playlists stay at the top level.
+            disabled.add(R.id.action_move)
+        }
         if (detailModel.songsOf(menu.playlist).isEmpty()) {
             // Disable any operations that require some kind of songs to work with, as there won't
             // be any in an empty playlist.
-            setOf(
-                R.id.action_play,
-                R.id.action_shuffle,
-                R.id.action_play_next,
-                R.id.action_queue_add,
-                R.id.action_playlist_add,
-                R.id.action_export,
-                R.id.action_share,
+            disabled.addAll(
+                listOf(
+                    R.id.action_play,
+                    R.id.action_shuffle,
+                    R.id.action_play_next,
+                    R.id.action_queue_add,
+                    R.id.action_playlist_add,
+                    R.id.action_export,
+                    R.id.action_share,
+                )
             )
-        } else {
-            setOf()
         }
+        return disabled
+    }
 
     override fun getHiddenItemIds(menu: Menu.ForPlaylist) =
         if (menu.playlist is AutoPlaylist) {

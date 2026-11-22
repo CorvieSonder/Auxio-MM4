@@ -471,6 +471,7 @@ class PlaylistViewHolder private constructor(private val binding: ItemParentBind
      * @param childCount The number of playlists nested inside [playlist].
      * @param location Where [playlist] is nested, shown instead of its counts. Null to show them.
      * @param isPinned Whether [playlist] is pinned to the top of its level.
+     * @param isLibrary Whether [playlist] is a library playlist.
      */
     fun bind(
         playlist: Playlist,
@@ -478,16 +479,18 @@ class PlaylistViewHolder private constructor(private val binding: ItemParentBind
         childCount: Int,
         location: String? = null,
         isPinned: Boolean = false,
+        isLibrary: Boolean = false,
     ) {
         listener.bind(playlist, this, menuButton = binding.parentMenu)
         binding.parentImage.bind(playlist)
+        binding.parentImage.setPinned(isPinned)
         binding.parentName.text = playlist.name.resolve(binding.context)
         binding.parentName.compoundDrawablePadding =
             binding.context.resources.getDimensionPixelSize(R.dimen.spacing_tiny)
         binding.parentName.setCompoundDrawablesRelativeWithIntrinsicBounds(
             when {
                 playlist is AutoPlaylist -> R.drawable.ic_auto_playlist_16
-                isPinned -> R.drawable.ic_pin_16
+                isLibrary -> R.drawable.ic_library_playlist_16
                 else -> 0
             },
             0,
