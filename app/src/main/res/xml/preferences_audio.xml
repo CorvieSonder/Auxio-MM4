@@ -17,6 +17,12 @@
 
         <SwitchPreferenceCompat
             app:defaultValue="false"
+            app:key="@string/set_key_resume_long_songs"
+            app:summary="@string/set_resume_long_songs_desc"
+            app:title="@string/set_resume_long_songs" />
+
+        <SwitchPreferenceCompat
+            app:defaultValue="false"
             app:key="@string/set_key_repeat_pause"
             app:summary="@string/set_repeat_pause_desc"
             app:title="@string/set_repeat_pause" />
