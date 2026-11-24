@@ -116,6 +116,17 @@ private class MusikrImpl(
         onProgress(IndexingProgress.Songs(0, 0))
         var explored = 0
         var loaded = 0
+        // Reporting every file floods the main thread with updates on large libraries, so only
+        // report progress every PROGRESS_INTERVAL_MS. Both trackers run on the main thread, so
+        // this needs no synchronization.
+        var lastProgressMs = 0L
+        suspend fun reportProgress(force: Boolean = false) {
+            val now = System.currentTimeMillis()
+            if (force || now - lastProgressMs >= PROGRESS_INTERVAL_MS) {
+                lastProgressMs = now
+                onProgress(IndexingProgress.Songs(loaded, explored))
+            }
+        }
         val exploredChannel = Channel<Explored>(Channel.UNLIMITED)
         val exploredTask = exploreStep.explore(this, exploredChannel)
         val trackedExploredChannel = Channel<Explored>(Channel.UNLIMITED)
@@ -123,9 +134,10 @@ private class MusikrImpl(
             tryAsyncWith(trackedExploredChannel, Dispatchers.Main) {
                 for (item in exploredChannel) {
                     explored++
-                    onProgress(IndexingProgress.Songs(loaded, explored))
+                    reportProgress()
                     trackedExploredChannel.send(item)
                 }
+                reportProgress(force = true)
             }
         val extractedChannel = Channel<Extracted>(Channel.UNLIMITED)
         val extractedTask = extractStep.extract(this, trackedExploredChannel, extractedChannel)
@@ -134,9 +146,10 @@ private class MusikrImpl(
             tryAsyncWith(trackedExtractedChannel, Dispatchers.Main) {
                 for (item in extractedChannel) {
                     loaded++
-                    onProgress(IndexingProgress.Songs(loaded, explored))
+                    reportProgress()
                     trackedExtractedChannel.send(item)
                 }
+                reportProgress(force = true)
                 onProgress(IndexingProgress.Indeterminate)
             }
         val library = evaluateStep.evaluate(trackedExtractedChannel)
@@ -144,6 +157,9 @@ private class MusikrImpl(
         LibraryResultImpl(config, library)
     }
 }
+
+/** How often [Musikr.run] reports loading progress at most. */
+private const val PROGRESS_INTERVAL_MS = 100L
 
 private class LibraryResultImpl(private val config: Config, override val library: MutableLibrary) :
     LibraryResult {
