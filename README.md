@@ -71,12 +71,12 @@ Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, di
 
 Measured on a phone with about 8,000 songs (release build, System mode).
 
-- The library appears at startup straight from the cache, and changes are checked in the background
+- The library appears at startup straight from the cache, & changes are checked in the background
 - Startup skips that check when nothing changed on the phone (System mode, Android 11+): a restart went from 5–6 s to about 3 s
 - Faster cache reading: storage volumes are looked up once per load instead of once per song
 - Faster sorting setup for non-Latin names: one shared transliterator instead of one per name
 - Fixed a small memory leak in the tag reader
-- Leaving settings is faster: home tabs are built when first opened, and the Now Playing bar sets up its buttons in one go
+- Leaving settings is faster: home tabs are built when first opened, & the Now Playing bar sets up its buttons in one go
 - ~~Now Multicore!~~ No measurable improvements :<
 
 Planned:
@@ -116,7 +116,7 @@ Build from source on Linux (the custom Media3 build runs shell scripts, so Windo
 
 Auxio-MM4 is built on [Auxio](https://github.com/OxygenCobalt/Auxio) by Alexander Capehart (OxygenCobalt) & its contributors. If you like Auxio, consider [supporting its developer](https://github.com/sponsors/OxygenCobalt).
 
-Performance work ported or adapted from: upstream pull requests [#1488](https://github.com/OxygenCobalt/Auxio/pull/1488) (shared transliterator) and [#1499](https://github.com/OxygenCobalt/Auxio/pull/1499) (library from the cache at startup), and the tag reader leak fix from [HrshD1eux/Music_Player](https://github.com/HrshD1eux/Music_Player).
+Performance work ported or adapted from: upstream pull requests [#1488](https://github.com/OxygenCobalt/Auxio/pull/1488) (shared transliterator) & [#1499](https://github.com/OxygenCobalt/Auxio/pull/1499) (library from the cache at startup), & the tag reader leak fix from [HrshD1eux/Music_Player](https://github.com/HrshD1eux/Music_Player).
 
 [![GNU GPLv3 Image](https://www.gnu.org/graphics/gplv3-127x51.png)](http://www.gnu.org/licenses/gpl-3.0.en.html)
 
