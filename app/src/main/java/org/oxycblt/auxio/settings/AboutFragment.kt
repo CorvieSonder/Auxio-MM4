@@ -122,8 +122,10 @@ class AboutFragment : ViewBindingFragment<FragmentAboutBinding>() {
     }
 
     private companion object {
-        const val LINK_SOURCE = "https://github.com/OxygenCobalt/Auxio"
-        const val LINK_WIKI = "$LINK_SOURCE/wiki"
+        // FORK: source code and issues go to the fork; the wiki and licenses stay upstream's
+        const val LINK_SOURCE = "https://github.com/CorvieSonder/Auxio-MM4"
+        const val LINK_UPSTREAM = "https://github.com/OxygenCobalt/Auxio"
+        const val LINK_WIKI = "$LINK_UPSTREAM/wiki"
         const val LINK_LICENSES = "$LINK_WIKI/Licenses"
         const val LINK_NEW_ISSUE = "$LINK_SOURCE/issues/new"
         const val LINK_PROFILE = "https://github.com/OxygenCobalt"

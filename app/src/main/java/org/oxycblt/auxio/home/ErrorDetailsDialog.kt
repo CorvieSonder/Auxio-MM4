@@ -87,8 +87,9 @@ class ErrorDetailsDialog : ViewBindingMaterialDialogFragment<DialogErrorDetailsB
 
     private companion object {
         /** The URL to the bug report issue form */
+        // FORK: report crashes to the fork's issue tracker, not upstream's
         const val LINK_ISSUES =
-            "https://github.com/OxygenCobalt/Auxio/issues/new" +
-                "?assignees=OxygenCobalt&labels=bug&projects=&template=bug-crash-report.yml"
+            "https://github.com/CorvieSonder/Auxio-MM4/issues/new" +
+                "?assignees=CorvieSonder&labels=bug&projects=&template=bug-crash-report.yml"
     }
 }
