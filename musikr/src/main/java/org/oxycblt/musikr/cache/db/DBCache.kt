@@ -59,15 +59,23 @@ private constructor(private val readDao: CacheReadDao, private val volumeManager
         return CacheResult.Hit(dbSong.toCachedFile(file))
     }
 
-    override suspend fun readAll(): List<CachedFile> =
-        loadMapping().values.mapNotNull { dbSong ->
+    override suspend fun readAll(): List<CachedFile> {
+        val mapping = loadMapping()
+        // Every volume lookup is a call into the system, so resolve each volume only once
+        // instead of once per song.
+        val volumes = HashMap<String, Volume?>()
+        return mapping.values.mapNotNull { dbSong ->
             if (dbSong.mimeType == null) return@mapNotNull null
-            val file = dbSong.toFile(volumeManager) ?: return@mapNotNull null
-            dbSong.toCachedFile(file)
+            val volume =
+                volumes.getOrPut(dbSong.pathVolume) {
+                    decodeVolume(volumeManager, dbSong.pathVolume)
+                } ?: return@mapNotNull null
+            dbSong.toCachedFile(dbSong.toFile(volume))
         }
+    }
 
-    private fun CachedFileData.toFile(volumeManager: VolumeManager): File? {
-        val path = decodePath(volumeManager, pathVolume, pathComponents) ?: return null
+    private fun CachedFileData.toFile(volume: Volume): File {
+        val path = Path(volume, Components.parseUnix(pathComponents))
         return File(
             uri = uri,
             path = path,
@@ -233,18 +241,15 @@ private fun encodeVolume(volume: Volume) =
         is Volume.ThirdParty -> VOLUME_THIRD_PARTY_PREFIX + volume.uri
     }
 
-/** Inverse of [encodeVolume] + path components. Null if the volume is no longer present. */
-private fun decodePath(volumeManager: VolumeManager, volume: String, components: String): Path? {
-    val resolved =
-        when {
-            volume == VOLUME_INTERNAL -> volumeManager.getInternalVolume()
-            volume.startsWith(VOLUME_EXTERNAL_PREFIX) -> {
-                val id = volume.removePrefix(VOLUME_EXTERNAL_PREFIX).ifEmpty { null }
-                volumeManager.getVolumes().find { it is Volume.External && it.id == id }
-            }
-            volume.startsWith(VOLUME_THIRD_PARTY_PREFIX) ->
-                Volume.ThirdParty(Uri.parse(volume.removePrefix(VOLUME_THIRD_PARTY_PREFIX)))
-            else -> null
-        } ?: return null
-    return Path(resolved, Components.parseUnix(components))
-}
+/** Inverse of [encodeVolume]. Null if the volume is no longer present. */
+private fun decodeVolume(volumeManager: VolumeManager, volume: String): Volume? =
+    when {
+        volume == VOLUME_INTERNAL -> volumeManager.getInternalVolume()
+        volume.startsWith(VOLUME_EXTERNAL_PREFIX) -> {
+            val id = volume.removePrefix(VOLUME_EXTERNAL_PREFIX).ifEmpty { null }
+            volumeManager.getVolumes().find { it is Volume.External && it.id == id }
+        }
+        volume.startsWith(VOLUME_THIRD_PARTY_PREFIX) ->
+            Volume.ThirdParty(Uri.parse(volume.removePrefix(VOLUME_THIRD_PARTY_PREFIX)))
+        else -> null
+    }
