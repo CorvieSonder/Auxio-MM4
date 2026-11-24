@@ -113,7 +113,7 @@ private class EvaluateStepImpl(
                         if (extracted is RawSong) {
                             async(Dispatchers.Default) { tagInterpreter.interpret(extracted) }
                         } else {
-                            CompletableDeferred(null)
+                            NO_SONG
                         }
                     ordered.send(extracted to preSong)
                 }
@@ -128,5 +128,12 @@ private class EvaluateStepImpl(
 
     private companion object {
         const val IN_FLIGHT = 256
+
+        /**
+         * An already-completed result for items that are not songs. Note that
+         * `CompletableDeferred(null)` would instead create an incomplete deferred with no parent
+         * job, which would never complete.
+         */
+        val NO_SONG: Deferred<PreSong?> = CompletableDeferred<PreSong?>().apply { complete(null) }
     }
 }
