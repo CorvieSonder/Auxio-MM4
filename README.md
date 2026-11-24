@@ -12,7 +12,9 @@
 
 ## About
 
-Auxio-MM4 is a personal project that may not be useful for anyone else. Like the description says, it's designed for interoperability with MediaMonkey 4. Why 4 & not 5? 4 has more plugins that I use for my huge library, & the themes look better. That's it, that's the reason. Again, something hyper-specific that may not be of use to you. If you are browsing Auxio forks & you like mine but wish it had x feature, go ahead & open an issue. Worst thing I can do is say no, & most of the time, I'll prolly have it added anyway as long as it doesn't bog down the app or majorly change how something works.
+Auxio-MM4 is a personal project that may not be useful for anyone else. Like the description says, it's designed for interoperability with MediaMonkey 4. Why 4 & not 5? 4 has more plugins that I use for my huge library, & the themes look better. That's it, that's the reason. Again, something hyper-specific that may not be of use to you. 
+
+*If you are browsing Auxio forks & you like mine but wish it had x feature, go ahead & open an issue or PR. Worst thing I can do is say no, & most of the time, I'll prolly have it added anyway as long as it doesn't bog down the app or majorly change how something works.* **Please** *give a brief look at contributing.md for details on issues & PRs.*
 
 Auxio-MM4 installs next to the regular Auxio (its own app ID, `org.oxycblt.auxio.mm4`) & does not touch Auxio's data.
 
