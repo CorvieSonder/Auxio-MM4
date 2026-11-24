@@ -63,12 +63,6 @@ data class Interpretation(
 
     /** The user-defined tags to read as [CustomValue]s. Empty if none are enabled. */
     val customTags: List<CustomTagSpec> = listOf(),
-
-    /**
-     * Whether to interpret the tags of several songs at once on every CPU core. The resulting
-     * library is the same either way.
-     */
-    val parallel: Boolean = false,
 )
 
 /**

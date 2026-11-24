@@ -51,13 +51,7 @@ data object SimpleNaming : Naming() {
     override fun name(raw: String, sort: String?): Name.Known = SimpleKnownName(raw, sort)
 }
 
-// Collators are not thread-safe, and names may be created on several threads at once, so every
-// thread gets its own.
-private val threadCollator =
-    object : ThreadLocal<Collator>() {
-        override fun initialValue(): Collator =
-            Collator.getInstance().apply { strength = Collator.PRIMARY }
-    }
+private val collator: Collator = Collator.getInstance().apply { strength = Collator.PRIMARY }
 private val punctRegex by lazy { Regex("[\\p{Punct}+]") }
 
 // TODO: Consider how you want to handle whitespace and "gaps" in names.
@@ -74,7 +68,7 @@ private data class SimpleKnownName(override val raw: String, override val sort: 
     private fun parseToken(name: String): Token {
         // Remove excess punctuation from the string, as those usually aren't considered in sorting.
         val stripped = name.replace(punctRegex, "").trim().ifEmpty { name }
-        val collationKey = threadCollator.get()!!.getCollationKey(stripped)
+        val collationKey = collator.getCollationKey(stripped)
         // Always use lexicographic mode since we aren't parsing any numeric components
         return Token(collationKey, Token.Type.LEXICOGRAPHIC)
     }
@@ -112,13 +106,12 @@ private data class IntelligentKnownName(override val raw: String, override val s
         // Transliterate to latin if available. Text that is already entirely latin is left
         // untouched by Any-Latin, so skip the (expensive) transliteration pass for it.
         if (stripped.any { it >= FIRST_NON_LATIN_CHAR }) {
-            latinTransliterator.get()?.let { stripped = it.transliterate(stripped) }
+            latinTransliterator?.let { stripped = it.transliterate(stripped) }
         }
 
         // To properly compare numeric components in names, we have to split them up into
         // individual lexicographic and numeric tokens and then individually compare them
         // with special logic.
-        val collator = threadCollator.get()!!
         return TOKEN_REGEX.findAll(stripped).mapTo(mutableListOf()) { match ->
             // Remove excess whitespace where possible
             val token = match.value.trim().ifEmpty { match.value }
@@ -149,21 +142,19 @@ private data class IntelligentKnownName(override val raw: String, override val s
          */
         private const val FIRST_NON_LATIN_CHAR = '\u0250'
 
-        /** Whether the Any-Latin [Transliterator] exists on this device. Looked up only once. */
-        private val hasLatinTransliterator: Boolean by lazy {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
-                Transliterator.getAvailableIDs().asSequence().contains("Any-Latin")
-        }
-
         /**
          * Looking up and instantiating a [Transliterator] is very slow, so it must only be done
-         * once per thread rather than for every name. It is not shared between threads, as
-         * transliterators are not guaranteed to be thread-safe. Null if unavailable on this device.
+         * once rather than for every name. Null if unavailable on this device.
          */
-        private val latinTransliterator =
-            object : ThreadLocal<Transliterator?>() {
-                override fun initialValue(): Transliterator? =
-                    if (hasLatinTransliterator) Transliterator.getInstance("Any-Latin;") else null
+        private val latinTransliterator: Transliterator? by lazy {
+            if (
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                    Transliterator.getAvailableIDs().asSequence().contains("Any-Latin")
+            ) {
+                Transliterator.getInstance("Any-Latin;")
+            } else {
+                null
             }
+        }
     }
 }
