@@ -60,6 +60,10 @@ Playback based on Media3 ExoPlayer · Material Design UI · multiple artists, di
 - Back up and restore settings and app data (playlists, moods, ratings, listened status) as a zip file; music folders are picked again after a restore
 - Listened status: export which songs were played to the end, and when, as a CSV file
 
+### Performance tip
+
+For faster startup with large libraries, set **Settings → Library → Music sources → Load from** to **System**. Loading from folders you pick ("File picker") is slower, especially on restart. The trade-off: System mode can miss files that Android hasn't indexed, and it doesn't read `cover.jpg` files.
+
 ### Planned
 
 - Phone and PC sync improvements as they come up
