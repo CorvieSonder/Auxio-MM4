@@ -134,6 +134,16 @@ sealed interface Music {
              *
              * @param item The type of [Item] that created this [UID].
              */
+            private class DigestHolder {
+                val digest: MessageDigest = MessageDigest.getInstance("SHA-256")
+                var inUse = false
+            }
+
+            private val digests =
+                object : ThreadLocal<DigestHolder>() {
+                    override fun initialValue() = DigestHolder()
+                }
+
             internal fun auxio(item: Item): UID {
                 return UID(Format.AUXIO, item, UUID.randomUUID())
             }
@@ -149,10 +159,27 @@ sealed interface Music {
              * @return A new auxio-style [UID].
              */
             internal fun auxio(item: Item, updates: MessageDigest.() -> Unit): UID {
+                val holder = digests.get()!!
+                // Looking up a MessageDigest is slow compared to hashing a few short strings, so
+                // reuse one per thread. If this is called again while the thread's digest is
+                // still in use (an ID computed while computing another), use a new one.
                 val digest =
-                    MessageDigest.getInstance("SHA-256").run {
-                        updates()
-                        digest()
+                    if (holder.inUse) {
+                        MessageDigest.getInstance("SHA-256").run {
+                            updates()
+                            digest()
+                        }
+                    } else {
+                        holder.inUse = true
+                        try {
+                            holder.digest.run {
+                                reset()
+                                updates()
+                                digest()
+                            }
+                        } finally {
+                            holder.inUse = false
+                        }
                     }
                 // Convert the digest to a UUID. This does cleave off some of the hash, but this
                 // is considered okay.
