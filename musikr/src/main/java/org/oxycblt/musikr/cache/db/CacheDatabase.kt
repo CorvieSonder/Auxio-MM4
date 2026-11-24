@@ -38,7 +38,7 @@ import org.oxycblt.musikr.tag.Date
 import org.oxycblt.musikr.util.correctWhitespace
 import org.oxycblt.musikr.util.splitEscaped
 
-@Database(entities = [CachedFileData::class], version = 71, exportSchema = false)
+@Database(entities = [CachedFileData::class], version = 72, exportSchema = false)
 internal abstract class CacheDatabase : RoomDatabase() {
     abstract fun readDao(): CacheReadDao
 
@@ -51,7 +51,7 @@ internal abstract class CacheDatabase : RoomDatabase() {
                     CacheDatabase::class.java,
                     "music_cache.db",
                 )
-                .addMigrations(MIGRATION_70_71)
+                .addMigrations(MIGRATION_70_71, MIGRATION_71_72)
                 .fallbackToDestructiveMigration(true)
                 .build()
 
@@ -63,6 +63,30 @@ internal abstract class CacheDatabase : RoomDatabase() {
             object : Migration(70, 71) {
                 override fun migrate(db: SupportSQLiteDatabase) {
                     db.execSQL("ALTER TABLE CachedFileData ADD COLUMN extras TEXT")
+                    db.execSQL("UPDATE CachedFileData SET modifiedMs = -1")
+                }
+            }
+
+        /**
+         * Adds the file columns needed to rebuild a library from the cache alone. Every entry is
+         * marked as stale so that they are filled in on the next scan while the date added values
+         * are retained.
+         */
+        private val MIGRATION_71_72 =
+            object : Migration(71, 72) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        "ALTER TABLE CachedFileData ADD COLUMN fileMimeType TEXT NOT NULL DEFAULT ''"
+                    )
+                    db.execSQL(
+                        "ALTER TABLE CachedFileData ADD COLUMN size INTEGER NOT NULL DEFAULT 0"
+                    )
+                    db.execSQL(
+                        "ALTER TABLE CachedFileData ADD COLUMN pathVolume TEXT NOT NULL DEFAULT ''"
+                    )
+                    db.execSQL(
+                        "ALTER TABLE CachedFileData ADD COLUMN pathComponents TEXT NOT NULL DEFAULT ''"
+                    )
                     db.execSQL("UPDATE CachedFileData SET modifiedMs = -1")
                 }
             }
@@ -101,6 +125,10 @@ internal data class CachedFileData(
     @PrimaryKey val uri: Uri,
     val modifiedMs: Long,
     val addedMs: Long,
+    val fileMimeType: String,
+    val size: Long,
+    val pathVolume: String,
+    val pathComponents: String,
     val mimeType: String?,
     val durationMs: Long?,
     val bitrateKbps: Int?,

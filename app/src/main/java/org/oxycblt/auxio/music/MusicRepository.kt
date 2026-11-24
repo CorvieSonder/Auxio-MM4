@@ -468,9 +468,22 @@ constructor(
                 customTags = customTags,
             )
         val config = Config(fs, storage, interpretation)
+        val musikr = Musikr.new(context, config)
+        if (withCache && synchronized(this) { library == null }) {
+            // Show the last known library immediately from the cache instead of making the user
+            // wait for a full file system walk. The real index below corrects any drift.
+            L.d("Loading provisional library from cache")
+            emitIndexingProgress(IndexingProgress.Indeterminate)
+            val cachedStart = System.currentTimeMillis()
+            val cached = musikr.runFromCache()
+            if (cached != null) {
+                L.d("Cache library built in ${System.currentTimeMillis() - cachedStart}ms")
+                emitLibrary(cached.library)
+            }
+        }
         L.d("Running index...")
         val start = System.currentTimeMillis()
-        val result = Musikr.new(context, config).run(::emitIndexingProgress)
+        val result = musikr.run(::emitIndexingProgress)
         L.d("Index finished in ${System.currentTimeMillis() - start}ms")
         // Music loading completed, update the revision right now so we re-use this work
         // later.
