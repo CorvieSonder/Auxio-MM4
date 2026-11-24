@@ -22,6 +22,7 @@ import android.icu.text.Transliterator
 import android.os.Build
 import java.text.CollationKey
 import java.text.Collator
+import java.util.concurrent.ConcurrentHashMap
 import org.oxycblt.musikr.tag.Name
 import org.oxycblt.musikr.tag.Placeholder
 import org.oxycblt.musikr.tag.Token
@@ -37,10 +38,36 @@ abstract class Naming {
     abstract fun name(raw: String, sort: String?): Name.Known
 
     companion object {
-        fun intelligent(): Naming = IntelligentNaming
+        /**
+         * Create a new [Naming] with intelligent sorting. Each instance remembers the names it
+         * created, so use one instance per library load.
+         */
+        fun intelligent(): Naming = CachedNaming(IntelligentNaming)
 
-        fun simple(): Naming = SimpleNaming
+        /**
+         * Create a new [Naming] with simple sorting. Each instance remembers the names it created,
+         * so use one instance per library load.
+         */
+        fun simple(): Naming = CachedNaming(SimpleNaming)
     }
+}
+
+/**
+ * Remembers every name created by [inner] and returns the same [Name.Known] for the same raw and
+ * sort name, since songs share most of their album, artist and genre names and creating the sort
+ * tokens is expensive. Names only depend on their raw and sort values, so this is safe.
+ */
+private class CachedNaming(private val inner: Naming) : Naming() {
+    private val names = ConcurrentHashMap<Pair<String, String?>, Name.Known>()
+
+    override fun name(raw: String, sort: String?): Name.Known =
+        names.getOrPut(raw to sort) { inner.name(raw, sort) }
+
+    override fun equals(other: Any?) = other is CachedNaming && inner == other.inner
+
+    override fun hashCode() = inner.hashCode()
+
+    override fun toString() = inner.toString()
 }
 
 data object IntelligentNaming : Naming() {
