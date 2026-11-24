@@ -57,4 +57,10 @@ data class Interpretation(
 
     /** What separators delimit multi-value audio tags. */
     val separators: Separators,
+
+    /**
+     * Whether to interpret the tags of several songs at once on every CPU core. The resulting
+     * library is the same either way.
+     */
+    val parallel: Boolean = false,
 )

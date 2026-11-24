@@ -282,6 +282,8 @@
     <string name="set_separators_and">Ampersand (&amp;)</string>
     <string name="set_separators_warning">Warning: Using this setting may result in some tags being incorrectly interpreted as having multiple values. You can resolve this by prefixing unwanted separator characters with a backslash (\\).</string>
     <string name="set_intelligent_sorting">Intelligent sorting</string>
+    <string name="set_multicore_loading">Use all CPU cores when loading</string>
+    <string name="set_multicore_loading_desc">Load large libraries faster, using more power while loading</string>
     <string name="set_intelligent_sorting_desc">Correctly sort names that begin with numbers or words like \"the\" (works best with english-language music)</string>
     <string name="set_hide_collaborators">Hide collaborators</string>
     <string name="set_hide_collaborators_desc">Only show artists that are directly credited on an album (works best on well-tagged libraries)</string>

@@ -61,6 +61,9 @@ interface MusicSettings : Settings<MusicSettings.Listener> {
     /** Whether to enable more advanced sorting by articles and numbers. */
     val intelligentSorting: Boolean
 
+    /** Whether to use every CPU core when loading music. */
+    val multicoreLoading: Boolean
+
     /** Whether to use the file-system cache for improved loading times. */
     val useFileTreeCache: Boolean
 
@@ -109,6 +112,9 @@ class MusicSettingsImpl @Inject constructor(@ApplicationContext private val cont
 
     override val intelligentSorting: Boolean
         get() = sharedPreferences.getBoolean(getString(R.string.set_key_auto_sort_names), true)
+
+    override val multicoreLoading: Boolean
+        get() = sharedPreferences.getBoolean(getString(R.string.set_key_multicore_loading), false)
 
     override val useFileTreeCache: Boolean
         get() = sharedPreferences.getBoolean(getString(R.string.set_key_fs_cache), false)

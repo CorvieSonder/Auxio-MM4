@@ -405,7 +405,8 @@ constructor(
             }
         L.d("FS: $fs")
         val storage = Storage(cache, covers, storedPlaylists)
-        val interpretation = Interpretation(nameFactory, separators)
+        val interpretation =
+            Interpretation(nameFactory, separators, parallel = musicSettings.multicoreLoading)
         val config = Config(fs, storage, interpretation)
         L.d("Running index...")
         val start = System.currentTimeMillis()
