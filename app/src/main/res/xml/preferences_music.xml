@@ -27,6 +27,12 @@
 
         <SwitchPreferenceCompat
             app:defaultValue="false"
+            app:key="@string/set_key_multicore_loading"
+            app:summary="@string/set_multicore_loading_desc"
+            app:title="@string/set_multicore_loading" />
+
+        <SwitchPreferenceCompat
+            app:defaultValue="false"
             app:key="@string/set_key_hide_collaborators"
             app:summary="@string/set_hide_collaborators_desc"
             app:title="@string/set_hide_collaborators" />

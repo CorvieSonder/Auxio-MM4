@@ -466,6 +466,7 @@ constructor(
                 separators,
                 moodOverrides = moodRepository.overrides(),
                 customTags = customTags,
+                parallel = musicSettings.multicoreLoading,
             )
         val config = Config(fs, storage, interpretation)
         val musikr = Musikr.new(context, config)
