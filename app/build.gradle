@@ -18,8 +18,8 @@ android {
         // FORK: own app id so the fork installs next to stock Auxio and other forks
         applicationId "org.oxycblt.auxio.mm4"
         // FORK: fork releases: upstream version + "-mm4.N"; versionCode = upstream code * 100 + N
-        versionName "4.1.5-mm4.1"
-        versionCode 7501
+        versionName "4.1.5-mm4.2"
+        versionCode 7502
 
         minSdk min_sdk
         // randomly flickers between deprecated and required depending on what mood my gradle is in
