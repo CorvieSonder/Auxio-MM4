@@ -20,6 +20,8 @@ package org.oxycblt.musikr.tag.interpret
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertSame
 import org.junit.Test
 import org.oxycblt.musikr.tag.Name
 import org.oxycblt.musikr.tag.Placeholder
@@ -428,5 +430,15 @@ class NamingTest {
         val a = Name.Unknown(Placeholder.ALBUM)
         val b = Naming.intelligent().name("A", null)
         assertEquals(-1, a.compareTo(b))
+    }
+
+    @Test
+    fun name_reusedForSameRawAndSort() {
+        val naming = Naming.intelligent()
+        val a = naming.name("The Smile", "Smile")
+        assertSame(a, naming.name("The Smile", "Smile"))
+        assertNotSame(a, naming.name("The Smile", null))
+        assertEquals(a, Naming.intelligent().name("The Smile", "Smile"))
+        assertEquals(Naming.intelligent(), naming)
     }
 }
