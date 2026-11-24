@@ -469,6 +469,14 @@ constructor(
             )
         val config = Config(fs, storage, interpretation)
         val musikr = Musikr.new(context, config)
+        // In system database mode, the state of that database tells whether anything changed
+        // since the last full load. Taken before loading so that changes during it are noticed.
+        val snapshot =
+            if (musicSettings.locationMode == LocationMode.MEDIA_STORE) {
+                MediaStoreSnapshot.take(context, "$newRevision/${musicSettings.mediaStoreQuery}")
+            } else {
+                null
+            }
         if (withCache && synchronized(this) { library == null }) {
             // Show the last known library immediately from the cache instead of making the user
             // wait for a full file system walk. The real index below corrects any drift.
@@ -479,6 +487,13 @@ constructor(
             if (cached != null) {
                 L.d("Cache library built in ${System.currentTimeMillis() - cachedStart}ms")
                 emitLibrary(cached.library)
+                if (MediaStoreSnapshot.isUnchanged(context, snapshot)) {
+                    // Nothing changed since the last full load, so the cached library is
+                    // already complete.
+                    L.d("System media database unchanged, skipping the full load")
+                    emitIndexingCompletion(null)
+                    return
+                }
             }
         }
         L.d("Running index...")
@@ -489,6 +504,7 @@ constructor(
         // later.
         L.d("Revisioning from $currentRevision -> $newRevision")
         musicSettings.revision = newRevision
+        MediaStoreSnapshot.save(context, snapshot)
         // Deliver the library to the rest of the app
         // This will more or less block until all required item translation and
         // cleanup finishes.
