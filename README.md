@@ -79,11 +79,15 @@ Measured on a phone with about 8,000 songs (release build, System mode).
 - Faster sorting setup for non-Latin names: one shared transliterator instead of one per name
 - Fixed a small memory leak in the tag reader
 - Leaving settings is faster: home tabs are built when first opened, & the Now Playing bar sets up its buttons in one go
+- Names that repeat across songs are built once per load: the tag step at startup takes about half as long
+- Loading progress is reported at most 10 times a second instead of for every file: a full rescan is about 5 s faster
+- Song IDs reuse one hash object per thread instead of creating one per ID
+- Smooth fast scrolling in large lists: the scrollbar jumps to its row, & cover loading uses a small thread pool (from upstream pull request [#1437](https://github.com/OxygenCobalt/Auxio/pull/1437))
+- The lock screen, Bluetooth & Android Auto get the 100 songs around the current one instead of the whole queue, so shuffling the whole library stays fast (from upstream pull request [#1437](https://github.com/OxygenCobalt/Auxio/pull/1437); the Tonewise fork does the same)
 - ~~Now Multicore!~~ No measurable improvements :<
 
 Planned:
 
-- Reuse sort keys for names that repeat across songs (about half of the remaining tag work at startup)
 - Faster "Refresh music" (its file check takes about 7 s)
 - Faster song ID hashing
 
@@ -118,7 +122,7 @@ Build from source on Linux (the custom Media3 build runs shell scripts, so Windo
 
 Auxio-MM4 is built on [Auxio](https://github.com/OxygenCobalt/Auxio) by Alexander Capehart (OxygenCobalt) & its contributors. If you like Auxio, consider [supporting its developer](https://github.com/sponsors/OxygenCobalt).
 
-Performance work ported or adapted from: upstream pull requests [#1488](https://github.com/OxygenCobalt/Auxio/pull/1488) (shared transliterator) & [#1499](https://github.com/OxygenCobalt/Auxio/pull/1499) (library from the cache at startup), & the tag reader leak fix from [HrshD1eux/Music_Player](https://github.com/HrshD1eux/Music_Player).
+Performance work ported or adapted from: upstream pull requests [#1488](https://github.com/OxygenCobalt/Auxio/pull/1488) (shared transliterator) & [#1499](https://github.com/OxygenCobalt/Auxio/pull/1499) (library from the cache at startup), [#1437](https://github.com/OxygenCobalt/Auxio/pull/1437) (fast scrolling, cover thread pool & queue window), & the tag reader leak fix from [HrshD1eux/Music_Player](https://github.com/HrshD1eux/Music_Player).
 
 [![GNU GPLv3 Image](https://www.gnu.org/graphics/gplv3-127x51.png)](http://www.gnu.org/licenses/gpl-3.0.en.html)
 
