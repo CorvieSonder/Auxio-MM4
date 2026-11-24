@@ -86,15 +86,10 @@ Measured on a phone with about 8,000 songs (release build, System mode).
 - The lock screen, Bluetooth & Android Auto get the 100 songs around the current one instead of the whole queue, so shuffling the whole library stays fast (from upstream pull request [#1437](https://github.com/OxygenCobalt/Auxio/pull/1437); the Tonewise fork does the same)
 - ~~Now Multicore!~~ No measurable improvements :<
 
-Planned:
-
-- Faster "Refresh music" (its file check takes about 7 s)
-- Faster song ID hashing
-
 ### Planned
 
 - Phone & PC sync improvements as they come up
-- Custom theme (we're going skeumorphic babyyyyy but holy moly is it gonna take a while because I want to do this without AI)
+- Custom theme (we're going skeumorphic & hifi babyyyyy but holy moly is it gonna take a while because I want to do this without AI)
 
 ## MediaMonkey 4 scripts
 
